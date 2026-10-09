@@ -1,0 +1,254 @@
+// Socle : hasard déterministe, palette, monde, mots-pouvoirs, canvas, formes dessinées, encre persistante, son synthétisé.
+// Scripts classiques partagés : les déclarations de premier niveau sont visibles des fichiers chargés ensuite.
+'use strict';
+
+/* ===================== Paramètres & hasard ===================== */
+const params = new URLSearchParams(location.search);
+const CAPTURE = params.has('capture');          // rendu image par image (vidéos)
+let seed = parseInt(params.get('seed'), 10) || (Date.now() % 1000000007);
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+let rand = mulberry32(seed);
+const rnd = (a = 1, b) => b === undefined ? rand() * a : a + rand() * (b - a);
+const pick = arr => arr[Math.floor(rand() * arr.length)];
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp = (a, b, t) => a + (b - a) * t;
+const TAU = Math.PI * 2;
+const ease = t => 1 - Math.pow(1 - clamp(t, 0, 1), 3);
+
+/* ===================== Palette ===================== */
+const C = {
+  paper: '#fdfcf6', unwritten: '#ebeae3', dot: '#b9b8ae', ink: '#1d3a8a', inkLight: '#3e63c9', inkDeep: '#12275f',
+  graphite: '#2e2e33', pencil: '#6d6d74', red: '#c8424a', margin: '#e06a6c', rule: 'rgba(140,152,214,0.55)',
+  ruleMinor: 'rgba(170,180,230,0.45)', hl: 'rgba(246,231,94,0.82)', hlPink: 'rgba(255,140,190,0.6)', hlGreen: 'rgba(140,230,140,0.6)',
+  eraser: '#f2a0a8', eraserSleeve: '#3c66c4', gold: '#c9921b', fire: '#e8742c'
+};
+const FONT_MAIN = "'Main', 'Segoe Print', 'Bradley Hand', cursive";
+const FONT_CURSIVE = "'Cursive', 'Main', cursive";
+
+/* ===================== Monde ===================== */
+const SQ = 64;                                   // un grand carreau Seyès
+const WORLD = { w: SQ * 44, h: SQ * 31 };
+const MARGIN_X = SQ * 3;
+const UNWRITTEN_NOTES = [
+  { x: WORLD.w / 2, y: -150, t: "— marge du haut : rien d'écrit pour l'instant —", r: -0.02 },
+  { x: WORLD.w + 170, y: WORLD.h * 0.35, t: 'ici, plus tard :', r: 0.06 },
+  { x: WORLD.w + 180, y: WORLD.h * 0.35 + 46, t: 'une autre page ?', r: 0.04 },
+  { x: -190, y: WORLD.h * 0.55, t: 'brouillon,', r: -0.07 },
+  { x: -180, y: WORLD.h * 0.55 + 44, t: 'ne pas lire', r: -0.05 },
+  { x: WORLD.w * 0.3, y: WORLD.h + 140, t: 'à suivre…', r: 0.03 },
+  { x: WORLD.w * 0.72, y: WORLD.h + 150, t: 'zone non écrite', r: -0.03 },
+  { x: WORLD.w + 160, y: WORLD.h * 0.8, t: '(TODO)', r: 0.1 },
+  { x: -170, y: WORLD.h * 0.18, t: '???', r: 0.05 }
+];
+
+/* ===================== Mots (améliorations) ===================== */
+const MOTS = {
+  ENCRE:      { label: 'ENCRE', max: 5, desc: 'Une encre plus noire, plus lourde.', eff: () => 'dégâts +30 %', frag: "l'encre" },
+  VIRGULE:    { label: 'VIRGULE', max: 5, desc: 'La pause entre deux gouttes raccourcit.', eff: () => 'cadence +18 %', frag: 'une virgule' },
+  GUILLEMETS: { label: 'GUILLEMETS', max: 4, desc: 'Des gouttes encadrent la tienne, en éventail.', eff: l => l === 0 ? '+2 gouttes par tir' : '+1 goutte par tir', frag: 'des guillemets' },
+  ECHO:       { label: 'ÉCHO', max: 4, desc: 'Chaque goutte rebondit vers une autre rature.', eff: () => '+1 rebond', frag: 'un écho' },
+  ITALIQUE:   { label: 'ITALIQUE', max: 4, desc: 'Penchées, tes gouttes traversent tout.', eff: () => '+1 traversée, gouttes plus rapides', frag: "l'italique" },
+  LUNE:       { label: 'LUNE', max: 5, desc: 'Un petit « o » tourne autour de toi et cogne.', eff: () => '+1 lune en orbite', frag: 'la lune' },
+  FEU:        { label: 'FEU', max: 5, desc: "L'encre s'enflamme au contact des ratures.", eff: l => l === 0 ? 'tes gouttes brûlent' : 'brûlure plus forte', frag: 'le feu' },
+  POINT:      { label: 'POINT', max: 5, desc: 'Un point final tombe du ciel, régulièrement.', eff: l => l === 0 ? 'un gros point toutes les 8 s' : 'plus gros, plus souvent', frag: 'un point final' },
+  VENT:       { label: 'VENT', max: 3, desc: "Tes gouttes repoussent ce qu'elles touchent.", eff: () => 'recul +', frag: 'le vent' },
+  AIMANT:     { label: 'AIMANT', max: 3, desc: 'Les lettres accourent vers toi de plus loin.', eff: () => 'collecte +45 %', frag: 'un aimant' },
+  PLUME:      { label: 'PLUME', max: 4, desc: 'Plus légère, plus vive.', eff: () => 'vitesse +10 %, pâté plus fréquent', frag: 'la plume' },
+  SOUFFLE:    { label: 'SOUFFLE', max: 3, desc: 'Reprendre son souffle, et un peu plus.', eff: () => '+1 cœur, soin complet', frag: 'un souffle' }
+};
+const DICTEES = ['PLUME', 'ENCRE', 'MARGE', 'CAHIER', 'BUVARD', 'LETTRE', 'ÉCRIRE', 'RATURE', 'CHAPITRE', 'BROUILLON', 'PARCHEMIN', 'HISTOIRE'];
+const LETTER_POOL = 'EEEEEEEEEEEEEEAAAAAAAASSSSSSSIIIIIIINNNNNNNTTTTTTRRRRRRUUUUUULLLLLOOOOODDDDCCCPPPMMMÉÉVVQFBGHJÀXYZ';
+
+/* ===================== Canvas ===================== */
+const cv = document.getElementById('game');
+const ctx = cv.getContext('2d');
+let W = 1280, H = 720, DPR = 1, ZOOM = 1, U = 1;
+const SAFE = { t: 0, r: 0, b: 0, l: 0 };
+function resize() {
+  if (CAPTURE) { W = 1280; H = 720; DPR = 1; }
+  else { W = innerWidth; H = innerHeight; DPR = Math.min(2, window.devicePixelRatio || 1); }
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  if (CAPTURE) { cv.style.width = W + 'px'; cv.style.height = H + 'px'; }
+  ZOOM = clamp(Math.sqrt(W * H) / Math.sqrt(1280 * 720), 0.62, 1.6);
+  U = clamp(Math.min(W / 1280, H / 720) * 1.05, 0.6, 1.5);
+  if (W < 700) U = Math.max(U, 0.72);
+  const cs = getComputedStyle(document.getElementById('safe'));
+  SAFE.t = parseFloat(cs.paddingTop) || 0; SAFE.r = parseFloat(cs.paddingRight) || 0;
+  SAFE.b = parseFloat(cs.paddingBottom) || 0; SAFE.l = parseFloat(cs.paddingLeft) || 0;
+}
+
+/* ===================== Textures & formes ===================== */
+let paperPattern = null, unwrittenPattern = null;
+function makeTextures() {
+  const r = mulberry32(99);
+  const c = document.createElement('canvas'); c.width = c.height = 256;
+  const g = c.getContext('2d');
+  g.fillStyle = C.paper; g.fillRect(0, 0, 256, 256);
+  const id = g.getImageData(0, 0, 256, 256);
+  for (let i = 0; i < id.data.length; i += 4) { const n = (r() - 0.5) * 9; id.data[i] += n; id.data[i + 1] += n; id.data[i + 2] += n - 1; }
+  g.putImageData(id, 0, 0);
+  g.strokeStyle = 'rgba(150,140,110,0.07)'; g.lineWidth = 1;
+  for (let i = 0; i < 40; i++) { const x = r() * 256, y = r() * 256, a = r() * TAU, l = 6 + r() * 18; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); g.stroke(); }
+  paperPattern = ctx.createPattern(c, 'repeat');
+  const c2 = document.createElement('canvas'); c2.width = c2.height = 128;
+  const g2 = c2.getContext('2d'); g2.fillStyle = C.unwritten; g2.fillRect(0, 0, 128, 128);
+  g2.fillStyle = C.dot; g2.fillRect(0, 0, 2, 2); g2.fillRect(64, 0, 2, 2); g2.fillRect(0, 64, 2, 2); g2.fillRect(64, 64, 2, 2);
+  unwrittenPattern = ctx.createPattern(c2, 'repeat');
+}
+
+// Points de base + variantes « bouillonnantes » (le trait tremble 8 fois par seconde)
+function pathFrom(points, jitterSeed, amp, closed) {
+  const r = mulberry32(jitterSeed);
+  const p = new Path2D();
+  const pts = points.map(([x, y]) => [x + (r() - 0.5) * amp, y + (r() - 0.5) * amp]);
+  p.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length - 1; i++) {
+    const mx = (pts[i][0] + pts[i + 1][0]) / 2, my = (pts[i][1] + pts[i + 1][1]) / 2;
+    p.quadraticCurveTo(pts[i][0], pts[i][1], mx, my);
+  }
+  const last = pts[pts.length - 1]; p.lineTo(last[0], last[1]);
+  if (closed) p.closePath();
+  return p;
+}
+const SHAPES = {};
+function buildShapes() {
+  const make = (type, count, gen, amp, closed) => {
+    SHAPES[type] = [];
+    for (let s = 0; s < count; s++) {
+      const r = mulberry32(1000 + s * 31 + type.length * 977);
+      const pts = gen(r);
+      SHAPES[type].push([0, 1, 2].map(k => pathFrom(pts, s * 7 + k * 101 + 5, amp, closed)));
+    }
+  };
+  make('gribouillis', 8, r => { const pts = []; let a = r() * TAU; for (let i = 0; i < 16; i++) { a += 1.6 + r() * 1.6; const rr = 5 + r() * 13; pts.push([Math.cos(a) * rr, Math.sin(a) * rr]); } return pts; }, 2.2, false);
+  make('gouttelette', 6, r => { const pts = []; let a = r() * TAU; for (let i = 0; i < 9; i++) { a += 1.9 + r() * 1.5; const rr = 3 + r() * 7.5; pts.push([Math.cos(a) * rr, Math.sin(a) * rr]); } return pts; }, 1.6, false);
+  make('biffure', 6, r => { const pts = []; for (let i = 0; i <= 9; i++) { pts.push([-22 + i * 4.9, (i % 2 ? -1 : 1) * (5 + r() * 5)]); } return pts; }, 2.4, false);
+  make('tache', 6, r => { const pts = []; const n = 14; for (let i = 0; i <= n; i++) { const a = i / n * TAU; const rr = 22 * (0.8 + r() * 0.35); pts.push([Math.cos(a) * rr, Math.sin(a) * rr]); } return pts; }, 2.5, true);
+  make('boss', 3, r => { const pts = []; for (let i = 0; i < 70; i++) { const a = i * 0.55; const rr = 6 + i * 0.95 + r() * 6; pts.push([Math.cos(a) * rr, Math.sin(a) * rr]); } return pts; }, 5, false);
+}
+function boilFrame(t, off = 0) { return Math.floor(t * 8 + off) % 3; }
+
+/* ===================== Encre persistante (taches) ===================== */
+const STAIN_S = 0.5;
+const stain = document.createElement('canvas');
+stain.width = WORLD.w * STAIN_S; stain.height = WORLD.h * STAIN_S;
+const sctx = stain.getContext('2d');
+function clearStains() { sctx.clearRect(0, 0, stain.width, stain.height); }
+function splat(x, y, r, color, alpha, n = 7) {
+  sctx.save(); sctx.scale(STAIN_S, STAIN_S); sctx.globalAlpha = alpha; sctx.fillStyle = color;
+  sctx.beginPath(); sctx.arc(x, y, r, 0, TAU); sctx.fill();
+  for (let i = 0; i < n; i++) {
+    const a = rnd(TAU), d = r * rnd(0.6, 1.9), rr = r * rnd(0.08, 0.32);
+    sctx.beginPath(); sctx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, rr, 0, TAU); sctx.fill();
+  }
+  sctx.restore();
+}
+function eraseStain(x, y, r) {
+  sctx.save(); sctx.scale(STAIN_S, STAIN_S); sctx.globalCompositeOperation = 'destination-out';
+  sctx.globalAlpha = 0.25; sctx.beginPath(); sctx.arc(x, y, r, 0, TAU); sctx.fill(); sctx.restore();
+}
+
+/* ===================== Son (tout est synthétisé) ===================== */
+const CAPLOG = { on: false, t: 0, events: [], states: [] };   // capture : sons rejoués hors ligne dans la vidéo
+const AU = {
+  ctx: null, master: null, sfx: null, mus: null, muted: false, t0: 0, nextBeat: 0, step: 0, noiseBuf: null, last: {},
+  init() {
+    if (this.ctx || CAPTURE) return;
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+      this.ctx = new AC();
+      this.master = this.ctx.createGain(); this.master.gain.value = this.muted ? 0 : 0.9; this.master.connect(this.ctx.destination);
+      this.sfx = this.ctx.createGain(); this.sfx.gain.value = 0.5; this.sfx.connect(this.master);
+      this.mus = this.ctx.createGain(); this.mus.gain.value = 0.2; this.mus.connect(this.master);
+      const len = this.ctx.sampleRate * 0.6; this.noiseBuf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+      const d = this.noiseBuf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      this.nextBeat = this.ctx.currentTime + 0.2;
+    } catch (e) { this.ctx = null; }
+  },
+  setMuted(m) { this.muted = m; if (this.master) this.master.gain.setTargetAtTime(m ? 0 : 0.9, this.ctx.currentTime, 0.05); },
+  throttle(name, gap) { const now = this.offline || CAPLOG.on ? CAPLOG.t * 1000 : performance.now(); if (this.last[name] && now - this.last[name] < gap) return false; this.last[name] = now; return true; },
+  tone(f, dur, { type = 'sine', vol = 0.25, when = 0, slide = 0, dest = null, attack = 0.004 } = {}) {
+    if (!this.ctx) return; const t = this.ctx.currentTime + this.t0 + when;
+    const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f * slide), t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + attack); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(dest || this.sfx); o.start(t); o.stop(t + dur + 0.05);
+  },
+  noise(dur, { f = 2000, q = 1, vol = 0.2, when = 0, sweep = 0, type = 'bandpass' } = {}) {
+    if (!this.ctx) return; const t = this.ctx.currentTime + this.t0 + when;
+    const s = this.ctx.createBufferSource(); s.buffer = this.noiseBuf;
+    const bp = this.ctx.createBiquadFilter(); bp.type = type; bp.frequency.setValueAtTime(f, t); bp.Q.value = q;
+    if (sweep) bp.frequency.exponentialRampToValueAtTime(f * sweep, t + dur);
+    const g = this.ctx.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    s.connect(bp); bp.connect(g); g.connect(this.sfx); s.start(t, Math.random() * 0.3); s.stop(t + dur + 0.02);
+  },
+  play(name, k = 0) {
+    if (CAPLOG.on) { if (this.throttle('cap-' + name, 25)) CAPLOG.events.push({ t: CAPLOG.t, name, k }); return; }
+    if (!this.ctx || this.muted) return;
+    const PENTA = [293.66, 349.23, 392, 440, 523.25, 587.33, 698.46, 783.99, 880, 1046.5, 1174.66];
+    switch (name) {
+      case 'shoot': if (this.throttle('shoot', 70)) this.noise(0.05, { f: 3200 + Math.random() * 1500, q: 2.5, vol: 0.07 }); break;
+      case 'hit': if (this.throttle('hit', 40)) this.noise(0.04, { f: 900, q: 1.5, vol: 0.09 }); break;
+      case 'kill': if (this.throttle('kill', 45)) { this.noise(0.12, { f: 1800, q: 0.8, vol: 0.12, sweep: 0.4 }); this.tone(110 + Math.random() * 30, 0.12, { type: 'triangle', vol: 0.12, slide: 0.6 }); } break;
+      case 'pickup': if (this.throttle('pickup', 30)) this.tone(PENTA[Math.min(PENTA.length - 1, k)] * 2, 0.18, { type: 'sine', vol: 0.09 }); break;
+      case 'dictee': this.tone(PENTA[Math.min(PENTA.length - 1, 3 + k)] * 2, 0.5, { type: 'triangle', vol: 0.16 }); this.tone(PENTA[Math.min(PENTA.length - 1, 3 + k)] * 4, 0.35, { vol: 0.05 }); break;
+      case 'dicteeDone': [0, 2, 4, 6, 8].forEach((n, i) => this.tone(PENTA[n] * 2, 0.5, { type: 'triangle', vol: 0.14, when: i * 0.07 })); break;
+      case 'level': [0, 2, 4, 7].forEach((n, i) => this.tone(PENTA[n] * 2, 0.45, { type: 'triangle', vol: 0.15, when: i * 0.08 })); break;
+      case 'choose': this.tone(PENTA[5] * 2, 0.3, { type: 'triangle', vol: 0.15 }); this.noise(0.25, { f: 2500, q: 0.7, vol: 0.08, sweep: 2 }); break;
+      case 'hurt': this.tone(150, 0.3, { type: 'sawtooth', vol: 0.14, slide: 0.4 }); this.noise(0.25, { f: 600, q: 0.6, vol: 0.2 }); break;
+      case 'dash': this.noise(0.22, { f: 700, q: 0.8, vol: 0.18, sweep: 3.5 }); break;
+      case 'point': this.tone(70, 0.6, { type: 'sine', vol: 0.4, slide: 0.5 }); this.noise(0.4, { f: 400, q: 0.5, vol: 0.25, type: 'lowpass' }); break;
+      case 'boss': this.tone(55, 2.2, { type: 'sawtooth', vol: 0.12, attack: 0.6 }); this.tone(82.4, 2.2, { type: 'sawtooth', vol: 0.08, attack: 0.8 }); break;
+      case 'bossShot': if (this.throttle('bossShot', 200)) this.noise(0.3, { f: 1200, q: 3, vol: 0.12, sweep: 0.3 }); break;
+      case 'win': [0, 2, 4, 5, 7, 9, 10].forEach((n, i) => this.tone(PENTA[n], 0.9, { type: 'triangle', vol: 0.16, when: i * 0.11 })); break;
+      case 'lose': [6, 4, 2, 0].forEach((n, i) => this.tone(PENTA[n], 0.8, { type: 'triangle', vol: 0.15, when: i * 0.18 })); break;
+    }
+  },
+  // Musique générative : un petit kalimba en ré dorien, qui s'agite quand ça chauffe
+  tick(intensity, bossOn) {
+    if (!this.ctx || this.muted) return;
+    const beat = 0.36, scale = [146.83, 174.61, 196, 220, 261.63, 293.66, 349.23, 392, 440];
+    const bass = [73.42, 87.31, 65.41, 98];
+    while (this.nextBeat < this.ctx.currentTime + 0.15) {
+      this.beatAt(this.nextBeat - this.ctx.currentTime, this.step, intensity, bossOn);
+      this.nextBeat += this.BEAT; this.step++;
+    }
+  },
+  BEAT: 0.36,
+  beatAt(when, s, intensity, bossOn) {
+    const beat = this.BEAT, scale = [146.83, 174.61, 196, 220, 261.63, 293.66, 349.23, 392, 440];
+    const bass = [73.42, 87.31, 65.41, 98];
+    if (s % 8 === 0) this.tone(bass[(s >> 5) % 4], beat * 7, { type: 'sine', vol: 0.22, when, dest: this.mus, attack: 0.05 });
+    if (Math.random() < 0.25 + intensity * 0.55) { const n = scale[Math.floor(Math.random() * scale.length)]; this.tone(n * 2, beat * 2.2, { type: 'triangle', vol: 0.1, when, dest: this.mus }); }
+    if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
+  },
+  // Rejoue la bande-son d'une capture dans un OfflineAudioContext et renvoie un WAV (base64)
+  async renderCapture(duration) {
+    const sr = 44100, oc = new OfflineAudioContext(1, Math.ceil(sr * duration), sr);
+    const saved = { ctx: this.ctx, master: this.master, sfx: this.sfx, mus: this.mus, noiseBuf: this.noiseBuf, muted: this.muted };
+    this.ctx = oc; this.muted = false; this.offline = true;
+    this.master = oc.createGain(); this.master.gain.value = 0.9;
+    const comp = oc.createDynamicsCompressor(); this.master.connect(comp); comp.connect(oc.destination);
+    this.sfx = oc.createGain(); this.sfx.gain.value = 0.5; this.sfx.connect(this.master);
+    this.mus = oc.createGain(); this.mus.gain.value = 0.2; this.mus.connect(this.master);
+    const len = sr * 0.6; this.noiseBuf = oc.createBuffer(1, len, sr); const d = this.noiseBuf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    this.last = {};
+    const st = CAPLOG.states;
+    for (let s = 0, tb = 0.05; tb < duration; s++, tb += this.BEAT) {
+      let k = 0; while (k < st.length - 1 && st[k + 1].t <= tb) k++;
+      this.beatAt(tb, s, st[k] ? st[k].i : 0.1, st[k] ? st[k].b : false);
+    }
+    for (const e of CAPLOG.events) { CAPLOG.t = e.t; this.t0 = e.t; this.play(e.name, e.k); }
+    this.t0 = 0;
+    const buf = await oc.startRendering();
+    Object.assign(this, saved); this.offline = false;
+    const pcm = buf.getChannelData(0), n = pcm.length, bytes = new Uint8Array(44 + n * 2), dv = new DataView(bytes.buffer);
+    const wr = (o, str) => { for (let i = 0; i < str.length; i++) bytes[o + i] = str.charCodeAt(i); };
+    wr(0, 'RIFF'); dv.setUint32(4, 36 + n * 2, true); wr(8, 'WAVEfmt '); dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
+    dv.setUint32(24, sr, true); dv.setUint32(28, sr * 2, true); dv.setUint16(32, 2, true); dv.setUint16(34, 16, true); wr(36, 'data'); dv.setUint32(40, n * 2, true);
+    for (let i = 0; i < n; i++) dv.setInt16(44 + i * 2, Math.max(-1, Math.min(1, pcm[i])) * 32767, true);
+    let bin = ''; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return btoa(bin);
+  }
+};
+if (!CAPTURE) { try { AU.muted = localStorage.getItem('inacheve.muted') === '1'; } catch (e) { /* stockage indisponible */ } }

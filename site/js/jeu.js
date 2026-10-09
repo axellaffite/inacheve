@@ -1,0 +1,467 @@
+// Simulation : état, ratures, joueur et pilote automatique, collisions, niveaux, fins de partie.
+// Scripts classiques partagés : les déclarations de premier niveau sont visibles des fichiers chargés ensuite.
+'use strict';
+
+/* ===================== État ===================== */
+const G = {
+  state: 'title', time: 0, stateT: 0, demo: false, t: 0,
+  cam: { x: WORLD.w / 2, y: WORLD.h / 2, shake: 0 },
+  captions: [], deco: [], best: 0, input: { touch: !CAPTURE && !!(window.matchMedia && matchMedia('(pointer: coarse)').matches) }
+};
+try { G.best = parseInt(localStorage.getItem('inacheve.best') || '0', 10) || 0; } catch (e) { G.best = 0; }
+let enemyId = 1;
+
+function xpFor(level) { return Math.floor(5 + level * 3 + level * level * 0.3); }
+function lvl(k) { return (G.mots && G.mots[k]) || 0; }
+function computeStats() {
+  const g = lvl('GUILLEMETS');
+  G.S = {
+    dmg: 1 + 0.3 * lvl('ENCRE'), rate: 2.8 * (1 + 0.18 * lvl('VIRGULE')), extra: g ? g + 1 : 0,
+    bounce: lvl('ECHO'), pierce: lvl('ITALIQUE'), pspeed: 560 * (1 + 0.1 * lvl('ITALIQUE')),
+    moons: lvl('LUNE'), burn: lvl('FEU'), point: lvl('POINT'), knock: lvl('VENT'),
+    magnet: 135 * (1 + 0.45 * lvl('AIMANT')), speed: 235 * (1 + 0.1 * lvl('PLUME')), dashCd: 2.1 * (1 - 0.13 * lvl('PLUME'))
+  };
+}
+
+function newGame(demo) {
+  if (!CAPTURE) { seed = (seed * 16807 + 12345) % 2147483647; }
+  rand = mulberry32(seed);
+  Object.assign(G, {
+    demo, state: 'play', stateT: 0, t: 0, kills: 0, letters: 0, dictees: 0, level: 1, xp: 0, xpNext: xpFor(1), pendingLv: 0,
+    mots: {}, motOrder: [], enemies: [], shots: [], ebul: [], items: [], parts: [], puddles: [], points: [], texts: [],
+    spawnAcc: 0, nextWave: 45, boss: null, bossSpawned: false, bossDefeated: false, endless: false, nextBossAt: 180,
+    pointCd: 6, dicteeIdx: 0, dicteeWord: DICTEES[0], dicteeProg: 0, choices: [], sel: 0, score: 0, comboN: 0, comboT: 0,
+    moonA: 0, botPickT: 0, endPhrase: '', newBest: false
+  });
+  const hp = demo ? 7 : 6;
+  G.p = { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, r: 13, hp, maxHp: hp, inv: 1.2, dashCd: 0, dashT: 0, dx: 1, dy: 0, face: 0, fireCd: 0.5, look: 0, puddleT: 0, squash: 0 };
+  G.cam.x = G.p.x; G.cam.y = G.p.y;
+  computeStats(); clearStains();
+  caption('Chapitre ' + GAME_META.chapter + ' : tiens la page jusqu’à la Grande Rature', 4);
+  setUI();
+}
+
+function caption(text, dur = 2.5, style = 'hl') { G.captions.push({ text, t: 0, dur, style }); if (G.captions.length > 3) G.captions.shift(); }
+function addText(x, y, text, color = C.ink, size = 22) { G.texts.push({ x, y, text, color, size, t: 0, dur: 1 }); }
+
+/* ===================== Ennemis ===================== */
+const ETYPES = {
+  gribouillis: { r: 16, hp: 2.5, speed: 84, dmg: 1, xp: 1, agil: 3.5 },
+  gouttelette: { r: 10, hp: 1, speed: 108, dmg: 1, xp: 1, agil: 5 },
+  biffure:     { r: 17, hp: 6, speed: 55, dmg: 1, xp: 2, agil: 3 },
+  tache:       { r: 24, hp: 14, speed: 42, dmg: 1, xp: 4, agil: 1.6 },
+  gomme:       { r: 22, hp: 24, speed: 90, dmg: 2, xp: 6, agil: 2.2 },
+  boss:        { r: 74, hp: 540, speed: 46, dmg: 2, xp: 60, agil: 1.2 }
+};
+function spawnEnemy(type, x, y) {
+  const T = ETYPES[type];
+  const scale = type === 'boss' ? 1 + (G.endless ? 0.6 * Math.floor((G.t - 180) / 180 + 1) : 0) : 1 + G.t / 190 + (G.endless ? (G.t - 180) / 100 : 0);
+  const e = {
+    id: enemyId++, type, x, y, vx: 0, vy: 0, r: T.r, hp: T.hp * scale, maxHp: T.hp * scale, speed: T.speed * (1 + Math.min(0.35, G.t / 600)),
+    dmg: T.dmg, xp: T.xp, agil: T.agil, shape: Math.floor(rnd((SHAPES[type] || [0]).length)), rot: rnd(TAU), spin: rnd(-1.5, 1.5),
+    flash: 0, burn: 0, burnDps: 0, slow: 0, orbCd: 0, punchCd: 0, phase: 'walk', pt: rnd(1.5, 3), cx: 0, cy: 0, boilOff: rnd(3), atk: 2.5, atkN: 0, enter: 0
+  };
+  G.enemies.push(e);
+  return e;
+}
+function spawnAround(type) {
+  const viewR = Math.hypot(W, H) / ZOOM / 2 + 60;
+  for (let i = 0; i < 10; i++) {
+    const a = rnd(TAU), d = viewR + rnd(0, 120);
+    const x = G.p.x + Math.cos(a) * d, y = G.p.y + Math.sin(a) * d;
+    if (x > 30 && y > 30 && x < WORLD.w - 30 && y < WORLD.h - 30) return spawnEnemy(type, x, y);
+  }
+  // à défaut, depuis le bord de page le plus éloigné
+  const x = G.p.x < WORLD.w / 2 ? WORLD.w - 40 : 40, y = rnd(40, WORLD.h - 40);
+  return spawnEnemy(type, x, y);
+}
+function director(dt) {
+  const t = G.t;
+  if (G.boss && !G.endless) { G.spawnAcc += dt * 0.7; }
+  else G.spawnAcc += dt * Math.min(G.endless ? 9 : 5.5, 0.9 + t * 0.03 + (G.endless ? (t - 180) * 0.02 : 0));
+  while (G.spawnAcc >= 1) {
+    G.spawnAcc -= 1;
+    if (G.enemies.length > 240) break;
+    const r = rand();
+    let type = 'gribouillis';
+    if (t > 95 && r < 0.09) type = 'gomme';
+    else if (t > 60 && r < 0.22) type = 'tache';
+    else if (t > 25 && r < 0.42) type = 'biffure';
+    spawnAround(type);
+  }
+  if (t >= G.nextWave && (!G.boss || G.endless)) {
+    G.nextWave += 45;
+    const n = 14 + Math.floor(t / 30) * 2;
+    const ring = Math.min(W, H) / ZOOM * 0.62;
+    for (let i = 0; i < n; i++) {
+      const a = i / n * TAU;
+      const x = clamp(G.p.x + Math.cos(a) * ring, 30, WORLD.w - 30), y = clamp(G.p.y + Math.sin(a) * ring, 30, WORLD.h - 30);
+      spawnEnemy(t > 80 && i % 3 === 0 ? 'biffure' : 'gribouillis', x, y);
+    }
+    caption('Une vague de gribouillis !', 2.2, 'pink');
+  }
+  if (!G.bossSpawned && t >= 180) {
+    G.bossSpawned = true;
+    const b = spawnAround('boss'); b.enter = 1; G.boss = b;
+    caption('La Grande Rature approche…', 3.5, 'pink'); G.cam.shake = 14; AU.play('boss');
+  }
+  if (G.endless && G.bossDefeated && !G.boss && t >= G.nextBossAt) {
+    G.nextBossAt += 180; const b = spawnAround('boss'); G.boss = b; caption('Elle revient, plus épaisse.', 3, 'pink'); AU.play('boss');
+  }
+}
+
+function hurtEnemy(e, dmg, src, kx = 0, ky = 0) {
+  if (e.dead) return;
+  e.hp -= dmg; e.flash = 0.09;
+  if (src === 'shot' && G.S.burn) { e.burn = 2.6; e.burnDps = 0.9 + 0.75 * G.S.burn; }
+  if (G.S.knock && src === 'shot' && e.type !== 'boss') { const k = 70 + 60 * G.S.knock; e.vx += kx * k; e.vy += ky * k; }
+  if (src !== 'burn' && src !== 'puddle') AU.play('hit');
+  if (e.hp <= 0) killEnemy(e);
+}
+function killEnemy(e) {
+  e.dead = true; G.kills++;
+  G.score += e.type === 'boss' ? 2500 : Math.round(e.xp * 10);
+  splat(e.x, e.y, e.r * (e.type === 'boss' ? 1.6 : 0.9), C.ink, 0.16, e.type === 'boss' ? 26 : 8);
+  for (let i = 0; i < (e.type === 'boss' ? 70 : 9); i++) {
+    const a = rnd(TAU), s = rnd(60, e.type === 'boss' ? 520 : 260);
+    G.parts.push({ x: e.x, y: e.y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: rnd(0.3, 0.8), max: 0.8, size: rnd(1.5, 4.5), color: i % 3 ? C.ink : C.graphite, drag: 4 });
+  }
+  if (e.type === 'boss') {
+    G.boss = null; G.cam.shake = 26; AU.play('win');
+    for (let i = 0; i < 40; i++) dropLetter(e.x + rnd(-80, 80), e.y + rnd(-80, 80), i % 4 === 0 ? 5 : 2);
+    if (!G.bossDefeated) { G.bossDefeated = true; G.victoryAt = G.t + 1.6; }
+    return;
+  }
+  AU.play('kill');
+  if (e.type === 'tache') { for (let i = 0; i < 2; i++) { const g = spawnEnemy('gouttelette', e.x + rnd(-10, 10), e.y + rnd(-10, 10)); g.vx = rnd(-150, 150); g.vy = rnd(-150, 150); } }
+  let v = e.xp;
+  const n = v <= 2 ? v : 2 + (v > 4 ? 1 : 0);
+  for (let i = 0; i < n; i++) { const share = Math.max(1, Math.round(v / (n - i))); v -= share; dropLetter(e.x + rnd(-8, 8), e.y + rnd(-8, 8), share); }
+}
+function dropLetter(x, y, value) {
+  if (G.items.length > 320) { G.xp += value; return; }
+  let ch = pick(LETTER_POOL), rare = false, need = false;
+  const target = G.dicteeWord[G.dicteeProg];
+  if (target && rand() < 0.1) { ch = target; need = true; }
+  if (rand() < 0.025) { rare = true; value += 5; }
+  G.items.push({ x, y, vx: rnd(-90, 90), vy: rnd(-90, 90), ch, value, rare, need, t: rnd(TAU), pull: false, rot: rnd(-0.4, 0.4) });
+}
+
+/* ===================== Joueur & entrées ===================== */
+const keys = {};
+function moveInput() {
+  if (G.demo) return botInput();
+  let x = 0, y = 0;
+  if (keys.KeyA || keys.ArrowLeft) x -= 1; if (keys.KeyD || keys.ArrowRight) x += 1;
+  if (keys.KeyW || keys.ArrowUp) y -= 1; if (keys.KeyS || keys.ArrowDown) y += 1;
+  const j = G.input.joy;
+  if (j && j.active) { const dx = j.x - j.ox, dy = j.y - j.oy, d = Math.hypot(dx, dy); if (d > 6) { const m = Math.min(1, d / (55 * U)); x = dx / d * m; y = dy / d * m; } }
+  const d = Math.hypot(x, y); if (d > 1) { x /= d; y /= d; }
+  return { x, y, dash: !!G.input.dashQueued };
+}
+// Le pilote automatique des vidéos : teste 16 directions et prend la plus sûre (lettres et dictée en bonus)
+function botInput() {
+  const p = G.p, near = [], bul = [];
+  for (const e of G.enemies) if (Math.abs(e.x - p.x) < 520 && Math.abs(e.y - p.y) < 520) near.push(e);
+  for (const b of G.ebul) if (Math.abs(b.x - p.x) < 320 && Math.abs(b.y - p.y) < 320) bul.push(b);
+  let goal = null, gd = 1e9;
+  const need = G.dicteeWord[G.dicteeProg];
+  for (const it of G.items) { const d = Math.hypot(it.x - p.x, it.y - p.y) - (it.ch === need ? 160 : 0) - (it.rare ? 80 : 0); if (d < gd && d < 520) { gd = d; goal = it; } }
+  if (!goal) goal = { x: WORLD.w / 2 + Math.cos(G.t * 0.21) * 700, y: WORLD.h / 2 + Math.sin(G.t * 0.17) * 420 };
+  const gdx = goal.x - p.x, gdy = goal.y - p.y, gl = Math.hypot(gdx, gdy) || 1;
+  const prev = G.botDir || { x: 1, y: 0 };
+  let best = prev, bestS = -1e9, close = false;
+  for (const e of near) if (Math.hypot(e.x - p.x, e.y - p.y) - e.r < 30) close = true;
+  for (let i = 0; i < 16; i++) {
+    const a = i / 16 * TAU, dx = Math.cos(a), dy = Math.sin(a);
+    let sc = 0;
+    for (const look of [60, 140]) {
+      const x = p.x + dx * look, y = p.y + dy * look, w = look === 60 ? 1 : 0.6;
+      for (const e of near) {
+        let d = Math.hypot(e.x - x, e.y - y) - e.r;
+        if (e.type === 'biffure' && e.phase !== 'walk') d -= 40;
+        sc -= w * (e.type === 'boss' ? 5 : e.type === 'gomme' ? 1.6 : 1) * 2900 / Math.pow(Math.max(8, d), 1.8);
+      }
+      for (const b of bul) sc -= w * 600 / Math.pow(Math.max(6, Math.hypot(b.x - x, b.y - y)), 1.5);
+      const wm = Math.min(x, y, WORLD.w - x, WORLD.h - y);
+      if (wm < 220) sc -= (220 - wm) * 0.03 * w;
+    }
+    sc += (dx * gdx + dy * gdy) / gl * 1.5;
+    sc += (dx * prev.x + dy * prev.y) * 0.25;
+    if (sc > bestS) { bestS = sc; best = { x: dx, y: dy }; }
+  }
+  G.botDir = best;
+  return { x: best.x, y: best.y, dash: close && p.dashCd <= 0 };
+}
+function stepPlayer(dt) {
+  const p = G.p, S = G.S, inp = moveInput();
+  G.input.dashQueued = false;
+  if (inp.dash && p.dashCd <= 0) {
+    let dx = inp.x, dy = inp.y; if (Math.hypot(dx, dy) < 0.2) { dx = Math.cos(p.face); dy = Math.sin(p.face); }
+    const d = Math.hypot(dx, dy) || 1; p.vx = dx / d * 980; p.vy = dy / d * 980; p.dashT = 0.17; p.dashCd = S.dashCd; p.inv = Math.max(p.inv, 0.32); p.puddleT = 0;
+    AU.play('dash'); G.cam.shake = Math.max(G.cam.shake, 3);
+  }
+  if (p.dashT > 0) {
+    p.dashT -= dt; p.puddleT -= dt;
+    if (p.puddleT <= 0) { p.puddleT = 0.045; G.puddles.push({ x: p.x, y: p.y, r: 30, life: 2.6, max: 2.6 }); splat(p.x, p.y, 16, C.ink, 0.07, 3); }
+  } else {
+    const tx = inp.x * S.speed, ty = inp.y * S.speed, k = 1 - Math.exp(-dt * 14);
+    p.vx = lerp(p.vx, tx, k); p.vy = lerp(p.vy, ty, k);
+  }
+  p.x = clamp(p.x + p.vx * dt, p.r, WORLD.w - p.r); p.y = clamp(p.y + p.vy * dt, p.r, WORLD.h - p.r);
+  const sp = Math.hypot(p.vx, p.vy);
+  if (sp > 20) { const f = Math.atan2(p.vy, p.vx); let df = f - p.face; while (df > Math.PI) df -= TAU; while (df < -Math.PI) df += TAU; p.face += df * Math.min(1, dt * 12); }
+  p.squash = lerp(p.squash, Math.min(1, sp / 600), Math.min(1, dt * 10));
+  p.inv = Math.max(0, p.inv - dt); p.dashCd = Math.max(0, p.dashCd - dt);
+  if (rand() < sp / 600 * dt * 30) G.parts.push({ x: p.x - Math.cos(p.face) * 14, y: p.y - Math.sin(p.face) * 14, vx: rnd(-20, 20), vy: rnd(-20, 20), life: 0.5, max: 0.5, size: rnd(1, 2.6), color: C.ink, drag: 3 });
+  // tir automatique sur la rature la plus proche
+  p.fireCd -= dt;
+  if (p.fireCd <= 0) {
+    let tgt = null, bd = 600 * 600;
+    for (const e of G.enemies) { let d = (e.x - p.x) ** 2 + (e.y - p.y) ** 2; if (e.type === 'boss' && d < 480 * 480) d *= 0.15; if (d < bd) { bd = d; tgt = e; } }
+    if (tgt) {
+      p.fireCd = 1 / S.rate;
+      const lead = Math.sqrt(bd) / S.pspeed;
+      const a = Math.atan2(tgt.y + tgt.vy * lead * 0.5 - p.y, tgt.x + tgt.vx * lead * 0.5 - p.x);
+      p.look = a;
+      const n = 1 + S.extra;
+      for (let i = 0; i < n; i++) {
+        const aa = a + (i - (n - 1) / 2) * 0.17;
+        G.shots.push({ x: p.x + Math.cos(aa) * 12, y: p.y + Math.sin(aa) * 12, vx: Math.cos(aa) * S.pspeed, vy: Math.sin(aa) * S.pspeed, r: 5.5, life: 1.25, pierce: S.pierce, bounce: S.bounce, hit: new Set(), px: p.x, py: p.y });
+      }
+      AU.play('shoot');
+    } else p.fireCd = 0.1;
+  }
+}
+function hurtPlayer(n, fromX, fromY) {
+  const p = G.p; if (p.inv > 0 || G.state !== 'play') return;
+  p.hp -= n; p.inv = 1.1; G.cam.shake = 12; AU.play('hurt');
+  splat(p.x, p.y, 20, C.ink, 0.2, 10);
+  const dx = p.x - fromX, dy = p.y - fromY, d = Math.hypot(dx, dy) || 1; p.vx += dx / d * 380; p.vy += dy / d * 380;
+  for (const e of G.enemies) { const ex = e.x - p.x, ey = e.y - p.y, ed = Math.hypot(ex, ey); if (ed < 120 && e.type !== 'boss') { e.vx += ex / ed * 260; e.vy += ey / ed * 260; } }
+  if (p.hp <= 0) endRun(false);
+}
+
+/* ===================== Simulation ===================== */
+let grid = new Map();
+const CELL = 64;
+function buildGrid() {
+  grid = new Map();
+  for (const e of G.enemies) { const k = ((e.x / CELL) | 0) + ((e.y / CELL) | 0) * 1000; let a = grid.get(k); if (!a) grid.set(k, a = []); a.push(e); }
+}
+function query(x, y, r, out) {
+  out.length = 0; const x0 = ((x - r) / CELL) | 0, x1 = ((x + r) / CELL) | 0, y0 = ((y - r) / CELL) | 0, y1 = ((y + r) / CELL) | 0;
+  for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) { const a = grid.get(cx + cy * 1000); if (a) for (const e of a) out.push(e); }
+  return out;
+}
+const tmpA = [], tmpB = [];
+
+function stepPlay(dt) {
+  G.t += dt;
+  const p = G.p, S = G.S;
+  stepPlayer(dt);
+  director(dt);
+  buildGrid();
+  // ---- ennemis
+  for (const e of G.enemies) {
+    if (e.dead) continue;
+    e.flash = Math.max(0, e.flash - dt); e.orbCd -= dt; e.punchCd -= dt;
+    if (e.burn > 0) { e.burn -= dt; hurtEnemy(e, e.burnDps * dt, 'burn'); if (rand() < dt * 12) G.parts.push({ x: e.x + rnd(-e.r, e.r) * 0.6, y: e.y + rnd(-e.r, e.r) * 0.6, vx: 0, vy: rnd(-60, -20), life: 0.4, max: 0.4, size: rnd(2, 4), color: C.fire, drag: 1 }); if (e.dead) continue; }
+    let slow = 1;
+    for (const pd of G.puddles) if ((e.x - pd.x) ** 2 + (e.y - pd.y) ** 2 < (pd.r + e.r * 0.5) ** 2) { slow = 0.55; break; }
+    const dx = p.x - e.x, dy = p.y - e.y, d = Math.hypot(dx, dy) || 1;
+    let tx = dx / d * e.speed * slow, ty = dy / d * e.speed * slow, agil = e.agil;
+    if (e.type === 'gribouillis' || e.type === 'gouttelette') { const w = Math.sin(G.t * 3 + e.id) * 0.5; tx += -dy / d * e.speed * w; ty += dx / d * e.speed * w; }
+    if (e.type === 'biffure') {
+      e.pt -= dt;
+      if (e.phase === 'walk' && e.pt <= 0 && d < 520) { e.phase = 'aim'; e.pt = 0.6; e.cx = dx / d; e.cy = dy / d; }
+      else if (e.phase === 'aim') { tx = 0; ty = 0; e.cx = lerp(e.cx, dx / d, dt * 3); e.cy = lerp(e.cy, dy / d, dt * 3); if (e.pt <= 0) { e.phase = 'charge'; e.pt = 0.5; const n = Math.hypot(e.cx, e.cy) || 1; e.cx /= n; e.cy /= n; } }
+      else if (e.phase === 'charge') { tx = e.cx * 430; ty = e.cy * 430; agil = 20; if (e.pt <= 0) { e.phase = 'walk'; e.pt = rnd(2, 3.4); } }
+      else if (e.phase === 'walk' && e.pt <= 0) e.pt = 0.5;
+      e.rot = Math.atan2(e.phase === 'walk' ? ty : e.cy, e.phase === 'walk' ? tx : e.cx);
+    } else if (e.type === 'gomme') {
+      if (rand() < dt * 20) eraseStain(e.x, e.y, 30);
+      e.rot = Math.atan2(ty, tx) * 0.15 + Math.sin(G.t * 4 + e.id) * 0.12;
+    } else if (e.type === 'boss') {
+      stepBoss(e, dt, dx, dy, d);
+      tx = e.phase === 'charge' ? e.cx * 520 : (e.phase === 'aim' ? 0 : dx / d * e.speed * slow);
+      ty = e.phase === 'charge' ? e.cy * 520 : (e.phase === 'aim' ? 0 : dy / d * e.speed * slow);
+      if (e.phase === 'charge') agil = 18;
+      e.rot += dt * (e.hp < e.maxHp / 2 ? 1.6 : 0.8);
+    } else e.rot += e.spin * dt;
+    const k = 1 - Math.exp(-dt * agil);
+    e.vx = lerp(e.vx, tx, k); e.vy = lerp(e.vy, ty, k);
+    // séparation
+    query(e.x, e.y, e.r + 30, tmpA);
+    for (const o of tmpA) {
+      if (o === e || o.dead) continue;
+      const ox = e.x - o.x, oy = e.y - o.y, od = ox * ox + oy * oy, rr = e.r + o.r;
+      if (od < rr * rr && od > 0.01) { const dd = Math.sqrt(od), push = (rr - dd) / rr * (o.type === 'boss' ? 600 : 160); e.vx += ox / dd * push * dt * 10; e.vy += oy / dd * push * dt * 10; }
+    }
+    e.x = clamp(e.x + e.vx * dt, -40, WORLD.w + 40); e.y = clamp(e.y + e.vy * dt, -40, WORLD.h + 40);
+    // contact avec le joueur
+    if (d < e.r + p.r - 3) hurtPlayer(e.dmg, e.x, e.y);
+  }
+  // ---- gouttes du joueur
+  for (const s of G.shots) {
+    s.px = s.x; s.py = s.y; s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt;
+    if (s.x < -50 || s.y < -50 || s.x > WORLD.w + 50 || s.y > WORLD.h + 50) s.life = 0;
+    if (s.life <= 0) continue;
+    query(s.x, s.y, s.r + 80, tmpA);
+    for (const e of tmpA) {
+      if (e.dead || s.hit.has(e.id)) continue;
+      const rr = e.r + s.r; if ((e.x - s.x) ** 2 + (e.y - s.y) ** 2 > rr * rr) continue;
+      const sp = Math.hypot(s.vx, s.vy) || 1;
+      hurtEnemy(e, S.dmg, 'shot', s.vx / sp, s.vy / sp); s.hit.add(e.id);
+      G.parts.push({ x: s.x, y: s.y, vx: rnd(-80, 80), vy: rnd(-80, 80), life: 0.3, max: 0.3, size: rnd(1.5, 3), color: C.ink, drag: 5 });
+      if (s.bounce > 0) {
+        s.bounce--; let nt = null, nd = 340 * 340;
+        query(s.x, s.y, 340, tmpB);
+        for (const o of tmpB) { if (o.dead || s.hit.has(o.id)) continue; const od = (o.x - s.x) ** 2 + (o.y - s.y) ** 2; if (od < nd) { nd = od; nt = o; } }
+        if (nt) { const a = Math.atan2(nt.y - s.y, nt.x - s.x); s.vx = Math.cos(a) * sp; s.vy = Math.sin(a) * sp; s.life = Math.max(s.life, 0.7); continue; }
+      }
+      if (s.pierce > 0) { s.pierce--; continue; }
+      s.life = 0; break;
+    }
+  }
+  G.shots = G.shots.filter(s => s.life > 0);
+  // ---- projectiles ennemis (traits de stylo rouge)
+  for (const b of G.ebul) {
+    b.x += b.vx * dt; b.y += b.vy * dt; b.life -= dt;
+    if ((b.x - p.x) ** 2 + (b.y - p.y) ** 2 < (p.r + 5) ** 2) { hurtPlayer(1, b.x, b.y); b.life = 0; }
+  }
+  G.ebul = G.ebul.filter(b => b.life > 0);
+  // ---- lunes en orbite
+  if (S.moons) {
+    G.moonA += dt * 2.7; const R = 74 + 6 * S.moons;
+    for (let i = 0; i < S.moons; i++) {
+      const a = G.moonA + i / S.moons * TAU, mx = p.x + Math.cos(a) * R, my = p.y + Math.sin(a) * R;
+      query(mx, my, 90, tmpA);
+      for (const e of tmpA) if (!e.dead && e.orbCd <= 0 && (e.x - mx) ** 2 + (e.y - my) ** 2 < (e.r + 13) ** 2) { e.orbCd = 0.33; hurtEnemy(e, (1.6 + 0.5 * S.moons) * S.dmg, 'moon', Math.cos(a), Math.sin(a)); }
+    }
+  }
+  // ---- flaques d'encre (pâtés)
+  for (const pd of G.puddles) {
+    pd.life -= dt;
+    query(pd.x, pd.y, pd.r + 80, tmpA);
+    for (const e of tmpA) if (!e.dead && (e.x - pd.x) ** 2 + (e.y - pd.y) ** 2 < (pd.r + e.r * 0.5) ** 2) hurtEnemy(e, 2.4 * S.dmg * dt, 'puddle');
+  }
+  G.puddles = G.puddles.filter(pd => pd.life > 0);
+  // ---- POINT final
+  if (S.point) {
+    G.pointCd -= dt;
+    if (G.pointCd <= 0 && G.enemies.length) {
+      G.pointCd = Math.max(3, 8 - (S.point - 1) * 1.1);
+      let best = null, bn = -1;
+      for (let i = 0; i < 7; i++) { const e = pick(G.enemies); if (e.dead || Math.hypot(e.x - p.x, e.y - p.y) > 560) continue; const n = query(e.x, e.y, 110, tmpA).length; if (n > bn) { bn = n; best = e; } }
+      if (best) G.points.push({ x: best.x, y: best.y, t: 0, fall: 0.55, r: 88 + 14 * S.point, dmg: (7 + 4 * S.point) * S.dmg });
+    }
+  }
+  for (const pt of G.points) {
+    pt.t += dt;
+    if (!pt.done && pt.t >= pt.fall) {
+      pt.done = true; G.cam.shake = Math.max(G.cam.shake, 10); AU.play('point'); splat(pt.x, pt.y, pt.r * 0.4, C.inkDeep, 0.3, 14);
+      query(pt.x, pt.y, pt.r + 80, tmpA);
+      for (const e of tmpA) { const d = Math.hypot(e.x - pt.x, e.y - pt.y); if (!e.dead && d < pt.r + e.r) hurtEnemy(e, pt.dmg, 'point', (e.x - pt.x) / (d || 1), (e.y - pt.y) / (d || 1)); }
+      for (let i = 0; i < 26; i++) { const a = rnd(TAU), s = rnd(120, 420); G.parts.push({ x: pt.x, y: pt.y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: rnd(0.3, 0.7), max: 0.7, size: rnd(2, 5), color: C.inkDeep, drag: 4 }); }
+    }
+  }
+  G.points = G.points.filter(pt => pt.t < pt.fall + 0.6);
+  G.enemies = G.enemies.filter(e => !e.dead);
+  // ---- lettres
+  G.comboT -= dt; if (G.comboT <= 0) G.comboN = 0;
+  for (const it of G.items) {
+    it.t += dt;
+    const dx = p.x - it.x, dy = p.y - it.y, d = Math.hypot(dx, dy) || 1;
+    if (d < S.magnet || it.pull) { it.pull = true; const s = 260 + (1 - Math.min(1, d / S.magnet)) * 600 + it.t * 40; it.vx = lerp(it.vx, dx / d * s, Math.min(1, dt * 9)); it.vy = lerp(it.vy, dy / d * s, Math.min(1, dt * 9)); }
+    else if (it.t > 6) { const s = Math.min(70, (it.t - 6) * 12); it.vx = lerp(it.vx, dx / d * s, Math.min(1, dt * 3)); it.vy = lerp(it.vy, dy / d * s, Math.min(1, dt * 3)); } // les lettres oubliées veulent être écrites
+    else { it.vx *= Math.exp(-dt * 4); it.vy *= Math.exp(-dt * 4); }
+    it.x += it.vx * dt; it.y += it.vy * dt;
+    if (d < p.r + 10) { it.got = true; collect(it); }
+  }
+  G.items = G.items.filter(it => !it.got);
+  // ---- divers
+  stepParticles(dt);
+  if (G.victoryAt && G.t >= G.victoryAt) { G.victoryAt = 0; endRun(true); }
+  if (G.pendingLv > 0 && G.state === 'play') openLevelUp();
+}
+function stepBoss(e, dt, dx, dy, d) {
+  if (e.enter > 0) { e.enter = Math.max(0, e.enter - dt * 0.5); }
+  const enraged = e.hp < e.maxHp / 2;
+  e.atk -= dt;
+  if (e.phase === 'aim') { e.pt -= dt; e.cx = lerp(e.cx, dx / d, dt * 2); e.cy = lerp(e.cy, dy / d, dt * 2); if (e.pt <= 0) { e.phase = 'charge'; e.pt = 0.7; const n = Math.hypot(e.cx, e.cy) || 1; e.cx /= n; e.cy /= n; } return; }
+  if (e.phase === 'charge') { e.pt -= dt; if (e.pt <= 0) { e.phase = 'walk'; } return; }
+  if (e.atk <= 0) {
+    e.atkN++;
+    if (enraged && e.atkN % 3 === 0) { e.phase = 'aim'; e.pt = 0.8; e.cx = dx / d; e.cy = dy / d; e.atk = 1.9; caption('Elle charge !', 1.2, 'pink'); return; }
+    if (enraged && e.atkN % 3 === 1) {
+      for (let i = 0; i < 6; i++) { const a = i / 6 * TAU + G.t; spawnEnemy('gribouillis', e.x + Math.cos(a) * 95, e.y + Math.sin(a) * 95); }
+      e.atk = 2.1; return;
+    }
+    const n = enraged ? 16 : 11, off = rnd(TAU);
+    for (let i = 0; i < n; i++) { const a = off + i / n * TAU; G.ebul.push({ x: e.x + Math.cos(a) * 60, y: e.y + Math.sin(a) * 60, vx: Math.cos(a) * 205, vy: Math.sin(a) * 205, life: 4, a }); }
+    AU.play('bossShot'); e.atk = enraged ? 1.9 : 2.7;
+  }
+}
+function collect(it) {
+  G.letters++; G.xp += it.value; G.score += it.value * 3;
+  G.comboN++; G.comboT = 1.1;
+  const target = G.dicteeWord[G.dicteeProg];
+  if (target && it.ch === target) {
+    G.dicteeProg++; AU.play('dictee', G.dicteeProg);
+    if (G.dicteeProg >= G.dicteeWord.length) {
+      G.dictees++; G.score += 150 * G.dicteeWord.length; AU.play('dicteeDone');
+      caption('Dictée réussie : ' + G.dicteeWord + ' !', 2.6, 'green');
+      G.p.hp = Math.min(G.p.maxHp, G.p.hp + 1); G.xp += 6 + G.dicteeWord.length * 2;
+      G.dicteeIdx++; G.dicteeWord = DICTEES[G.dicteeIdx % DICTEES.length]; G.dicteeProg = 0;
+    }
+  } else AU.play('pickup', Math.min(10, G.comboN >> 1));
+  while (G.xp >= G.xpNext) { G.xp -= G.xpNext; G.level++; G.xpNext = xpFor(G.level); G.pendingLv++; }
+}
+function stepParticles(dt) {
+  for (const q of G.parts) { q.life -= dt; q.x += q.vx * dt; q.y += q.vy * dt; const k = Math.exp(-dt * (q.drag || 2)); q.vx *= k; q.vy *= k; }
+  G.parts = G.parts.filter(q => q.life > 0);
+  if (G.parts.length > 900) G.parts.splice(0, G.parts.length - 900);
+  for (const t of G.texts) t.t += dt;
+  G.texts = G.texts.filter(t => t.t < t.dur);
+}
+
+/* ===================== Niveaux ===================== */
+function openLevelUp() {
+  const avail = Object.keys(MOTS).filter(k => lvl(k) < MOTS[k].max && !(k === 'SOUFFLE' && G.p.hp === G.p.maxHp && rand() < 0.5));
+  if (!avail.length) { G.pendingLv = 0; G.p.hp = G.p.maxHp; return; }
+  const ch = [];
+  while (ch.length < 3 && avail.length) { const i = Math.floor(rand() * avail.length); ch.push(avail.splice(i, 1)[0]); }
+  G.choices = ch; G.sel = 0; G.state = 'levelup'; G.stateT = 0; G.botPickT = 1.25; AU.play('level');
+  for (let i = 0; i < 24; i++) { const a = rnd(TAU), s = rnd(100, 300); G.parts.push({ x: G.p.x, y: G.p.y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0.6, max: 0.6, size: rnd(2, 4), color: '#e8c22a', drag: 3 }); }
+  setUI();
+}
+function chooseMot(i) {
+  const k = G.choices[i]; if (!k) return;
+  G.mots[k] = lvl(k) + 1; if (!G.motOrder.includes(k)) G.motOrder.push(k);
+  if (k === 'SOUFFLE') { G.p.maxHp++; G.p.hp = G.p.maxHp; }
+  computeStats(); AU.play('choose');
+  addText(G.p.x, G.p.y - 30, MOTS[k].label + (G.mots[k] > 1 ? ' ' + G.mots[k] : ''), C.ink, 30);
+  G.pendingLv--; G.state = 'play'; G.stateT = 0; G.p.inv = Math.max(G.p.inv, 0.6);
+  if (G.pendingLv > 0) openLevelUp();
+  setUI();
+}
+const BOT_PRIORITY = ['LUNE', 'GUILLEMETS', 'VIRGULE', 'ENCRE', 'POINT', 'ECHO', 'FEU', 'SOUFFLE', 'ITALIQUE', 'PLUME', 'AIMANT', 'VENT'];
+
+/* ===================== Fins de partie ===================== */
+function phrase(win) {
+  const ws = G.motOrder.slice().sort((a, b) => lvl(b) - lvl(a)).map(k => MOTS[k].frag);
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+  if (!ws.length) return 'Une page presque blanche.';
+  if (ws.length === 1) return win ? cap(ws[0]) + ' tint bon, jusqu’au point final.' : 'Il ne restait que ' + ws[0] + '.';
+  if (win) return pick([cap(ws[0]) + ' et ' + ws[1] + ' tinrent la page jusqu’au bout.', 'Grâce à ' + ws[0] + ', ' + ws[1] + ' eut le dernier mot.']);
+  return pick(['Ici, ' + ws[0] + ' croisa ' + ws[1] + ', puis tout fut raturé.', cap(ws[0]) + ' et ' + ws[1] + ' ont presque suffi.', 'On devinait encore ' + ws[0] + ' sous la gomme.']);
+}
+function endRun(win) {
+  G.state = win ? 'victory' : 'gameover'; G.stateT = 0;
+  G.score += Math.floor(G.t) * 5;
+  G.endPhrase = phrase(win);
+  if (!G.demo && G.score > G.best) { G.best = G.score; G.newBest = true; try { localStorage.setItem('inacheve.best', String(G.best)); } catch (e) { /* rien */ } }
+  if (!win) { AU.play('lose'); splat(G.p.x, G.p.y, 50, C.ink, 0.35, 20); }
+  setUI();
+}

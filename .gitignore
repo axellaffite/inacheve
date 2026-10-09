@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.scratch/
+site/videos/*.mp4
+site/fonts/
+*.wav
+notes.md

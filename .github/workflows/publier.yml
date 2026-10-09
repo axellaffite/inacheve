@@ -1,0 +1,80 @@
+# À chaque push sur main : vérifie le jeu, le filme, range la vidéo dans une release, publie le site.
+# Si une étape échoue, rien n'est publié : la version en ligne reste la dernière qui marchait.
+name: Publier l'itération
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: publier
+  cancel-in-progress: false
+
+jobs:
+  construire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Dépendances
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+
+      - name: Vérifications
+        run: |
+          node tools/check.mjs
+          node tools/record.mjs --smoke
+
+      - name: Tournage de la vidéo
+        run: node tools/record.mjs
+
+      - name: Vidéo rangée dans une release GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=$(node tools/meta.mjs tag)
+          N=$(node tools/meta.mjs iteration)
+          node tools/meta.mjs notes > notes.md
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release edit "$TAG" --notes-file notes.md
+          else
+            gh release create "$TAG" --target "$GITHUB_SHA" --title "Itération $N : $(node tools/meta.mjs title)" --notes-file notes.md
+          fi
+          gh release upload "$TAG" "site/videos/$TAG.mp4" --clobber
+
+      - name: Préparation du site
+        run: sed -i "s#__REPO__#${{ github.repository }}#g" site/index.html
+
+      # Miroir GitHub Pages : seulement si le dépôt est public (le jeu principal vit dans l'artefact Claude)
+      - if: ${{ !github.event.repository.private }}
+        uses: actions/configure-pages@v5
+
+      - if: ${{ !github.event.repository.private }}
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deployer:
+    needs: construire
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - id: deploiement
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,16 @@
+{
+  "name": "inacheve",
+  "private": true,
+  "type": "module",
+  "description": "Inachevé : un jeu réécrit par Claude toutes les 12 heures.",
+  "scripts": {
+    "check": "node tools/check.mjs",
+    "record": "node tools/record.mjs",
+    "bundle": "node tools/bundle.mjs"
+  },
+  "devDependencies": {
+    "@fontsource/caveat": "5.3.0",
+    "@fontsource/playwrite-fr-moderne": "5.3.0",
+    "playwright": "1.56.1"
+  }
+}

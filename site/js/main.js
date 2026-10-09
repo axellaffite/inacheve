@@ -1,0 +1,191 @@
+// Boucle, entrées clavier/souris/tactile, carnet de bord, démarrage et API de capture (window.__cap).
+// Scripts classiques partagés : les déclarations de premier niveau sont visibles des fichiers chargés ensuite.
+'use strict';
+
+/* ===================== Boucle ===================== */
+function initTitle() {
+  G.state = 'title'; G.stateT = 0; G.deco = [];
+  for (let i = 0; i < 16; i++) {
+    const type = pick(['gribouillis', 'gribouillis', 'biffure', 'tache', 'gouttelette']);
+    const T = ETYPES[type];
+    G.deco.push({ type, x: WORLD.w / 2 + rnd(-900, 900), y: WORLD.h / 2 + rnd(-520, 520), vx: rnd(-30, 30), vy: rnd(-30, 30), r: T.r, shape: Math.floor(rnd(6)), rot: rnd(TAU), spin: rnd(-0.6, 0.6), boilOff: rnd(3), flash: 0, phase: 'walk', cx: 0, cy: 0 });
+  }
+  G.cam.x = WORLD.w / 2; G.cam.y = WORLD.h / 2;
+  setUI();
+}
+function update(dt) {
+  G.time += dt; G.stateT += dt;
+  if (G.state !== 'levelup') { for (const c of G.captions) c.t += dt; G.captions = G.captions.filter(c => c.t < c.dur); }
+  if (G.state === 'title') {
+    for (const d of G.deco) { d.x += d.vx * dt; d.y += d.vy * dt; d.rot += d.spin * dt; if (Math.abs(d.x - WORLD.w / 2) > 950) d.vx *= -1; if (Math.abs(d.y - WORLD.h / 2) > 560) d.vy *= -1; }
+    G.cam.x = WORLD.w / 2 + Math.sin(G.time * 0.08) * 120; G.cam.y = WORLD.h / 2 + Math.cos(G.time * 0.06) * 60;
+    return;
+  }
+  if (G.state === 'play') stepPlay(dt);
+  else if (G.state === 'levelup') {
+    if (G.demo) {
+      G.botPickT -= dt;
+      const best = G.choices.map(k => BOT_PRIORITY.indexOf(k)).reduce((bi, v, i, arr) => v < arr[bi] ? i : bi, 0);
+      if (G.botPickT < 0.7) G.sel = best;
+      if (G.botPickT <= 0) chooseMot(best);
+    }
+  } else if (G.state === 'gameover' || G.state === 'victory') stepParticles(dt);
+  // caméra
+  if (G.p && G.state !== 'title') {
+    const vw = W / ZOOM, vh = H / ZOOM, m = 230;
+    let tx = G.p.x, ty = G.p.y;
+    tx = vw > WORLD.w + 2 * m ? WORLD.w / 2 : clamp(tx, vw / 2 - m, WORLD.w - vw / 2 + m);
+    ty = vh > WORLD.h + 2 * m ? WORLD.h / 2 : clamp(ty, vh / 2 - m, WORLD.h - vh / 2 + m);
+    const k = 1 - Math.exp(-dt * 7); G.cam.x = lerp(G.cam.x, tx, k); G.cam.y = lerp(G.cam.y, ty, k);
+  }
+  G.cam.shake = Math.max(0, G.cam.shake - dt * 40);
+}
+let lastT = 0;
+function frame(now) {
+  const dt = Math.min(0.05, (now - lastT) / 1000 || 0.016); lastT = now;
+  update(dt); render();
+  AU.tick(G.state === 'play' ? Math.min(1, G.t / 180) : 0.1, !!G.boss && G.state === 'play');
+  requestAnimationFrame(frame);
+}
+
+/* ===================== Entrées & interface ===================== */
+function setUI() {
+  if (CAPTURE) { document.getElementById('ui').classList.add('hidden'); return; }
+  const showUI = G.state === 'title' || G.state === 'pause' || G.state === 'gameover' || G.state === 'victory';
+  document.getElementById('ui').classList.toggle('hidden', !showUI);
+  document.getElementById('btnPause').classList.toggle('show', G.input.touch && G.state === 'play');
+  document.getElementById('btnSound').textContent = 'Son : ' + (AU.muted ? 'coupé' : 'activé');
+}
+function primaryAction() {
+  AU.init();
+  if (G.state === 'title') newGame(false);
+  else if (G.state === 'pause') { G.state = 'play'; setUI(); }
+  else if (G.state === 'gameover' && G.stateT > 0.8) newGame(false);
+  else if (G.state === 'victory' && G.stateT > 0.8) { G.state = 'play'; G.endless = true; G.nextWave = G.t + 20; G.nextBossAt = G.t + 180; caption('Page libre : jusqu’où iras-tu ?', 3); setUI(); }
+}
+function togglePause() {
+  if (G.state === 'play') { G.state = 'pause'; G.stateT = 0; } else if (G.state === 'pause') G.state = 'play';
+  setUI();
+}
+function toggleMute() { AU.init(); AU.setMuted(!AU.muted); try { localStorage.setItem('inacheve.muted', AU.muted ? '1' : '0'); } catch (e) { /* rien */ } setUI(); }
+
+if (!CAPTURE) {
+  addEventListener('keydown', e => {
+    if (document.getElementById('journal').open) return;
+    if (G.input.touch) { G.input.touch = false; setUI(); }
+    keys[e.code] = true;
+    if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
+    AU.init();
+    if (e.code === 'KeyM') toggleMute();
+    if (G.state === 'levelup') {
+      if (G.stateT < 0.3) return;
+      if (e.code === 'Digit1' || e.code === 'Numpad1') chooseMot(0);
+      else if (e.code === 'Digit2' || e.code === 'Numpad2') chooseMot(1);
+      else if (e.code === 'Digit3' || e.code === 'Numpad3') chooseMot(2);
+      else if (e.code === 'ArrowLeft' || e.code === 'ArrowUp' || e.code === 'KeyA' || e.code === 'KeyW') G.sel = (G.sel + G.choices.length - 1) % G.choices.length;
+      else if (e.code === 'ArrowRight' || e.code === 'ArrowDown' || e.code === 'KeyD' || e.code === 'KeyS') G.sel = (G.sel + 1) % G.choices.length;
+      else if (e.code === 'Enter' || e.code === 'Space') chooseMot(G.sel);
+      return;
+    }
+    if (e.code === 'Enter' || (e.code === 'Space' && G.state !== 'play')) primaryAction();
+    if ((e.code === 'Space' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') && G.state === 'play') G.input.dashQueued = true;
+    if (e.code === 'Escape' || e.code === 'KeyP') togglePause();
+    if (e.code === 'KeyR' && (G.state === 'victory' || G.state === 'gameover')) newGame(false);
+  });
+  addEventListener('keyup', e => { keys[e.code] = false; });
+  addEventListener('blur', () => { for (const k in keys) keys[k] = false; if (G.state === 'play') togglePause(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden && G.state === 'play') togglePause(); });
+  G.input.joy = { active: false };
+  cv.addEventListener('pointerdown', e => {
+    cv.focus(); AU.init();
+    const touch = e.pointerType === 'touch'; if (touch !== G.input.touch) { G.input.touch = touch; setUI(); }
+    const x = e.clientX, y = e.clientY;
+    if (G.state === 'levelup') {
+      if (G.stateT < 0.35) return;
+      cardRects().forEach((r, i) => { if (x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) chooseMot(i); });
+      return;
+    }
+    if (G.state !== 'play') { if (G.state === 'title' || touch || G.state === 'pause' || G.state === 'gameover' || G.state === 'victory') primaryAction(); return; }
+    if (touch) {
+      const bxp = W - SAFE.r - 70 * U, byp = H - SAFE.b - 110 * U;
+      if (Math.hypot(x - bxp, y - byp) < 52 * U) { G.input.dashQueued = true; return; }
+      if (!G.input.joy.active) { G.input.joy = { active: true, id: e.pointerId, ox: x, oy: y, x, y }; }
+    } else { G.input.joy = { active: true, id: e.pointerId, ox: x, oy: y, x, y }; }
+  });
+  cv.addEventListener('pointermove', e => {
+    const j = G.input.joy;
+    if (G.state === 'levelup') { cardRects().forEach((r, i) => { if (e.clientX >= r.x && e.clientX <= r.x + r.w && e.clientY >= r.y && e.clientY <= r.y + r.h) G.sel = i; }); }
+    if (j && j.active && j.id === e.pointerId) { j.x = e.clientX; j.y = e.clientY; }
+  });
+  const endJoy = e => { const j = G.input.joy; if (j && j.id === e.pointerId) j.active = false; };
+  cv.addEventListener('pointerup', endJoy); cv.addEventListener('pointercancel', endJoy);
+  cv.addEventListener('contextmenu', e => e.preventDefault());
+
+  const dlg = document.getElementById('journal');
+  document.getElementById('btnJournal').addEventListener('click', () => { buildJournal(); if (G.state === 'play') togglePause(); dlg.showModal(); });
+  document.getElementById('btnCloseJournal').addEventListener('click', () => dlg.close());
+  dlg.addEventListener('close', () => cv.focus());
+  document.getElementById('btnSound').addEventListener('click', toggleMute);
+  document.getElementById('btnPause').addEventListener('click', () => togglePause());
+}
+function videoFor(n) {
+  const tag = 'iteration-' + String(n).padStart(3, '0');
+  return {
+    src: !LOCAL_VIDEOS ? null : n === GAME_META.iteration ? 'videos/' + tag + '.mp4' : HAS_REPO ? 'https://github.com/' + REPO + '/releases/download/' + tag + '/' + tag + '.mp4' : null,
+    page: HAS_REPO ? 'https://github.com/' + REPO + '/releases/tag/' + tag : null
+  };
+}
+function buildJournal() {
+  const ol = document.getElementById('entries'); ol.innerHTML = '';
+  if (HAS_REPO && !document.getElementById('allVideos')) {
+    const p = document.createElement('p'); p.className = 'lede'; p.id = 'allVideos';
+    const a = document.createElement('a'); a.href = 'https://github.com/' + REPO + '/releases'; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Toutes les vidéos et le code source sont sur GitHub.';
+    a.style.color = 'var(--ink)'; p.appendChild(a); ol.before(p);
+  }
+  for (const j of JOURNAL.slice().reverse()) {
+    const li = document.createElement('li'); li.className = 'entry';
+    const h = document.createElement('h3'); h.textContent = 'Itération ' + j.iteration + ' : ' + j.title; li.appendChild(h);
+    const t = document.createElement('time'); t.dateTime = j.date; t.textContent = frDate(j.date); li.appendChild(t);
+    const ul = document.createElement('ul'); for (const n of j.notes) { const x = document.createElement('li'); x.textContent = n; ul.appendChild(x); } li.appendChild(ul);
+    const vid = videoFor(j.iteration);
+    const miss = document.createElement('p'); miss.className = 'novideo';
+    if (vid.page) { const a = document.createElement('a'); a.href = vid.page; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Voir la vidéo de cette itération sur GitHub'; a.style.color = 'var(--ink)'; miss.appendChild(a); }
+    else miss.textContent = 'La vidéo de cette itération est rangée avec le code source du jeu.';
+    if (vid.src) {
+      const v = document.createElement('video'); v.controls = true; v.preload = 'metadata'; v.playsInline = true; v.src = vid.src;
+      v.addEventListener('error', () => { v.replaceWith(miss); });
+      li.appendChild(v);
+    } else li.appendChild(miss);
+    ol.appendChild(li);
+  }
+}
+
+/* ===================== Démarrage ===================== */
+resize(); if (!CAPTURE) addEventListener('resize', resize);
+makeTextures(); buildShapes();
+initTitle();
+const fontsReady = Promise.all([document.fonts.load('700 20px Main'), document.fonts.load('400 20px Main'), document.fonts.load('40px Cursive')]).catch(() => null);
+
+// API de capture pour tools/record.mjs (image par image, déterministe)
+window.__cap = {
+  ready: fontsReady.then(() => true),
+  meta: GAME_META,
+  frames(n, dt = 1 / 30, quality = 0.86) {
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      CAPLOG.on = true; update(dt); CAPLOG.on = false; render(); out.push(cv.toDataURL('image/jpeg', quality));
+      CAPLOG.states.push({ t: CAPLOG.t, i: G.state === 'play' ? Math.min(1, G.t / 180) : 0.1, b: !!G.boss && G.state === 'play' });
+      CAPLOG.t += dt;
+    }
+    return out;
+  },
+  audio(duration) { return AU.renderCapture(duration); },
+  skip(seconds, dt = 1 / 30) { const n = Math.round(seconds / dt); for (let i = 0; i < n; i++) update(dt); },
+  title() { initTitle(); },
+  start() { newGame(true); },
+  caption(t, d) { caption(t, d); },
+  state() { return { state: G.state, t: G.t, boss: !!G.boss, bossDefeated: !!G.bossDefeated, level: G.level, hp: G.p ? G.p.hp : 0, enemies: G.enemies ? G.enemies.length : 0, kills: G.kills, mots: G.mots }; },
+  heal() { if (G.p) G.p.hp = G.p.maxHp; }
+};
+if (!CAPTURE) { fontsReady.then(() => { lastT = performance.now(); requestAnimationFrame(frame); }); }
+else render();
