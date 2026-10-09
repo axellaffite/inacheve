@@ -61,7 +61,7 @@ function drawEnemy(e) {
     ctx.strokeStyle = fl ? C.red : C.graphite; ctx.lineWidth = e.type === 'gouttelette' ? 2 : 2.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     ctx.stroke(SHAPES[e.type][e.shape % SHAPES[e.type].length][fr]);
   } else if (e.type === 'biffure') {
-    if (e.phase === 'aim') { ctx.save(); ctx.strokeStyle = C.red; ctx.globalAlpha = 0.35 + 0.3 * Math.sin(G.time * 30); ctx.setLineDash([10, 8]); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(e.cx * 260, e.cy * 260); ctx.stroke(); ctx.restore(); ctx.translate(rnd(-2, 2), rnd(-2, 2)); }
+    if (e.phase === 'aim') { ctx.save(); ctx.strokeStyle = C.red; ctx.globalAlpha = 0.35 + 0.3 * Math.sin(G.time * 30); ctx.setLineDash([10, 8]); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(e.cx * 260, e.cy * 260); ctx.stroke(); ctx.restore(); ctx.translate(vrnd(-2, 2), vrnd(-2, 2)); }
     ctx.rotate(e.rot);
     ctx.strokeStyle = fl ? C.red : C.graphite; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     ctx.stroke(SHAPES.biffure[e.shape % SHAPES.biffure.length][fr]);
@@ -100,7 +100,12 @@ function drawPlayer() {
   const p = G.p; if (!p) return;
   if (p.inv > 0 && G.state === 'play' && Math.floor(G.time * 16) % 2 === 0 && p.dashT <= 0) return;
   const r = p.r, st = 1 + p.squash * 0.35;
+  if (p.hidden > 0) {
+    // encre sympathique : un « ? » au crayon là où les ratures te cherchent, et toi presque transparent
+    txt('?', p.gx, p.gy, 40, { color: C.pencil, alpha: Math.min(1, p.hidden * 2) * 0.7, rot: Math.sin(G.time * 3) * 0.2 });
+  }
   ctx.save(); ctx.translate(p.x, p.y);
+  if (p.hidden > 0) ctx.globalAlpha = 0.28 + 0.12 * Math.sin(G.time * 12);
   // jauge de pâté
   if (p.dashCd > 0) { ctx.strokeStyle = 'rgba(29,58,138,0.35)'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(0, 0, r + 9, -Math.PI / 2, -Math.PI / 2 + TAU * (1 - p.dashCd / G.S.dashCd)); ctx.stroke(); }
   ctx.save(); ctx.rotate(p.face); ctx.scale(st, 1 / Math.sqrt(st));
@@ -126,8 +131,8 @@ function drawPlayer() {
 function drawWorld() {
   const v = viewRect();
   ctx.save();
-  const sh = G.cam.shake;
-  ctx.translate(W / 2 + (sh ? rnd(-sh, sh) : 0), H / 2 + (sh ? rnd(-sh, sh) : 0));
+  const sh = G.calm ? 0 : G.cam.shake;
+  ctx.translate(W / 2 + (sh ? vrnd(-sh, sh) : 0), H / 2 + (sh ? vrnd(-sh, sh) : 0));
   ctx.scale(ZOOM, ZOOM); ctx.translate(-G.cam.x, -G.cam.y);
   drawPage(v);
   const inView = (x, y, m = 80) => x > v.x0 - m && x < v.x1 + m && y > v.y0 - m && y < v.y1 + m;
@@ -135,8 +140,21 @@ function drawWorld() {
   // flaques
   for (const pd of G.puddles) { ctx.globalAlpha = 0.28 * Math.min(1, pd.life / pd.max * 2); ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(pd.x, pd.y, pd.r * (0.85 + 0.15 * Math.sin(pd.life * 6)), 0, TAU); ctx.fill(); }
   ctx.globalAlpha = 1;
+  // cercles de flammes (POINT DE FEU)
+  if (G.fires) for (const f of G.fires) {
+    if (!inView(f.x, f.y, f.r + 40)) continue;
+    const a = Math.min(1, f.life / f.max * 2.5, (f.max - f.life) * 6);
+    ctx.save(); ctx.globalAlpha = 0.16 * a; ctx.fillStyle = C.fire; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, TAU); ctx.fill();
+    ctx.globalAlpha = 0.75 * a; ctx.strokeStyle = C.fire; ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.beginPath();
+    const n = 14;
+    for (let i = 0; i < n; i++) {
+      const an = f.seed + i / n * TAU, h = 14 + 9 * Math.sin(G.time * 11 + i * 2.3), x = f.x + Math.cos(an) * f.r, y = f.y + Math.sin(an) * f.r;
+      ctx.moveTo(x - 5, y + 3); ctx.quadraticCurveTo(x - 4, y - h * 0.5, x, y - h); ctx.quadraticCurveTo(x + 4, y - h * 0.5, x + 5, y + 3);
+    }
+    ctx.stroke(); ctx.restore();
+  }
   // points en chute (ombre)
-  for (const pt of G.points) if (!pt.done) { const k = pt.t / pt.fall; ctx.fillStyle = 'rgba(18,39,95,' + (0.1 + 0.25 * k) + ')'; ctx.beginPath(); ctx.ellipse(pt.x, pt.y, pt.r * (0.3 + 0.7 * k), pt.r * (0.3 + 0.7 * k) * 0.8, 0, 0, TAU); ctx.fill(); }
+  for (const pt of G.points) if (!pt.done && pt.t > 0) { const k = pt.t / pt.fall; ctx.fillStyle = 'rgba(18,39,95,' + (0.1 + 0.25 * k) + ')'; ctx.beginPath(); ctx.ellipse(pt.x, pt.y, pt.r * (0.3 + 0.7 * k), pt.r * (0.3 + 0.7 * k) * 0.8, 0, 0, TAU); ctx.fill(); }
   // lettres
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for (const it of G.items) {
@@ -163,7 +181,7 @@ function drawWorld() {
   ctx.lineCap = 'round';
   for (const s of G.shots) {
     ctx.strokeStyle = 'rgba(29,58,138,0.35)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(s.x - s.vx * 0.03, s.y - s.vy * 0.03); ctx.lineTo(s.x, s.y); ctx.stroke();
-    ctx.fillStyle = G.S.burn ? '#2b4fb5' : C.ink; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, TAU); ctx.fill();
+    ctx.fillStyle = s.echo ? C.inkLight : G.S.burn ? '#2b4fb5' : C.ink; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, TAU); ctx.fill();
     if (G.S.burn) { ctx.fillStyle = C.fire; ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 0.45, 0, TAU); ctx.fill(); }
   }
   // traits rouges du boss
@@ -173,7 +191,14 @@ function drawWorld() {
   // points qui tombent
   for (const pt of G.points) {
     if (pt.done) { const k = (pt.t - pt.fall) / 0.6; ctx.strokeStyle = 'rgba(18,39,95,' + (1 - k) + ')'; ctx.lineWidth = 6 * (1 - k) + 1; ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.r * ease(k), 0, TAU); ctx.stroke(); continue; }
-    const k = pt.t / pt.fall, h = (1 - k) * 420; ctx.fillStyle = C.inkDeep; ctx.beginPath(); ctx.arc(pt.x, pt.y - h, pt.r * 0.32, 0, TAU); ctx.fill();
+    if (pt.t < 0) continue;
+    const k = pt.t / pt.fall, h = (1 - k) * 420, pr = pt.r * 0.32; ctx.fillStyle = C.inkDeep; ctx.beginPath(); ctx.arc(pt.x, pt.y - h, pr, 0, TAU); ctx.fill();
+    if (pt.comma) { ctx.beginPath(); ctx.moveTo(pt.x + pr * 0.9, pt.y - h + pr * 0.1); ctx.quadraticCurveTo(pt.x + pr * 0.6, pt.y - h + pr * 2.2, pt.x - pr * 0.9, pt.y - h + pr * 2.4); ctx.quadraticCurveTo(pt.x + pr * 0.1, pt.y - h + pr * 1.4, pt.x - pr * 0.2, pt.y - h + pr * 0.6); ctx.fill(); }
+  }
+  // ondes (PLUME AU VENT, mots composés)
+  if (G.rings) for (const r of G.rings) {
+    const k = r.t / r.dur; ctx.save(); ctx.globalAlpha = 1 - k; ctx.strokeStyle = r.color; ctx.lineWidth = 7 * (1 - k) + 1.5;
+    ctx.setLineDash([18, 10]); ctx.beginPath(); ctx.arc(r.x, r.y, r.r * ease(k * 1.4), 0, TAU); ctx.stroke(); ctx.restore();
   }
   // particules
   for (const q of G.parts) { ctx.globalAlpha = Math.min(1, q.life / q.max * 1.5); ctx.fillStyle = q.color; ctx.fillRect(q.x - q.size / 2, q.y - q.size / 2, q.size, q.size); }
@@ -220,10 +245,13 @@ function drawHUD() {
   if (compact) drawStamp(right - 62 * s, top + 92 * s, s * 0.78); else drawStamp(right - 80 * s, top + 30 * s, s);
   // mots acquis
   let y = top + (compact ? 136 : 84) * s;
+  // la liste se resserre quand elle s'allonge (mots composés), pour ne jamais descendre sur la dictée
+  const room = bottom - 110 * s - y, need = G.motOrder.reduce((n, k) => n + (isCompose(k) ? 34 : 40), 0) * s, sq = need > room ? Math.max(0.62, room / need) : 1;
   for (const k of G.motOrder) {
+    if (isCompose(k)) { txt(MOTS[k].label, right - 4 * s, y + 6 * s, 21 * s, { align: 'right', color: C.ink, hl: C.hlGold }); y += 34 * s * sq; continue; }
     txt(MOTS[k].label, right - 4 * s, y, 21 * s, { align: 'right', color: C.ink });
     for (let i = 0; i < MOTS[k].max; i++) { ctx.fillStyle = i < lvl(k) ? C.ink : 'rgba(29,58,138,0.2)'; ctx.beginPath(); ctx.arc(right - 4 * s - (MOTS[k].max - 1 - i) * 9 * s, y + 15 * s, 3 * s, 0, TAU); ctx.fill(); }
-    y += 40 * s;
+    y += 40 * s * sq;
   }
   // dictée
   const word = G.dicteeWord, fs = 30 * s, gap = 24 * s, dy = bottom - 56 * s;
@@ -254,6 +282,8 @@ function drawHUD() {
 
 function drawCaptions() {
   let y = SAFE.t + (G.state === 'title' ? 60 : 150) * U;
+  // écran étroit : les sous-titres passent au-dessus de la dictée, loin de la liste des mots
+  if (W < 700 && G.state !== 'title') y = H - SAFE.b - (190 + 52 * (G.captions.length - 1)) * U;
   for (const c of G.captions) {
     const a = Math.min(1, c.t * 4, (c.dur - c.t) * 2.5);
     const hl = c.style === 'pink' ? C.hlPink : c.style === 'green' ? C.hlGreen : C.hl;
@@ -296,16 +326,18 @@ function drawLevelUp() {
     ctx.strokeStyle = C.ruleMinor; ctx.lineWidth = 1;
     for (let yy = -r.h / 2 + 46 * U + 26 * U; yy < r.h / 2 - 6; yy += 26 * U) { ctx.beginPath(); ctx.moveTo(-r.w / 2, yy); ctx.lineTo(r.w / 2, yy); ctx.stroke(); }
     if (sel) { ctx.strokeStyle = C.ink; ctx.lineWidth = 3; ctx.strokeRect(-r.w / 2 - 5, -r.h / 2 - 5, r.w + 10, r.h + 10); }
+    if (M.from) { ctx.strokeStyle = C.gold; ctx.lineWidth = 2; ctx.setLineDash([6, 5]); ctx.strokeRect(-r.w / 2 + 6, -r.h / 2 + 6, r.w - 12, r.h - 12); ctx.setLineDash([]); }
     ctx.restore();
     const cx = r.x + r.w / 2, top = r.y + yo;
     ctx.save(); ctx.globalAlpha = clamp(G.stateT * 4 - i * 0.15, 0, 1);
     txt(String(i + 1), r.x + 16 * U, top + 22 * U, 22 * U, { color: C.margin, align: 'left' });
-    txt(L ? 'niveau ' + (L + 1) : 'nouveau', r.x + r.w - 14 * U, top + 22 * U, 20 * U, { color: C.margin, align: 'right', weight: 400 });
+    txt(M.from ? 'mot composé' : L ? 'niveau ' + (L + 1) : 'nouveau', r.x + r.w - 14 * U, top + 22 * U, 20 * U, { color: M.from ? C.gold : C.margin, align: 'right', weight: M.from ? 700 : 400 });
     const wordSize = Math.min(46 * U, r.w / (M.label.length * 0.62));
-    txt(M.label, cx, top + (r.v ? 70 : 92) * U, wordSize, { color: C.ink, hl: sel ? C.hl : null });
+    txt(M.label, cx, top + (r.v ? 70 : 92) * U, wordSize, { color: C.ink, hl: M.from ? C.hlGold : sel ? C.hl : null });
+    if (M.from && !r.v) txt(M.from.map(f => MOTS[f].label).join(' + '), cx, top + 124 * U, 18 * U, { color: C.gold, weight: 400 });
     ctx.restore();
     ctx.save(); ctx.globalAlpha = clamp(G.stateT * 4 - i * 0.15, 0, 1);
-    wrap(M.desc, cx, top + (r.v ? 104 : 142) * U, r.w - 30 * U, 22 * U, 26 * U, C.graphite, 400);
+    wrap(M.desc, cx, top + (r.v ? 104 : M.from ? 156 : 142) * U, r.w - 30 * U, 22 * U, 26 * U, C.graphite, 400);
     if (!r.v) txt(M.eff(L), cx, top + r.h - 30 * U, 22 * U, { color: C.ink });
     ctx.restore();
   });
@@ -338,7 +370,7 @@ function drawTitle() {
   const a = clamp((t - 1.2) * 2, 0, 1);
   txt('un jeu qui s’écrit tout seul, toutes les douze heures', W / 2, ty + 128 * s, Math.min(32 * s, W / 22), { color: C.graphite, weight: 400, alpha: a });
   txt(G.input.touch ? 'Touche l’écran pour commencer' : 'Appuie sur Entrée pour commencer', W / 2, ty + 196 * s, Math.min(38 * s, W / 18), { color: C.ink, alpha: a * (0.6 + 0.4 * Math.sin(G.time * 3)), hl: C.hl });
-  if (!G.input.touch) txt('ZQSD, WASD ou flèches : bouger    Espace : pâté d’encre    Échap : pause    M : son', W / 2, ty + 252 * s, Math.min(22 * s, W / 40), { color: C.pencil, weight: 400, alpha: a });
+  if (!G.input.touch) txt('ZQSD, WASD ou flèches : bouger    Espace : pâté d’encre    Échap : pause    M : son    C : secousses', W / 2, ty + 252 * s, Math.min(22 * s, W / 40), { color: C.pencil, weight: 400, alpha: a });
   else txt('Glisse pour bouger, bouton « pâté » pour foncer', W / 2, ty + 252 * s, 22 * s, { color: C.pencil, weight: 400, alpha: a });
   if (G.best) txt('meilleur score : ' + G.best, W / 2, ty + 290 * s, 22 * s, { color: C.margin, weight: 400, alpha: a });
   drawStamp(W - SAFE.r - 110 * s, SAFE.t + 48 * s, s * 1.1);

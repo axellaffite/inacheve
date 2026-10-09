@@ -9,6 +9,7 @@ const G = {
   captions: [], deco: [], best: 0, input: { touch: !CAPTURE && !!(window.matchMedia && matchMedia('(pointer: coarse)').matches) }
 };
 try { G.best = parseInt(localStorage.getItem('inacheve.best') || '0', 10) || 0; } catch (e) { G.best = 0; }
+try { G.calm = !CAPTURE && localStorage.getItem('inacheve.calme') === '1'; } catch (e) { G.calm = false; }
 let enemyId = 1;
 
 function xpFor(level) { return Math.floor(5 + level * 3 + level * level * 0.3); }
@@ -28,13 +29,13 @@ function newGame(demo) {
   rand = mulberry32(seed);
   Object.assign(G, {
     demo, state: 'play', stateT: 0, t: 0, kills: 0, letters: 0, dictees: 0, level: 1, xp: 0, xpNext: xpFor(1), pendingLv: 0,
-    mots: {}, motOrder: [], enemies: [], shots: [], ebul: [], items: [], parts: [], puddles: [], points: [], texts: [],
+    mots: {}, motOrder: [], enemies: [], shots: [], ebul: [], items: [], parts: [], puddles: [], points: [], texts: [], fires: [], rings: [],
     spawnAcc: 0, nextWave: 45, boss: null, bossSpawned: false, bossDefeated: false, endless: false, nextBossAt: 180,
     pointCd: 6, dicteeIdx: 0, dicteeWord: DICTEES[0], dicteeProg: 0, choices: [], sel: 0, score: 0, comboN: 0, comboT: 0,
     moonA: 0, botPickT: 0, endPhrase: '', newBest: false
   });
   const hp = demo ? 7 : 6;
-  G.p = { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, r: 13, hp, maxHp: hp, inv: 1.2, dashCd: 0, dashT: 0, dx: 1, dy: 0, face: 0, fireCd: 0.5, look: 0, puddleT: 0, squash: 0 };
+  G.p = { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, r: 13, hp, maxHp: hp, inv: 1.2, dashCd: 0, dashT: 0, dx: 1, dy: 0, face: 0, fireCd: 0.5, look: 0, puddleT: 0, squash: 0, hidden: 0, gx: 0, gy: 0 };
   G.cam.x = G.p.x; G.cam.y = G.p.y;
   computeStats(); clearStains();
   caption('Chapitre ' + GAME_META.chapter + ' : tiens la page jusqu’à la Grande Rature', 4);
@@ -204,6 +205,7 @@ function stepPlayer(dt) {
   if (p.dashT > 0) {
     p.dashT -= dt; p.puddleT -= dt;
     if (p.puddleT <= 0) { p.puddleT = 0.045; G.puddles.push({ x: p.x, y: p.y, r: 30, life: 2.6, max: 2.6 }); splat(p.x, p.y, 16, C.ink, 0.07, 3); }
+    if (p.dashT <= 0) endDash(p);
   } else {
     const tx = inp.x * S.speed, ty = inp.y * S.speed, k = 1 - Math.exp(-dt * 14);
     p.vx = lerp(p.vx, tx, k); p.vy = lerp(p.vy, ty, k);
@@ -212,7 +214,7 @@ function stepPlayer(dt) {
   const sp = Math.hypot(p.vx, p.vy);
   if (sp > 20) { const f = Math.atan2(p.vy, p.vx); let df = f - p.face; while (df > Math.PI) df -= TAU; while (df < -Math.PI) df += TAU; p.face += df * Math.min(1, dt * 12); }
   p.squash = lerp(p.squash, Math.min(1, sp / 600), Math.min(1, dt * 10));
-  p.inv = Math.max(0, p.inv - dt); p.dashCd = Math.max(0, p.dashCd - dt);
+  p.inv = Math.max(0, p.inv - dt); p.dashCd = Math.max(0, p.dashCd - dt); p.hidden = Math.max(0, p.hidden - dt);
   if (rand() < sp / 600 * dt * 30) G.parts.push({ x: p.x - Math.cos(p.face) * 14, y: p.y - Math.sin(p.face) * 14, vx: rnd(-20, 20), vy: rnd(-20, 20), life: 0.5, max: 0.5, size: rnd(1, 2.6), color: C.ink, drag: 3 });
   // tir automatique sur la rature la plus proche
   p.fireCd -= dt;
@@ -231,6 +233,27 @@ function stepPlayer(dt) {
       }
       AU.play('shoot');
     } else p.fireCd = 0.1;
+  }
+}
+// Fin de pâté : les mots composés PLUME AU VENT et ENCRE SYMPATHIQUE y réagissent
+function endDash(p) {
+  if (lvl('PLUME_AU_VENT')) {
+    const R = 175;
+    G.rings.push({ x: p.x, y: p.y, t: 0, dur: 0.45, r: R, color: C.ink });
+    query(p.x, p.y, R + 60, tmpA);
+    for (const e of tmpA) {
+      const dx = e.x - p.x, dy = e.y - p.y, d = Math.hypot(dx, dy) || 1;
+      if (e.dead || d > R + e.r) continue;
+      hurtEnemy(e, 5 * G.S.dmg, 'gust');
+      if (e.type !== 'boss') { e.vx += dx / d * 620; e.vy += dy / d * 620; }
+    }
+    for (const b of G.ebul) if ((b.x - p.x) ** 2 + (b.y - p.y) ** 2 < R * R) b.life = 0;
+    for (let i = 0; i < 18; i++) { const a = i / 18 * TAU; G.parts.push({ x: p.x + Math.cos(a) * 20, y: p.y + Math.sin(a) * 20, vx: Math.cos(a) * 520, vy: Math.sin(a) * 520, life: 0.4, max: 0.4, size: 2.5, color: C.inkLight, drag: 5 }); }
+    AU.play('gust'); G.cam.shake = Math.max(G.cam.shake, 6);
+  }
+  if (lvl('ENCRE_SYMPATHIQUE')) {
+    p.hidden = 2; p.gx = p.x; p.gy = p.y; AU.play('vanish');
+    addText(p.x, p.y - 28, 'invisible', C.inkLight, 22);
   }
 }
 function hurtPlayer(n, fromX, fromY) {
@@ -269,12 +292,14 @@ function stepPlay(dt) {
     if (e.burn > 0) { e.burn -= dt; hurtEnemy(e, e.burnDps * dt, 'burn'); if (rand() < dt * 12) G.parts.push({ x: e.x + rnd(-e.r, e.r) * 0.6, y: e.y + rnd(-e.r, e.r) * 0.6, vx: 0, vy: rnd(-60, -20), life: 0.4, max: 0.4, size: rnd(2, 4), color: C.fire, drag: 1 }); if (e.dead) continue; }
     let slow = 1;
     for (const pd of G.puddles) if ((e.x - pd.x) ** 2 + (e.y - pd.y) ** 2 < (pd.r + e.r * 0.5) ** 2) { slow = 0.55; break; }
-    const dx = p.x - e.x, dy = p.y - e.y, d = Math.hypot(dx, dy) || 1;
+    // invisible (encre sympathique) : les ratures foncent vers l'endroit où tu as disparu, puis tournent en rond
+    const hid = p.hidden > 0, aimX = hid ? p.gx + Math.cos(G.t * 1.3 + e.id) * 90 : p.x, aimY = hid ? p.gy + Math.sin(G.t * 1.1 + e.id) * 90 : p.y;
+    const dx = aimX - e.x, dy = aimY - e.y, d = Math.hypot(dx, dy) || 1;
     let tx = dx / d * e.speed * slow, ty = dy / d * e.speed * slow, agil = e.agil;
     if (e.type === 'gribouillis' || e.type === 'gouttelette') { const w = Math.sin(G.t * 3 + e.id) * 0.5; tx += -dy / d * e.speed * w; ty += dx / d * e.speed * w; }
     if (e.type === 'biffure') {
       e.pt -= dt;
-      if (e.phase === 'walk' && e.pt <= 0 && d < 520) { e.phase = 'aim'; e.pt = 0.6; e.cx = dx / d; e.cy = dy / d; }
+      if (e.phase === 'walk' && e.pt <= 0 && d < 520 && !hid) { e.phase = 'aim'; e.pt = 0.6; e.cx = dx / d; e.cy = dy / d; }
       else if (e.phase === 'aim') { tx = 0; ty = 0; e.cx = lerp(e.cx, dx / d, dt * 3); e.cy = lerp(e.cy, dy / d, dt * 3); if (e.pt <= 0) { e.phase = 'charge'; e.pt = 0.5; const n = Math.hypot(e.cx, e.cy) || 1; e.cx /= n; e.cy /= n; } }
       else if (e.phase === 'charge') { tx = e.cx * 430; ty = e.cy * 430; agil = 20; if (e.pt <= 0) { e.phase = 'walk'; e.pt = rnd(2, 3.4); } }
       else if (e.phase === 'walk' && e.pt <= 0) e.pt = 0.5;
@@ -300,7 +325,7 @@ function stepPlay(dt) {
     }
     e.x = clamp(e.x + e.vx * dt, -40, WORLD.w + 40); e.y = clamp(e.y + e.vy * dt, -40, WORLD.h + 40);
     // contact avec le joueur
-    if (d < e.r + p.r - 3) hurtPlayer(e.dmg, e.x, e.y);
+    if ((p.x - e.x) ** 2 + (p.y - e.y) ** 2 < (e.r + p.r - 3) ** 2) hurtPlayer(e.dmg, e.x, e.y);
   }
   // ---- gouttes du joueur
   for (const s of G.shots) {
@@ -337,7 +362,10 @@ function stepPlay(dt) {
     for (let i = 0; i < S.moons; i++) {
       const a = G.moonA + i / S.moons * TAU, mx = p.x + Math.cos(a) * R, my = p.y + Math.sin(a) * R;
       query(mx, my, 90, tmpA);
-      for (const e of tmpA) if (!e.dead && e.orbCd <= 0 && (e.x - mx) ** 2 + (e.y - my) ** 2 < (e.r + 13) ** 2) { e.orbCd = 0.33; hurtEnemy(e, (1.6 + 0.5 * S.moons) * S.dmg, 'moon', Math.cos(a), Math.sin(a)); }
+      for (const e of tmpA) if (!e.dead && e.orbCd <= 0 && (e.x - mx) ** 2 + (e.y - my) ** 2 < (e.r + 13) ** 2) {
+        e.orbCd = 0.33; hurtEnemy(e, (1.6 + 0.5 * S.moons) * S.dmg, 'moon', Math.cos(a), Math.sin(a));
+        if (lvl('ECHO_DE_LUNE')) moonEcho(mx, my, e);
+      }
     }
   }
   // ---- flaques d'encre (pâtés)
@@ -354,7 +382,16 @@ function stepPlay(dt) {
       G.pointCd = Math.max(3, 8 - (S.point - 1) * 1.1);
       let best = null, bn = -1;
       for (let i = 0; i < 7; i++) { const e = pick(G.enemies); if (e.dead || Math.hypot(e.x - p.x, e.y - p.y) > 560) continue; const n = query(e.x, e.y, 110, tmpA).length; if (n > bn) { bn = n; best = e; } }
-      if (best) G.points.push({ x: best.x, y: best.y, t: 0, fall: 0.55, r: 88 + 14 * S.point, dmg: (7 + 4 * S.point) * S.dmg });
+      if (best) {
+        G.points.push({ x: best.x, y: best.y, t: 0, fall: 0.55, r: 88 + 14 * S.point, dmg: (7 + 4 * S.point) * S.dmg });
+        if (lvl('POINT_VIRGULE')) {
+          // la virgule tombe juste après, sur l'attroupement suivant
+          let b2 = null, bn2 = -1;
+          for (let i = 0; i < 7; i++) { const e = pick(G.enemies); if (e.dead || e === best || Math.hypot(e.x - best.x, e.y - best.y) < 140 || Math.hypot(e.x - p.x, e.y - p.y) > 600) continue; const n = query(e.x, e.y, 110, tmpA).length; if (n > bn2) { bn2 = n; b2 = e; } }
+          const tx = b2 ? b2.x : best.x + rnd(-120, 120), ty = b2 ? b2.y : best.y + 150;
+          G.points.push({ x: tx, y: ty, t: -0.35, fall: 0.55, r: (88 + 14 * S.point) * 0.8, dmg: (7 + 4 * S.point) * S.dmg * 0.8, comma: true });
+        }
+      }
     }
   }
   for (const pt of G.points) {
@@ -364,9 +401,19 @@ function stepPlay(dt) {
       query(pt.x, pt.y, pt.r + 80, tmpA);
       for (const e of tmpA) { const d = Math.hypot(e.x - pt.x, e.y - pt.y); if (!e.dead && d < pt.r + e.r) hurtEnemy(e, pt.dmg, 'point', (e.x - pt.x) / (d || 1), (e.y - pt.y) / (d || 1)); }
       for (let i = 0; i < 26; i++) { const a = rnd(TAU), s = rnd(120, 420); G.parts.push({ x: pt.x, y: pt.y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: rnd(0.3, 0.7), max: 0.7, size: rnd(2, 5), color: C.inkDeep, drag: 4 }); }
+      if (lvl('POINT_DE_FEU')) { G.fires.push({ x: pt.x, y: pt.y, r: pt.r * 0.85, life: 3, max: 3, seed: rnd(TAU) }); AU.play('fire'); }
     }
   }
   G.points = G.points.filter(pt => pt.t < pt.fall + 0.6);
+  for (const f of G.fires) {
+    f.life -= dt;
+    query(f.x, f.y, f.r + 80, tmpA);
+    for (const e of tmpA) if (!e.dead && (e.x - f.x) ** 2 + (e.y - f.y) ** 2 < (f.r + e.r * 0.5) ** 2) { hurtEnemy(e, 3.2 * S.dmg * dt, 'burn'); if (e.burn < 0.6) { e.burn = 1.2; e.burnDps = Math.max(e.burnDps, 1.5); } }
+    if (rand() < dt * 30) { const a = rnd(TAU), rr = Math.sqrt(rand()) * f.r; G.parts.push({ x: f.x + Math.cos(a) * rr, y: f.y + Math.sin(a) * rr, vx: rnd(-10, 10), vy: rnd(-90, -40), life: 0.5, max: 0.5, size: rnd(2.5, 5), color: C.fire, drag: 1 }); }
+  }
+  G.fires = G.fires.filter(f => f.life > 0);
+  for (const r of G.rings) r.t += dt;
+  G.rings = G.rings.filter(r => r.t < r.dur);
   G.enemies = G.enemies.filter(e => !e.dead);
   // ---- lettres
   G.comboT -= dt; if (G.comboT <= 0) G.comboN = 0;
@@ -384,6 +431,15 @@ function stepPlay(dt) {
   stepParticles(dt);
   if (G.victoryAt && G.t >= G.victoryAt) { G.victoryAt = 0; endRun(true); }
   if (G.pendingLv > 0 && G.state === 'play') openLevelUp();
+}
+// ÉCHO DE LUNE : la lune renvoie une goutte vers la rature voisine la plus proche
+function moonEcho(x, y, from) {
+  let nt = null, nd = 360 * 360;
+  query(x, y, 360, tmpB);
+  for (const o of tmpB) { if (o.dead || o === from) continue; const od = (o.x - x) ** 2 + (o.y - y) ** 2; if (od < nd) { nd = od; nt = o; } }
+  if (!nt) return;
+  const a = Math.atan2(nt.y - y, nt.x - x), sp = G.S.pspeed * 1.1;
+  G.shots.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: 4.5, life: 0.9, pierce: 0, bounce: 1 + Math.floor(G.S.bounce / 2), hit: new Set([from.id]), px: x, py: y, echo: true });
 }
 function stepBoss(e, dt, dx, dy, d) {
   if (e.enter > 0) { e.enter = Math.max(0, e.enter - dt * 0.5); }
@@ -427,11 +483,16 @@ function stepParticles(dt) {
 }
 
 /* ===================== Niveaux ===================== */
+function composeReady(k) { return isCompose(k) && !lvl(k) && MOTS[k].from.every(f => lvl(f) >= 2); }
 function openLevelUp() {
-  const avail = Object.keys(MOTS).filter(k => lvl(k) < MOTS[k].max && !(k === 'SOUFFLE' && G.p.hp === G.p.maxHp && rand() < 0.5));
-  if (!avail.length) { G.pendingLv = 0; G.p.hp = G.p.maxHp; return; }
+  const avail = Object.keys(MOTS).filter(k => !isCompose(k) && lvl(k) < MOTS[k].max && !(k === 'SOUFFLE' && G.p.hp === G.p.maxHp && rand() < 0.5));
+  const ready = Object.keys(MOTS).filter(composeReady);
+  if (!avail.length && !ready.length) { G.pendingLv = 0; G.p.hp = G.p.maxHp; return; }
   const ch = [];
-  while (ch.length < 3 && avail.length) { const i = Math.floor(rand() * avail.length); ch.push(avail.splice(i, 1)[0]); }
+  // un mot composé disponible est toujours proposé (un seul à la fois), à une place au hasard
+  const comp = ready.length ? pick(ready) : null;
+  while (ch.length < (comp ? 2 : 3) && avail.length) { const i = Math.floor(rand() * avail.length); ch.push(avail.splice(i, 1)[0]); }
+  if (comp) ch.splice(Math.floor(rand() * (ch.length + 1)), 0, comp);
   G.choices = ch; G.sel = 0; G.state = 'levelup'; G.stateT = 0; G.botPickT = 1.25; AU.play('level');
   for (let i = 0; i < 24; i++) { const a = rnd(TAU), s = rnd(100, 300); G.parts.push({ x: G.p.x, y: G.p.y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0.6, max: 0.6, size: rnd(2, 4), color: '#e8c22a', drag: 3 }); }
   setUI();
@@ -440,17 +501,24 @@ function chooseMot(i) {
   const k = G.choices[i]; if (!k) return;
   G.mots[k] = lvl(k) + 1; if (!G.motOrder.includes(k)) G.motOrder.push(k);
   if (k === 'SOUFFLE') { G.p.maxHp++; G.p.hp = G.p.maxHp; }
-  computeStats(); AU.play('choose');
-  addText(G.p.x, G.p.y - 30, MOTS[k].label + (G.mots[k] > 1 ? ' ' + G.mots[k] : ''), C.ink, 30);
+  computeStats();
+  if (isCompose(k)) {
+    AU.play('fusion'); G.cam.shake = Math.max(G.cam.shake, 8);
+    caption('Mot composé : ' + MOTS[k].from.map(f => MOTS[f].label).join(' + ') + ' = ' + MOTS[k].label, 3.2, 'green');
+    G.rings.push({ x: G.p.x, y: G.p.y, t: 0, dur: 0.7, r: 220, color: C.gold });
+    for (let i = 0; i < 40; i++) { const a = rnd(TAU), sp = rnd(140, 420); G.parts.push({ x: G.p.x, y: G.p.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0.9, max: 0.9, size: rnd(2, 5), color: i % 2 ? C.gold : C.ink, drag: 3 }); }
+  } else AU.play('choose');
+  addText(G.p.x, G.p.y - 30, MOTS[k].label + (G.mots[k] > 1 ? ' ' + G.mots[k] : ''), isCompose(k) ? C.gold : C.ink, 30);
   G.pendingLv--; G.state = 'play'; G.stateT = 0; G.p.inv = Math.max(G.p.inv, 0.6);
   if (G.pendingLv > 0) openLevelUp();
   setUI();
 }
-const BOT_PRIORITY = ['LUNE', 'GUILLEMETS', 'VIRGULE', 'ENCRE', 'POINT', 'ECHO', 'FEU', 'SOUFFLE', 'ITALIQUE', 'PLUME', 'AIMANT', 'VENT'];
+const BOT_PRIORITY = ['POINT_VIRGULE', 'ECHO_DE_LUNE', 'POINT_DE_FEU', 'PLUME_AU_VENT', 'ENCRE_SYMPATHIQUE', 'LUNE', 'GUILLEMETS', 'VIRGULE', 'ENCRE', 'POINT', 'ECHO', 'FEU', 'SOUFFLE', 'ITALIQUE', 'PLUME', 'AIMANT', 'VENT'];
 
 /* ===================== Fins de partie ===================== */
 function phrase(win) {
-  const ws = G.motOrder.slice().sort((a, b) => lvl(b) - lvl(a)).map(k => MOTS[k].frag);
+  const weight = k => lvl(k) + (isCompose(k) ? 10 : 0);   // les mots composés ont la vedette
+  const ws = G.motOrder.slice().sort((a, b) => weight(b) - weight(a)).map(k => MOTS[k].frag);
   const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
   if (!ws.length) return 'Une page presque blanche.';
   if (ws.length === 1) return win ? cap(ws[0]) + ' tint bon, jusqu’au point final.' : 'Il ne restait que ' + ws[0] + '.';

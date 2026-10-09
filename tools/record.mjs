@@ -41,10 +41,20 @@ async function load(seed) {
   await page.waitForFunction(() => window.__cap);
   await page.evaluate(() => window.__cap.ready);
 }
+// Coups de pouce du montage (itération 2 : les mots composés), appliqués à l'identique en simulation et au tournage.
+// Chaque étape : `skip` secondes jouées sans filmer, une action éventuelle dans la page, un sous-titre, puis `play` secondes filmées.
+const STEPS = [
+  { play: 9 },
+  { skip: 40, cap: ['… un peu plus loin dans la page …', 'Nouveau : deux mots peuvent s’unir'], act: () => { window.__cap.grant({ POINT: 2, VIRGULE: 2, LUNE: 2, ECHO: 2 }); window.__cap.levelup(); }, play: 9.5 },
+  { act: () => window.__cap.levelup(), play: 8.5 },
+  { act: () => { window.__cap.grant({ PLUME: 2, VENT: 2 }); window.__cap.levelup(); }, play: 9 }
+];
 // Joue une partie entière en accéléré (sans filmer) pour savoir comment elle se termine
 async function simulate(seed) {
   await load(seed);
-  return page.evaluate(() => { window.__cap.start(); for (let i = 0; i < 320; i++) { window.__cap.skip(1); const s = window.__cap.state(); if (s.state === 'victory' || s.state === 'gameover') return s; } return window.__cap.state(); });
+  await page.evaluate(() => window.__cap.start());
+  for (const st of STEPS) { await page.evaluate(n => window.__cap.skip(n), st.skip || 0); if (st.act) await page.evaluate(st.act); await page.evaluate(n => window.__cap.skip(n), st.play); }
+  return page.evaluate(() => { for (let i = 0; i < 320; i++) { window.__cap.skip(1); const s = window.__cap.state(); if (s.state === 'victory' || s.state === 'gameover') return s; } return window.__cap.state(); });
 }
 let SEED = SEED_ARG ? parseInt(SEED_ARG, 10) : null;
 if (SEED === null && !SMOKE) {
@@ -95,16 +105,21 @@ await page.evaluate(() => window.__cap.title());
 await grab(3.5);
 await page.evaluate(() => window.__cap.start());
 await cap(`Itération ${meta.iteration} : ${meta.title}`, 3.2);
-await grab(26);
+for (const step of STEPS) {
+  if (step.skip) await page.evaluate(n => window.__cap.skip(n), step.skip);
+  if (step.act) await page.evaluate(step.act);
+  for (const c of [].concat(step.cap || [])) await cap(c, 4);
+  await grab(step.play);
+}
 let st = await state();
 // avance rapide jusqu'au boss (le pilote joue vraiment, on ne filme simplement pas)
-while (st.state !== 'gameover' && st.t < 171) {
+while (st.state !== 'gameover' && st.t < 175) {
   await page.evaluate(() => { window.__cap.skip(5); const s = window.__cap.state(); if (s.state === 'levelup') window.__cap.skip(1.5); });
   st = await state();
 }
 if (st.state !== 'gameover') {
-  await cap('… deux minutes plus tard …', 2.4);
-  for (let i = 0; i < 50 && st.state !== 'victory' && st.state !== 'gameover'; i++) { await grab(1); st = await state(); }
+  await cap('… quelques pages plus tard …', 2.4);
+  for (let i = 0; i < 42 && st.state !== 'victory' && st.state !== 'gameover'; i++) { await grab(1); st = await state(); }
 }
 await grab(st.state === 'victory' || st.state === 'gameover' ? 5 : 1);
 /* ---------------------------------------------------------------------------------------------- */

@@ -40,6 +40,7 @@ canvas#game { position: fixed; inset: 0; width: 100%; height: 100%; display: blo
 .btn { font: 700 21px/1 'Main', cursive; color: var(--ink); background: var(--paper);
   border: 2px solid var(--ink); border-radius: 4px 7px 5px 6px; padding: 7px 14px 8px; cursor: pointer; transform: rotate(-1deg); }
 .btn:nth-child(2) { transform: rotate(1.2deg); }
+.btn:nth-child(3) { transform: rotate(-0.4deg); }
 .btn:hover { background: var(--highlight); }
 .btn:focus-visible { outline: 3px solid var(--margin); outline-offset: 3px; }
 #btnPause { position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); display: none; }
@@ -72,6 +73,7 @@ dialog#journal::backdrop { background: rgba(30, 32, 40, 0.55); }
 <div id="ui">
   <button class="btn" id="btnJournal" type="button">Carnet de bord</button>
   <button class="btn" id="btnSound" type="button">Son : activé</button>
+  <button class="btn" id="btnCalm" type="button">Secousses : oui</button>
 </div>
 <button class="btn" id="btnPause" type="button" aria-label="Pause">Pause</button>
 <dialog id="journal" aria-labelledby="journalTitle">

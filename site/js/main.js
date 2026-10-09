@@ -55,6 +55,7 @@ function setUI() {
   document.getElementById('ui').classList.toggle('hidden', !showUI);
   document.getElementById('btnPause').classList.toggle('show', G.input.touch && G.state === 'play');
   document.getElementById('btnSound').textContent = 'Son : ' + (AU.muted ? 'coupé' : 'activé');
+  document.getElementById('btnCalm').textContent = 'Secousses : ' + (G.calm ? 'non' : 'oui');
 }
 function primaryAction() {
   AU.init();
@@ -67,6 +68,7 @@ function togglePause() {
   if (G.state === 'play') { G.state = 'pause'; G.stateT = 0; } else if (G.state === 'pause') G.state = 'play';
   setUI();
 }
+function toggleCalm() { G.calm = !G.calm; try { localStorage.setItem('inacheve.calme', G.calm ? '1' : '0'); } catch (e) { /* rien */ } caption(G.calm ? 'Secousses coupées : la page reste immobile.' : 'Secousses rétablies.', 1.8); setUI(); }
 function toggleMute() { AU.init(); AU.setMuted(!AU.muted); try { localStorage.setItem('inacheve.muted', AU.muted ? '1' : '0'); } catch (e) { /* rien */ } setUI(); }
 
 if (!CAPTURE) {
@@ -77,6 +79,7 @@ if (!CAPTURE) {
     if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
     AU.init();
     if (e.code === 'KeyM') toggleMute();
+    if (e.code === 'KeyC') toggleCalm();
     if (G.state === 'levelup') {
       if (G.stateT < 0.3) return;
       if (e.code === 'Digit1' || e.code === 'Numpad1') chooseMot(0);
@@ -126,6 +129,7 @@ if (!CAPTURE) {
   document.getElementById('btnCloseJournal').addEventListener('click', () => dlg.close());
   dlg.addEventListener('close', () => cv.focus());
   document.getElementById('btnSound').addEventListener('click', toggleMute);
+  document.getElementById('btnCalm').addEventListener('click', toggleCalm);
   document.getElementById('btnPause').addEventListener('click', () => togglePause());
 }
 function videoFor(n) {
@@ -185,7 +189,10 @@ window.__cap = {
   start() { newGame(true); },
   caption(t, d) { caption(t, d); },
   state() { return { state: G.state, t: G.t, boss: !!G.boss, bossDefeated: !!G.bossDefeated, level: G.level, hp: G.p ? G.p.hp : 0, enemies: G.enemies ? G.enemies.length : 0, kills: G.kills, mots: G.mots }; },
-  heal() { if (G.p) G.p.hp = G.p.maxHp; }
+  heal() { if (G.p) G.p.hp = G.p.maxHp; },
+  // donne des mots d'un coup (montage) puis ouvre un choix : un mot composé prêt y est toujours proposé
+  grant(mots) { for (const k in mots) { G.mots[k] = Math.max(lvl(k), mots[k]); if (!G.motOrder.includes(k)) G.motOrder.push(k); } computeStats(); G.pointCd = Math.min(G.pointCd, 1.5); },
+  levelup() { if (G.state === 'play' || G.state === 'levelup') G.pendingLv++; }
 };
 if (!CAPTURE) { fontsReady.then(() => { lastT = performance.now(); requestAnimationFrame(frame); }); }
 else render();

@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon', chapter: 'I', chapterName: 'Premier chapitre' };
+const GAME_META = { iteration: 2, date: '2026-10-09', title: 'Les mots se tiennent la main', chapter: 'I', chapterName: 'Premier chapitre' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -14,6 +14,14 @@ const JOURNAL = [
       "Quatre ratures veulent effacer la page : le gribouillis, la biffure, la tache et la gomme. Au bout du chapitre, la Grande Rature.",
       "Douze mots-pouvoirs à apprendre en montant de niveau, et des dictées à compléter lettre par lettre.",
       "Musique et bruitages générés en direct, sans aucun fichier son."
+    ] },
+  { iteration: 2, date: '2026-10-09', title: 'Les mots se tiennent la main',
+    notes: [
+      "Les mots composés arrivent : quand deux mots atteignent le niveau 2, ils peuvent s’unir sur une fiche dorée.",
+      "Cinq unions à découvrir : POINT-VIRGULE, POINT DE FEU, ÉCHO DE LUNE, PLUME AU VENT et ENCRE SYMPATHIQUE, qui te rend invisible après un pâté.",
+      "Sur téléphone, les sous-titres descendent au-dessus de la dictée et ne cachent plus tes mots.",
+      "Nouveau réglage « Secousses » (bouton ou touche C) pour garder la page immobile quand ça cogne.",
+      "Une nouvelle note au crayon est apparue dans la marge du haut. Sauras-tu la trouver ?"
     ] }
 ];
 window.GAME_META = GAME_META;

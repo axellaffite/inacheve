@@ -20,6 +20,8 @@ jobs:
   construire:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    outputs:
+      pages: ${{ steps.pages_upload.outcome }}
     steps:
       - uses: actions/checkout@v4
 
@@ -59,18 +61,24 @@ jobs:
       - name: Préparation du site
         run: sed -i "s#__REPO__#${{ github.repository }}#g" site/index.html
 
-      # Miroir GitHub Pages : seulement si le dépôt est public (le jeu principal vit dans l'artefact Claude)
-      - if: ${{ !github.event.repository.private }}
+      # Miroir GitHub Pages : seulement si le dépôt est public (le jeu principal vit dans l'artefact Claude).
+      # Si Pages n'est pas activé sur le dépôt, le miroir est sauté sans faire échouer la publication.
+      - id: pages_config
+        if: ${{ !github.event.repository.private }}
+        continue-on-error: true
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
-      - if: ${{ !github.event.repository.private }}
+      - id: pages_upload
+        if: ${{ !github.event.repository.private && steps.pages_config.outcome == 'success' }}
         uses: actions/upload-pages-artifact@v3
         with:
           path: site
 
   deployer:
     needs: construire
-    if: ${{ !github.event.repository.private }}
+    if: ${{ !github.event.repository.private && needs.construire.outputs.pages == 'success' }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages

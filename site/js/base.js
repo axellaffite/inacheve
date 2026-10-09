@@ -10,6 +10,9 @@ function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; le
 let rand = mulberry32(seed);
 const rnd = (a = 1, b) => b === undefined ? rand() * a : a + rand() * (b - a);
 const pick = arr => arr[Math.floor(rand() * arr.length)];
+// Hasard purement visuel (tremblements) : séparé du hasard du jeu, pour qu'une partie filmée et une partie simulée restent identiques
+const vrand = mulberry32(seed ^ 0x5eed);
+const vrnd = (a, b) => a + vrand() * (b - a);
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const lerp = (a, b, t) => a + (b - a) * t;
 const TAU = Math.PI * 2;
@@ -19,7 +22,7 @@ const ease = t => 1 - Math.pow(1 - clamp(t, 0, 1), 3);
 const C = {
   paper: '#fdfcf6', unwritten: '#ebeae3', dot: '#b9b8ae', ink: '#1d3a8a', inkLight: '#3e63c9', inkDeep: '#12275f',
   graphite: '#2e2e33', pencil: '#6d6d74', red: '#c8424a', margin: '#e06a6c', rule: 'rgba(140,152,214,0.55)',
-  ruleMinor: 'rgba(170,180,230,0.45)', hl: 'rgba(246,231,94,0.82)', hlPink: 'rgba(255,140,190,0.6)', hlGreen: 'rgba(140,230,140,0.6)',
+  ruleMinor: 'rgba(170,180,230,0.45)', hl: 'rgba(246,231,94,0.82)', hlPink: 'rgba(255,140,190,0.6)', hlGreen: 'rgba(140,230,140,0.6)', hlGold: 'rgba(240,200,90,0.55)',
   eraser: '#f2a0a8', eraserSleeve: '#3c66c4', gold: '#c9921b', fire: '#e8742c'
 };
 const FONT_MAIN = "'Main', 'Segoe Print', 'Bradley Hand', cursive";
@@ -38,7 +41,8 @@ const UNWRITTEN_NOTES = [
   { x: WORLD.w * 0.3, y: WORLD.h + 140, t: 'à suivre…', r: 0.03 },
   { x: WORLD.w * 0.72, y: WORLD.h + 150, t: 'zone non écrite', r: -0.03 },
   { x: WORLD.w + 160, y: WORLD.h * 0.8, t: '(TODO)', r: 0.1 },
-  { x: -170, y: WORLD.h * 0.18, t: '???', r: 0.05 }
+  { x: -170, y: WORLD.h * 0.18, t: '???', r: 0.05 },
+  { x: WORLD.w * 0.62, y: -96, t: 'ajouté : les mots se tiennent la main (c’est fait)', r: 0.025 }
 ];
 
 /* ===================== Mots (améliorations) ===================== */
@@ -54,8 +58,15 @@ const MOTS = {
   VENT:       { label: 'VENT', max: 3, desc: "Tes gouttes repoussent ce qu'elles touchent.", eff: () => 'recul +', frag: 'le vent' },
   AIMANT:     { label: 'AIMANT', max: 3, desc: 'Les lettres accourent vers toi de plus loin.', eff: () => 'collecte +45 %', frag: 'un aimant' },
   PLUME:      { label: 'PLUME', max: 4, desc: 'Plus légère, plus vive.', eff: () => 'vitesse +10 %, pâté plus fréquent', frag: 'la plume' },
-  SOUFFLE:    { label: 'SOUFFLE', max: 3, desc: 'Reprendre son souffle, et un peu plus.', eff: () => '+1 cœur, soin complet', frag: 'un souffle' }
+  SOUFFLE:    { label: 'SOUFFLE', max: 3, desc: 'Reprendre son souffle, et un peu plus.', eff: () => '+1 cœur, soin complet', frag: 'un souffle' },
+  // Mots composés : quand deux mots atteignent le niveau 2, ils peuvent s'unir (une seule fois)
+  POINT_VIRGULE:     { label: 'POINT-VIRGULE', from: ['POINT', 'VIRGULE'], max: 1, desc: 'Chaque point final est suivi d’une virgule qui tombe ailleurs.', eff: () => 'un second point, aussitôt', frag: 'un point-virgule' },
+  POINT_DE_FEU:      { label: 'POINT DE FEU', from: ['POINT', 'FEU'], max: 1, desc: 'Là où tombe un point final, la page s’embrase.', eff: () => 'un cercle de flammes 3 s', frag: 'un point de feu' },
+  ECHO_DE_LUNE:      { label: 'ÉCHO DE LUNE', from: ['LUNE', 'ECHO'], max: 1, desc: 'Quand une lune cogne, elle renvoie une goutte plus loin.', eff: () => 'les lunes tirent en rebond', frag: 'l’écho de la lune' },
+  PLUME_AU_VENT:     { label: 'PLUME AU VENT', from: ['PLUME', 'VENT'], max: 1, desc: 'Ton pâté finit en bourrasque qui balaie tout.', eff: () => 'onde de choc après chaque pâté', frag: 'une plume au vent' },
+  ENCRE_SYMPATHIQUE: { label: 'ENCRE SYMPATHIQUE', from: ['ENCRE', 'AIMANT'], max: 1, desc: 'Après un pâté, tu deviens invisible : les ratures perdent ta trace.', eff: () => '2 s d’invisibilité', frag: 'l’encre sympathique' }
 };
+const isCompose = k => !!(MOTS[k] && MOTS[k].from);
 const DICTEES = ['PLUME', 'ENCRE', 'MARGE', 'CAHIER', 'BUVARD', 'LETTRE', 'ÉCRIRE', 'RATURE', 'CHAPITRE', 'BROUILLON', 'PARCHEMIN', 'HISTOIRE'];
 const LETTER_POOL = 'EEEEEEEEEEEEEEAAAAAAAASSSSSSSIIIIIIINNNNNNNTTTTTTRRRRRRUUUUUULLLLLOOOOODDDDCCCPPPMMMÉÉVVQFBGHJÀXYZ';
 
@@ -201,6 +212,10 @@ const AU = {
       case 'boss': this.tone(55, 2.2, { type: 'sawtooth', vol: 0.12, attack: 0.6 }); this.tone(82.4, 2.2, { type: 'sawtooth', vol: 0.08, attack: 0.8 }); break;
       case 'bossShot': if (this.throttle('bossShot', 200)) this.noise(0.3, { f: 1200, q: 3, vol: 0.12, sweep: 0.3 }); break;
       case 'win': [0, 2, 4, 5, 7, 9, 10].forEach((n, i) => this.tone(PENTA[n], 0.9, { type: 'triangle', vol: 0.16, when: i * 0.11 })); break;
+      case 'fusion': [0, 3, 5, 7, 10].forEach((n, i) => { this.tone(PENTA[n] * 2, 0.7, { type: 'triangle', vol: 0.13, when: i * 0.06 }); this.tone(PENTA[n] * 3, 0.5, { vol: 0.04, when: i * 0.06 + 0.03 }); }); this.noise(0.6, { f: 3000, q: 0.6, vol: 0.06, sweep: 2.5 }); break;
+      case 'gust': if (this.throttle('gust', 150)) { this.noise(0.45, { f: 450, q: 0.6, vol: 0.24, sweep: 4 }); this.tone(98, 0.35, { type: 'sine', vol: 0.18, slide: 0.5 }); } break;
+      case 'fire': if (this.throttle('fire', 120)) this.noise(0.5, { f: 900, q: 0.4, vol: 0.14, type: 'lowpass', sweep: 0.5 }); break;
+      case 'vanish': this.tone(PENTA[8] * 2, 0.45, { vol: 0.08, slide: 0.5 }); this.noise(0.35, { f: 4000, q: 1.2, vol: 0.05, sweep: 0.3 }); break;
       case 'lose': [6, 4, 2, 0].forEach((n, i) => this.tone(PENTA[n], 0.8, { type: 'triangle', vol: 0.15, when: i * 0.18 })); break;
     }
   },
