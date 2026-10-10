@@ -173,6 +173,7 @@ function drawWorld() {
     ctx.font = '700 ' + sz + 'px ' + FONT_MAIN; ctx.fillStyle = it.rare ? C.gold : C.ink; ctx.fillText(it.ch, 0, 1);
     ctx.restore();
   }
+  if (G.songs) drawRefrain(v);
   // ennemis
   for (const e of G.enemies) if (inView(e.x, e.y, e.r + 300)) drawEnemy(e);
   // lunes
@@ -384,7 +385,9 @@ function drawTitle() {
   txt(G.input.touch ? 'Touche l’écran pour commencer' : 'Appuie sur Entrée pour commencer', W / 2, ty + 196 * s, Math.min(38 * s, W / 18), { color: C.ink, alpha: a * (0.6 + 0.4 * Math.sin(G.time * 3)), hl: C.hl });
   if (!G.input.touch) txt('ZQSD, WASD ou flèches : bouger    Espace : pâté d’encre    Échap : pause    M : son    C : secousses', W / 2, ty + 252 * s, Math.min(22 * s, W / 40), { color: C.pencil, weight: 400, alpha: a });
   else txt('Glisse pour bouger, bouton « pâté » pour foncer', W / 2, ty + 252 * s, 22 * s, { color: C.pencil, weight: 400, alpha: a });
-  txt('Nouveau : bats la Grande Rature, puis tourne la page…', W / 2, ty + (G.best ? 322 : 290) * s, Math.min(22 * s, W / 30), { color: C.ink, weight: 400, alpha: a * 0.85 });
+  const news = G.unlocked >= 2 ? (G.input.touch ? 'Nouveau : le chapitre II t’attend (bouton en bas), avec son refrain' : 'Nouveau : touche 2 pour commencer au chapitre II, et joue son refrain')
+    : 'Nouveau : au chapitre II, un refrain est écrit sur la portée…';
+  txt(news, W / 2, ty + (G.best ? 322 : 290) * s, Math.min(22 * s, W / 30), { color: C.ink, weight: 400, alpha: a * 0.85 });
   if (G.best) txt('meilleur score : ' + G.best, W / 2, ty + 290 * s, 22 * s, { color: C.margin, weight: 400, alpha: a });
   drawStamp(W - SAFE.r - 110 * s, SAFE.t + 48 * s, s * 1.1);
 }
@@ -397,7 +400,7 @@ function drawEnd() {
   const last = G.chapter >= CHAPTERS.length - 1;
   txt(win ? CH().done : 'La page a été effacée.', W / 2, y0, Math.min(66 * s, W / 11), { font: FONT_CURSIVE, weight: 400, color: win ? C.ink : C.red, alpha: a });
   txt('« ' + G.endPhrase + ' »', W / 2, y0 + 82 * s, Math.min(32 * s, W / 26), { color: C.graphite, weight: 400, alpha: a });
-  const rows = [['temps', mmss((G.totalT || 0) + G.t)], ['ratures biffées', G.kills], ['lettres ramassées', G.letters], ['dictées réussies', G.dictees], ['niveau', G.level], ['score', G.score]];
+  const rows = [['temps', mmss((G.totalT || 0) + G.t)], ['ratures biffées', G.kills], ['lettres ramassées', G.letters], [G.refrains ? 'dictées · refrains' : 'dictées réussies', G.refrains ? G.dictees + ' · ' + G.refrains : G.dictees], ['niveau', G.level], ['score', G.score]];
   rows.forEach(([k, v], i) => {
     const y = y0 + 150 * s + i * 38 * s, aa = clamp(t * 3 - 1 - i * 0.25, 0, 1);
     txt(k, W / 2 - 14 * s, y, 26 * s, { align: 'right', color: C.pencil, weight: 400, alpha: aa });
@@ -419,6 +422,7 @@ function render() {
   if (G.state === 'title') drawTitle();
   else {
     drawHUD();
+    drawRefrainArrow();
     if (G.state === 'levelup') drawLevelUp();
     else if (G.state === 'pause') { dimPage(0.7); txt('Pause', W / 2, H / 2 - 40 * U, 80 * U, { font: FONT_CURSIVE, weight: 400 }); txt(G.input.touch ? 'Touche pour reprendre' : 'Échap ou Entrée pour reprendre', W / 2, H / 2 + 40 * U, 30 * U, { hl: C.hl }); }
     else if (G.state === 'gameover' || G.state === 'victory') drawEnd();

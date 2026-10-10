@@ -57,11 +57,30 @@ Le cahier a maintenant deux pages. Chaque chapitre est une entrée de `CHAPTERS`
   - Dictées musicales : NOTE, GAMME, ACCORD, REFRAIN, SOLFÈGE…
 - Les boss sont repérés par `e.isBoss` (champ `boss: true` dans `ETYPES`), plus par leur type.
 
+## Le refrain (itération 4)
+
+Tenu depuis la note de marge « un refrain ? » du chapitre II. Tout est dans `refrain.js` (chargé après `chapitre2.js`).
+
+- 8 s après le début du chapitre II, un **refrain** s'écrit sur une portée proche (`writeRefrain`) : 4 notes à la première fois, une de plus à chaque refrain réussi (7 au plus). Les notes suivent une petite marche mélodique, chacune à sa vraie hauteur sur la portée (`staffPitch` les retrouve).
+- Les notes sont dans des bulles dorées numérotées (pour ne pas les confondre avec les croches) ; la prochaine est surlignée en jaune. Une flèche dorée au bord de l'écran montre où attend la note suivante.
+- On les touche **dans l'ordre**, chacune sonne sa note. Plus de 4 s entre deux notes (un arc doré le montre) : le refrain « se perd » et on reprend du début.
+- Refrain complet (`singRefrain`) : la mélodie est rejouée d'un trait, puis une onde bleue et dorée (`G.songs`, rayon 540) frappe toutes les ratures (18 + 3 par note, 70 sur un boss, multiplié par ENCRE), efface les notes rouges et les ondes du métronome, rend un cœur et de l'expérience. Le refrain suivant vient 22 s plus tard.
+- Le pilote automatique va vers le refrain en priorité (dans un rayon de 1 600 px).
+- L'écran de fin compte « dictées · refrains » quand au moins un refrain a été joué.
+
+## Commencer au chapitre II (itération 4)
+
+- Battre la Grande Rature enregistre `inacheve.chapitre` = 2. L'écran titre propose alors la touche 2 (ou le bouton « Commencer au chapitre II ») pour commencer directement sur la portée.
+- On y arrive **au brouillon** (`draft`) : 19 mots tirés au hasard (mots composés compris quand ils sont prêts, jamais SOUFFLE), niveau 20.
+- Perdre ou recommencer (R) ramène au chapitre où la partie a commencé (`G.startChapter`).
+- `__cap.start(2)` lance la démo au chapitre II (utilisé par le test de fumée).
+
 ## Réglages et mémoire
 
 - `inacheve.best` : meilleur score.
 - `inacheve.muted` : son coupé.
 - `inacheve.calme` : secousses d'écran désactivées (bouton « Secousses » ou touche C).
+- `inacheve.chapitre` : chapitre le plus loin débloqué (2 après la Grande Rature).
 
 ## Déterminisme
 
@@ -75,6 +94,8 @@ Itération 2 (avec les mots composés) : 7 graines sur 10 gagnent, entre 3:28 et
 
 Itération 3 (chapitre II, parties naturelles : chapitre I joué en entier puis page tournée) : sur 12 pilotes arrivés au chapitre II, 8 battent la Fausse Note (entre 3:41 et 4:05 de chapitre), 4 meurent entre 2:08 et 3:00. Les premiers réglages (`scale` 1,15, boss à 820 PV) étaient beaucoup trop faciles : aucun pilote ne perdait plus de deux cœurs.
 
+Itération 4 (départ au brouillon du chapitre II, pilote) : sur 6 graines, 1 seule bat la Fausse Note ; les autres meurent entre 1:40 et 3:10. Le brouillon (mots au hasard) est nettement plus faible qu'une vraie partie : c'est voulu, c'est un raccourci, pas une récompense. Dans le montage vidéo (graines 42 et 7, chapitre I abrégé), le pilote joue 4 à 5 refrains et bat la Fausse Note vers 3:30 à 3:50.
+
 ## Outils
 
 - `tools/check.mjs` : vérifications sans navigateur.
@@ -87,9 +108,9 @@ Itération 3 (chapitre II, parties naturelles : chapitre I joué en entier puis 
 ## Carnet d'idées (libre à toi de piocher, de modifier ou d'ignorer)
 
 - ~~**Portées musicales**~~ : fait à l'itération 3 (chapitre II). **Chapitre III** : papier millimétré (géométrie : ennemis-compas, équerres, rapporteur), carte au trésor, page de calligraphie, buvard qui absorbe tout.
-- **Commencer au chapitre II** : une fois le chapitre I gagné, le proposer depuis l'écran titre avec un « brouillon » de mots tirés au hasard (clé `inacheve.chapitre`).
-- **Refrain** (promis dans la marge du chapitre II) : un motif de notes à rejouer en traversant les lignes dans l'ordre, qui déclenche un pouvoir.
-- **Les paroles** (TODO dans la marge) : les dictées du chapitre II écrites sous la portée, comme des paroles de chanson.
+- ~~**Commencer au chapitre II**~~ : fait à l'itération 4 (brouillon de 19 mots au hasard). Pour plus tard : un écran titre qui montre les pages débloquées comme les onglets d'un classeur.
+- ~~**Refrain**~~ : fait à l'itération 4 (notes à toucher dans l'ordre). Pour plus tard : un refrain « en canon » que deux mélodies se partagent ; un refrain caché que seul l'écho d'une ligne traversée révèle ; une version du chapitre I (une phrase à recopier mot à mot, la « copie »).
+- **Les paroles** (TODO dans la marge, et nouvelle promesse « les paroles ? » à côté du refrain) : des syllabes sous les notes du refrain, qui forment un mot ; les dictées du chapitre II écrites sous la portée, comme des paroles de chanson.
 - **Bons points** : de petites cartes illustrées à collectionner, gagnées par des exploits ; une page « collection » dans le carnet de bord.
 - **Bestiaire** : une page qui se remplit de croquis annotés à chaque nouvelle rature rencontrée.
 - **Page du jour** : une graine commune pour tous les joueurs, chaque jour, avec un défi.

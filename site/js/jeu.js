@@ -10,6 +10,9 @@ const G = {
 };
 try { G.best = parseInt(localStorage.getItem('inacheve.best') || '0', 10) || 0; } catch (e) { G.best = 0; }
 try { G.calm = !CAPTURE && localStorage.getItem('inacheve.calme') === '1'; } catch (e) { G.calm = false; }
+// chapitre le plus loin atteint : une fois la Grande Rature battue, on peut commencer directement au chapitre II
+try { G.unlocked = CAPTURE ? 1 : parseInt(localStorage.getItem('inacheve.chapitre') || '1', 10) || 1; } catch (e) { G.unlocked = 1; }
+function unlockChapter(n) { if (G.demo || n <= G.unlocked) return; G.unlocked = n; try { localStorage.setItem('inacheve.chapitre', String(n)); } catch (e) { /* rien */ } }
 let enemyId = 1;
 
 function xpFor(level) { return Math.floor(5 + level * 3 + level * level * 0.3); }
@@ -35,23 +38,37 @@ const CHAPTERS = [null, {
 const CH = () => CHAPTERS[G.chapter || 1];
 const TURN_DUR = 1.7;
 
-function newGame(demo) {
+function newGame(demo, start = 1) {
   if (!CAPTURE) { seed = (seed * 16807 + 12345) % 2147483647; }
   rand = mulberry32(seed);
-  G.chapter = 1;
+  G.chapter = start; G.startChapter = start;
   Object.assign(G, {
     demo, state: 'play', stateT: 0, t: 0, kills: 0, letters: 0, dictees: 0, level: 1, xp: 0, xpNext: xpFor(1), pendingLv: 0,
     mots: {}, motOrder: [], enemies: [], shots: [], ebul: [], items: [], parts: [], puddles: [], points: [], texts: [], fires: [], rings: [], waves: [], seen: {}, totalT: 0,
     spawnAcc: 0, nextWave: 45, boss: null, bossSpawned: false, bossDefeated: false, endless: false, nextBossAt: 180,
     pointCd: 6, dicteeIdx: 0, dicteeWord: CH().dictees[0], dicteeProg: 0, choices: [], sel: 0, score: 0, comboN: 0, comboT: 0,
-    moonA: 0, botPickT: 0, endPhrase: '', newBest: false
+    moonA: 0, botPickT: 0, endPhrase: '', newBest: false,
+    refrain: null, refrains: 0, nextRefrain: REFRAIN.first, songs: [], refrainSeen: false
   });
   const hp = demo ? 7 : 6;
   G.p = { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, r: 13, hp, maxHp: hp, inv: 1.2, dashCd: 0, dashT: 0, dx: 1, dy: 0, face: 0, fireCd: 0.5, look: 0, puddleT: 0, squash: 0, hidden: 0, gx: 0, gy: 0 };
   G.cam.x = G.p.x; G.cam.y = G.p.y;
   computeStats(); clearStains();
+  if (start > 1) draft(19);
   caption(CH().intro, 4);
+  if (start > 1) caption('Au brouillon : tes mots sont tirés au hasard', 4, 'green');
   setUI();
+}
+// Brouillon : on commence plus loin dans le cahier, avec des mots choisis au hasard (comme une partie déjà jouée)
+function draft(n) {
+  for (let i = 0; i < n; i++) {
+    const avail = Object.keys(MOTS).filter(k => !isCompose(k) && lvl(k) < MOTS[k].max && k !== 'SOUFFLE');
+    const ready = Object.keys(MOTS).filter(composeReady);
+    const k = ready.length && rand() < 0.5 ? pick(ready) : avail.length ? pick(avail) : null;
+    if (!k) break;
+    G.mots[k] = lvl(k) + 1; if (!G.motOrder.includes(k)) G.motOrder.push(k);
+  }
+  G.level = n + 1; G.xpNext = xpFor(G.level); computeStats();
 }
 // On tourne la page : le chapitre suivant commence, avec les mêmes mots et le même niveau
 function turnPage() {
@@ -61,7 +78,7 @@ function turnPage() {
   Object.assign(G, {
     chapter: G.chapter + 1, state: 'turn', stateT: 0, totalT: G.totalT + G.t, t: 0, enemies: [], shots: [], ebul: [], items: [], parts: [], puddles: [], points: [], fires: [], rings: [], waves: [], texts: [],
     spawnAcc: 0, nextWave: 45, boss: null, bossSpawned: false, bossDefeated: false, victoryAt: 0, endless: false, nextBossAt: 180, pointCd: 3,
-    dicteeIdx: 0, dicteeProg: 0, comboN: 0, newBest: false, captions: []
+    dicteeIdx: 0, dicteeProg: 0, comboN: 0, newBest: false, captions: [], refrain: null, nextRefrain: REFRAIN.first, songs: []
   });
   G.dicteeWord = CH().dictees[0];
   const p = G.p; Object.assign(p, { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, hp: p.maxHp, inv: 2.5, dashT: 0, hidden: 0 });
@@ -162,7 +179,7 @@ function killEnemy(e) {
   if (e.isBoss) {
     G.boss = null; G.cam.shake = 26; AU.play('win');
     for (let i = 0; i < 40; i++) dropLetter(e.x + rnd(-80, 80), e.y + rnd(-80, 80), i % 4 === 0 ? 5 : 2);
-    if (!G.bossDefeated) { G.bossDefeated = true; G.victoryAt = G.t + 1.6; }
+    if (!G.bossDefeated) { G.bossDefeated = true; G.victoryAt = G.t + 1.6; unlockChapter(Math.min(CHAPTERS.length - 1, G.chapter + 1)); }
     return;
   }
   if (CH().paper === 'portee') AU.play('noteKill', staffPitch(e.y)); else AU.play('kill');
@@ -200,6 +217,9 @@ function botInput() {
   let goal = null, gd = 1e9;
   const need = G.dicteeWord[G.dicteeProg];
   for (const it of G.items) { const d = Math.hypot(it.x - p.x, it.y - p.y) - (it.ch === need ? 160 : 0) - (it.rare ? 80 : 0); if (d < gd && d < 520) { gd = d; goal = it; } }
+  const rn = G.refrain && G.refrain.notes[G.refrain.prog];   // le refrain passe avant les lettres
+  const toSong = rn && Math.hypot(rn.x - p.x, rn.y - p.y) < 1600;
+  if (toSong) goal = rn;
   if (!goal) goal = { x: WORLD.w / 2 + Math.cos(G.t * 0.21) * 700, y: WORLD.h / 2 + Math.sin(G.t * 0.17) * 420 };
   const gdx = goal.x - p.x, gdy = goal.y - p.y, gl = Math.hypot(gdx, gdy) || 1;
   const prev = G.botDir || { x: 1, y: 0 };
@@ -222,7 +242,7 @@ function botInput() {
       const wm = Math.min(x, y, WORLD.w - x, WORLD.h - y);
       if (wm < 220) sc -= (220 - wm) * 0.03 * w;
     }
-    sc += (dx * gdx + dy * gdy) / gl * 1.5;
+    sc += (dx * gdx + dy * gdy) / gl * (toSong ? 3 : 1.5);
     sc += (dx * prev.x + dy * prev.y) * 0.25;
     if (sc > bestS) { bestS = sc; best = { x: dx, y: dy }; }
   }
@@ -460,6 +480,9 @@ function stepPlay(dt) {
   G.fires = G.fires.filter(f => f.life > 0);
   for (const r of G.rings) r.t += dt;
   G.rings = G.rings.filter(r => r.t < r.dur);
+  stepRefrain(dt);
+  for (const sg of G.songs) sg.t += dt;
+  G.songs = G.songs.filter(sg => sg.t < sg.dur);
   G.enemies = G.enemies.filter(e => !e.dead);
   // ---- lettres
   G.comboT -= dt; if (G.comboT <= 0) G.comboN = 0;

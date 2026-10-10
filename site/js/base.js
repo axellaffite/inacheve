@@ -235,6 +235,15 @@ const AU = {
       case 'wall': this.noise(0.5, { f: 1500, q: 4, vol: 0.1, sweep: 2 }); this.tone(116.54, 0.6, { type: 'sawtooth', vol: 0.06 }); break;
       case 'accord': [246.94, 277.18, 349.23].forEach(f => this.tone(f, 0.7, { type: 'triangle', vol: 0.09 })); break;
       case 'turn': this.noise(0.7, { f: 1800, q: 0.5, vol: 0.18, sweep: 0.35 }); this.noise(0.3, { f: 3500, q: 0.8, vol: 0.08, when: 0.55 }); break;
+      case 'refrainNew': [4, 6, 8].forEach((n, i) => this.tone(NOTE_F[n] * 2, 0.35, { type: 'sine', vol: 0.07, when: i * 0.09 })); break;
+      case 'refrainNote': this.tone(NOTE_F[k] * 2, 0.6, { type: 'triangle', vol: 0.18 }); this.tone(NOTE_F[k] * 4, 0.4, { vol: 0.05 }); break;
+      case 'refrainLost': this.tone(311.13, 0.5, { type: 'triangle', vol: 0.1, slide: 0.85 }); break;
+      case 'refrain': {   // la mélodie rejouée d'un trait, puis un accord
+        const ds = String(k).split('').map(c => Number(c) - 1);
+        ds.forEach((n, i) => { this.tone(NOTE_F[n] * 2, 0.45, { type: 'triangle', vol: 0.16, when: i * 0.1 }); this.tone(NOTE_F[n], 0.5, { vol: 0.06, when: i * 0.1 }); });
+        [0, 2, 4].forEach(n => this.tone(NOTE_F[n + 2] * 2, 1.2, { type: 'sine', vol: 0.08, when: ds.length * 0.1 }));
+        this.noise(0.8, { f: 3000, q: 0.6, vol: 0.06, sweep: 2.5 }); break;
+      }
       case 'lose': [6, 4, 2, 0].forEach((n, i) => this.tone(PENTA[n], 0.8, { type: 'triangle', vol: 0.15, when: i * 0.18 })); break;
     }
   },

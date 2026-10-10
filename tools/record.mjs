@@ -41,36 +41,42 @@ async function load(seed) {
   await page.waitForFunction(() => window.__cap);
   await page.evaluate(() => window.__cap.ready);
 }
-// Coups de pouce du montage (itération 3 : le chapitre II), appliqués à l'identique en simulation et au tournage.
+// Coups de pouce du montage (itération 4 : le refrain du chapitre II), appliqués à l'identique en simulation et au tournage.
 // Chaque étape : `skip` secondes jouées sans filmer, une action éventuelle dans la page, un sous-titre, puis `play` secondes filmées.
 // On saute la fin du chapitre I : le pilote reçoit les mots d'une partie avancée, puis la page se tourne.
+// Le premier refrain s'écrit 8 s après le début du chapitre II : l'étape `song` doit le montrer joué en entier.
 const STEPS = [
-  { play: 5.5 },
-  { skip: 30, cap: ['… trois minutes et une Grande Rature plus tard …', 'Nouveau : on tourne la page !'], act: () => {
+  { play: 5 },
+  { skip: 30, cap: ['… trois minutes et une Grande Rature plus tard …', 'On tourne la page : chapitre II'], act: () => {
     window.__cap.grant({ ENCRE: 4, VIRGULE: 4, GUILLEMETS: 3, LUNE: 3, ECHO: 2, POINT: 3, FEU: 2, PLUME: 2, POINT_VIRGULE: 1, ECHO_DE_LUNE: 1, POINT_DE_FEU: 1 });
     window.__cap.level(22); window.__cap.turn();
-  }, play: 9 },
-  { skip: 11.5, cap: ['Les lignes de la portée chantent quand tu les traverses'], play: 8.5 },
-  { skip: 26, play: 9 }
+  }, play: 7 },
+  { song: true, play: 13 },
+  { skip: 20, cap: ['Chaque refrain réussi en appelle un plus long'], play: 8 }
 ];
-const BOSS_FILM = 48;   // secondes de combat filmées au plus contre la Fausse Note
+const BOSS_FILM = 45;   // secondes de combat filmées au plus contre la Fausse Note
 // Joue une partie entière en accéléré (sans filmer) pour savoir comment elle se termine
 async function simulate(seed) {
   await load(seed);
   await page.evaluate(() => window.__cap.start());
-  for (const st of STEPS) { await page.evaluate(n => window.__cap.skip(n), st.skip || 0); if (st.act) await page.evaluate(st.act); await page.evaluate(n => window.__cap.skip(n), st.play); }
-  return page.evaluate(() => { for (let i = 0; i < 320; i++) { window.__cap.skip(1); const s = window.__cap.state(); if (s.state === 'victory' || s.state === 'gameover') return s; } return window.__cap.state(); });
+  let sung = 0;
+  for (const st of STEPS) {
+    await page.evaluate(n => window.__cap.skip(n), st.skip || 0); if (st.act) await page.evaluate(st.act); await page.evaluate(n => window.__cap.skip(n), st.play);
+    if (st.song) sung = (await page.evaluate(() => window.__cap.state())).refrains;
+  }
+  const end = await page.evaluate(() => { for (let i = 0; i < 320; i++) { window.__cap.skip(1); const s = window.__cap.state(); if (s.state === 'victory' || s.state === 'gameover') return s; } return window.__cap.state(); });
+  return { ...end, sung };
 }
-// une bonne graine : la Fausse Note tombe pendant qu'on filme encore
-const good = r => r.state === 'victory' && r.chapter === 2 && r.t <= 176 + BOSS_FILM - 2;
+// une bonne graine : le refrain est joué à l'écran, et la Fausse Note tombe pendant qu'on filme encore
+const good = r => r.sung >= 1 && r.state === 'victory' && r.chapter === 2 && r.t <= 176 + BOSS_FILM - 2;
 let SEED = SEED_ARG ? parseInt(SEED_ARG, 10) : null;
 if (SEED === null && !SMOKE) {
   // on cherche une partie qui va jusqu'à la victoire, pour montrer tout le chapitre
   let best = null;
   for (const s of [42, 7, 5, 99, 3, 11, 23, 64, 1, 8, 13, 21]) {
     const r = await simulate(s);
-    console.log(`graine ${s} : ${r.state} au chapitre ${r.chapter}, à ${r.t.toFixed(0)} s (niveau ${r.level})`);
-    const score = x => (good(x) ? 1e6 : 0) + (x.state === 'victory' ? 1e5 - x.t : x.t);
+    console.log(`graine ${s} : ${r.state} au chapitre ${r.chapter}, à ${r.t.toFixed(0)} s (niveau ${r.level}, refrain filmé : ${r.sung ? 'oui' : 'non'}, ${r.refrains} refrain(s))`);
+    const score = x => (good(x) ? 1e6 : 0) + (x.sung ? 2e5 : 0) + (x.state === 'victory' ? 1e5 - x.t : x.t);
     if (!best || score(r) > score(best.r)) best = { s, r };
     if (good(r)) break;
   }
@@ -81,7 +87,7 @@ const meta = await page.evaluate(() => window.__cap.meta);
 const fail = msg => { console.error('ÉCHEC : ' + msg); if (errors.length) console.error(errors.join('\n')); process.exitCode = 1; };
 
 if (SMOKE) {
-  await page.evaluate(() => { window.__cap.start(); window.__cap.skip(20); window.__cap.frames(3); });
+  await page.evaluate(() => { window.__cap.start(); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(2); window.__cap.skip(20); window.__cap.frames(3); });
   const st = await page.evaluate(() => window.__cap.state());
   console.log('smoke :', JSON.stringify(st));
   if (errors.length) fail('erreurs JavaScript'); else console.log('OK, aucune erreur.');

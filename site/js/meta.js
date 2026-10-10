@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 3, date: '2026-10-10', title: 'On tourne la page', chapter: 'II', chapterName: 'La portée' };
+const GAME_META = { iteration: 4, date: '2026-10-10', title: 'Le refrain', chapter: 'II', chapterName: 'La portée' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -30,6 +30,14 @@ const JOURNAL = [
       "Trois ratures musicales : la croche qui sautille, le soupir qui disparaît et réapparaît, le métronome dont le cercle frappe au quatrième tic.",
       "Au bout de la portée t’attend la Fausse Note : gammes en spirale, accords, et des portées entières de notes où il faut trouver la respiration.",
       "L’encre sèche doucement : les vieilles taches pâlissent, la page reste lisible même après mille ratures."
+    ] },
+  { iteration: 4, date: '2026-10-10', title: 'Le refrain',
+    notes: [
+      "Au chapitre II, un refrain s’écrit sur la portée : quelques notes à toucher dans l’ordre, avant que la mélodie ne se perde.",
+      "Quand le refrain est complet, la page chante : une onde de notes dorées balaie les ratures, efface les notes rouges et te rend un cœur.",
+      "Chaque refrain réussi en appelle un autre, un peu plus long. Une flèche dorée montre où il t’attend.",
+      "Une fois la Grande Rature battue, tu peux commencer directement au chapitre II, avec un brouillon de mots tirés au hasard.",
+      "Dans la marge, la promesse du refrain est tenue. Une autre l’a remplacée…"
     ] }
 ];
 window.GAME_META = GAME_META;

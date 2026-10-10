@@ -57,12 +57,13 @@ function setUI() {
   document.getElementById('btnPause').classList.toggle('show', G.input.touch && G.state === 'play');
   document.getElementById('btnSound').textContent = 'Son : ' + (AU.muted ? 'coupé' : 'activé');
   document.getElementById('btnCalm').textContent = 'Secousses : ' + (G.calm ? 'non' : 'oui');
+  document.getElementById('btnCh2').classList.toggle('hidden', !(G.state === 'title' && G.unlocked >= 2));
 }
 function primaryAction() {
   AU.init();
   if (G.state === 'title') newGame(false);
   else if (G.state === 'pause') { G.state = 'play'; setUI(); }
-  else if (G.state === 'gameover' && G.stateT > 0.8) newGame(false);
+  else if (G.state === 'gameover' && G.stateT > 0.8) newGame(false, G.startChapter);
   else if (G.state === 'victory' && G.stateT > 0.8 && G.chapter < CHAPTERS.length - 1) turnPage();
   else if (G.state === 'victory' && G.stateT > 0.8) { G.state = 'play'; G.endless = true; G.nextWave = G.t + 20; G.nextBossAt = G.t + 180; caption('Page libre : jusqu’où iras-tu ?', 3); setUI(); }
 }
@@ -92,10 +93,11 @@ if (!CAPTURE) {
       else if (e.code === 'Enter' || e.code === 'Space') chooseMot(G.sel);
       return;
     }
+    if ((e.code === 'Digit2' || e.code === 'Numpad2') && G.state === 'title' && G.unlocked >= 2) { newGame(false, 2); return; }
     if (e.code === 'Enter' || (e.code === 'Space' && G.state !== 'play')) primaryAction();
     if ((e.code === 'Space' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') && G.state === 'play') G.input.dashQueued = true;
     if (e.code === 'Escape' || e.code === 'KeyP') togglePause();
-    if (e.code === 'KeyR' && (G.state === 'victory' || G.state === 'gameover')) newGame(false);
+    if (e.code === 'KeyR' && (G.state === 'victory' || G.state === 'gameover')) newGame(false, G.startChapter);
   });
   addEventListener('keyup', e => { keys[e.code] = false; });
   addEventListener('blur', () => { for (const k in keys) keys[k] = false; if (G.state === 'play') togglePause(); });
@@ -132,6 +134,7 @@ if (!CAPTURE) {
   dlg.addEventListener('close', () => cv.focus());
   document.getElementById('btnSound').addEventListener('click', toggleMute);
   document.getElementById('btnCalm').addEventListener('click', toggleCalm);
+  document.getElementById('btnCh2').addEventListener('click', () => { AU.init(); if (G.state === 'title') newGame(false, 2); });
   document.getElementById('btnPause').addEventListener('click', () => togglePause());
 }
 function videoFor(n) {
@@ -188,9 +191,9 @@ window.__cap = {
   audio(duration) { return AU.renderCapture(duration); },
   skip(seconds, dt = 1 / 30) { const n = Math.round(seconds / dt); for (let i = 0; i < n; i++) update(dt); },
   title() { initTitle(); },
-  start() { newGame(true); },
+  start(chapter) { newGame(true, chapter || 1); },
   caption(t, d) { caption(t, d); },
-  state() { return { state: G.state, chapter: G.chapter || 1, t: G.t, boss: !!G.boss, bossDefeated: !!G.bossDefeated, level: G.level, hp: G.p ? G.p.hp : 0, enemies: G.enemies ? G.enemies.length : 0, kills: G.kills, mots: G.mots }; },
+  state() { return { state: G.state, chapter: G.chapter || 1, t: G.t, boss: !!G.boss, bossDefeated: !!G.bossDefeated, level: G.level, hp: G.p ? G.p.hp : 0, enemies: G.enemies ? G.enemies.length : 0, kills: G.kills, mots: G.mots, refrains: G.refrains || 0, refrain: G.refrain ? G.refrain.prog : -1 }; },
   heal() { if (G.p) G.p.hp = G.p.maxHp; },
   // donne des mots d'un coup (montage) puis ouvre un choix : un mot composé prêt y est toujours proposé
   grant(mots) { for (const k in mots) { G.mots[k] = Math.max(lvl(k), mots[k]); if (!G.motOrder.includes(k)) G.motOrder.push(k); } computeStats(); G.pointCd = Math.min(G.pointCd, 1.5); },
