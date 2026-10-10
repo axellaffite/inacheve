@@ -15,7 +15,7 @@ Le méta-récit est le cœur du projet : **le jeu est réellement inachevé**. A
 - Accent unique : **le surligneur fluo** (jaune, rose, vert) pour ce qui compte (sous-titres, lettre attendue, mot choisi). Ne pas en abuser.
 - Polices (dans `site/fonts/`, licence OFL) : Playwrite FR Moderne (cursive scolaire française) pour les grands titres, Caveat pour tout le reste.
 - Trait « bouillonnant » : les ratures sont dessinées en trois variantes qui alternent 8 fois par seconde, comme une animation dessinée à la main.
-- L'encre s'accumule : chaque rature biffée laisse une tache permanente sur la page ; les gommes l'effacent.
+- L'encre s'accumule : chaque rature biffée laisse une tache sur la page ; les gommes l'effacent. Depuis l'itération 3, l'encre sèche : une fois par seconde, toutes les taches pâlissent un peu (`dryStains`), sans jamais disparaître tout à fait.
 
 ## Systèmes (itération 1)
 
@@ -43,6 +43,20 @@ Quand deux mots atteignent chacun le niveau 2, leur union devient possible : au 
 
 La phrase de fin met les mots composés en vedette. Le pilote automatique les prend en priorité.
 
+## Chapitres (itération 3)
+
+Le cahier a maintenant deux pages. Chaque chapitre est une entrée de `CHAPTERS` (dans `jeu.js` pour le I, dans `chapitre2.js` pour le II, qui l'ajoute à la liste) : papier, notes des marges, dictées, table d'apparition (`pick`, `wave`), boss, décalages de difficulté (`scale`, `rateOff`, `rateCap`) et sous-titres de première rencontre (`meet`). `CH()` renvoie le chapitre courant (`G.chapter`).
+
+- **Tourner la page** : après la victoire du chapitre I, Entrée (ou toucher) lance `turnPage()`. L'état `turn` (1,7 s) montre l'ancienne page, photographiée juste avant, qui se soulève par la droite et révèle son verso. Mots, niveau et cœurs max sont conservés ; les lettres restées au sol sont comptées ; le chrono du chapitre repart à zéro (le temps total s'affiche à la fin).
+- **Page libre** : seulement après le dernier chapitre écrit (pour l'instant, le II).
+- **Chapitre II, la portée** : papier à musique, dix portées de cinq lignes, barres de mesure, clé de sol tracée à la main (`CLEF`, un `Path2D`). Les lignes chantent quand on les traverse (fa, ré, si, sol, mi : `staffCross`) et chaque rature biffée sonne la note de sa hauteur sur la portée (`staffPitch`). La musique passe en boîte à musique, do lydien, avec un tic-tac discret.
+  - **Croche** (base) : sautille en rythme, rapide par à-coups.
+  - **Soupir** (dès 20 s) : s'efface, un cercle en pointillés annonce où il va se poser, puis il réapparaît près de toi. Inoffensif et intouchable tant qu'il est « fantôme » (`e.ghost`).
+  - **Métronome** (dès 55 s) : tic, tic, tic… au quatrième tic, une onde rouge (`G.waves`) part de lui ; un cercle en pointillés l'annonce pendant le troisième tic. On est touché quand l'onde passe sur soi.
+  - **La Fausse Note** (boss à 3:00, 1 500 PV) : une grosse note rouge avec un bémol de travers. Cycle : gamme (spirale de notes tirées une à une), portée (un mur de notes annoncé 0,9 s, avec un trou, la « respiration », marquée d'une apostrophe), accord (trois cercles de notes décalés d'un temps). Sous 50 % : spirale double, charge et appel de croches.
+  - Dictées musicales : NOTE, GAMME, ACCORD, REFRAIN, SOLFÈGE…
+- Les boss sont repérés par `e.isBoss` (champ `boss: true` dans `ETYPES`), plus par leur type.
+
 ## Réglages et mémoire
 
 - `inacheve.best` : meilleur score.
@@ -59,6 +73,8 @@ Simulé avec le pilote automatique : environ 2 parties sur 3 battent la Grande R
 
 Itération 2 (avec les mots composés) : 7 graines sur 10 gagnent, entre 3:28 et 3:41 ; les morts arrivent entre 2:14 et 2:38. L'équilibre n'a pas bougé de façon notable.
 
+Itération 3 (chapitre II, parties naturelles : chapitre I joué en entier puis page tournée) : sur 12 pilotes arrivés au chapitre II, 8 battent la Fausse Note (entre 3:41 et 4:05 de chapitre), 4 meurent entre 2:08 et 3:00. Les premiers réglages (`scale` 1,15, boss à 820 PV) étaient beaucoup trop faciles : aucun pilote ne perdait plus de deux cœurs.
+
 ## Outils
 
 - `tools/check.mjs` : vérifications sans navigateur.
@@ -70,7 +86,10 @@ Itération 2 (avec les mots composés) : 7 graines sur 10 gagnent, entre 3:28 et
 
 ## Carnet d'idées (libre à toi de piocher, de modifier ou d'ignorer)
 
-- **Écrire les marges** : le chapitre II se joue sur une nouvelle sorte de papier. Papier millimétré (géométrie : ennemis-compas, équerres), portées musicales (les notes jouent la musique quand on les touche), carte au trésor, page de calligraphie, buvard qui absorbe tout.
+- ~~**Portées musicales**~~ : fait à l'itération 3 (chapitre II). **Chapitre III** : papier millimétré (géométrie : ennemis-compas, équerres, rapporteur), carte au trésor, page de calligraphie, buvard qui absorbe tout.
+- **Commencer au chapitre II** : une fois le chapitre I gagné, le proposer depuis l'écran titre avec un « brouillon » de mots tirés au hasard (clé `inacheve.chapitre`).
+- **Refrain** (promis dans la marge du chapitre II) : un motif de notes à rejouer en traversant les lignes dans l'ordre, qui déclenche un pouvoir.
+- **Les paroles** (TODO dans la marge) : les dictées du chapitre II écrites sous la portée, comme des paroles de chanson.
 - **Bons points** : de petites cartes illustrées à collectionner, gagnées par des exploits ; une page « collection » dans le carnet de bord.
 - **Bestiaire** : une page qui se remplit de croquis annotés à chaque nouvelle rature rencontrée.
 - **Page du jour** : une graine commune pour tous les joueurs, chaque jour, avec un défi.
@@ -80,6 +99,6 @@ Itération 2 (avec les mots composés) : 7 graines sur 10 gagnent, entre 3:28 et
 - **Patrons de chapitres** : le Correcteur au stylo rouge, la Photocopieuse qui duplique tout, le Cartable.
 - **Accessibilité** : options de contraste, vitesse du jeu, daltonisme (les secousses sont faites).
 - **Histoire** : une phrase d'histoire se révèle à chaque chapitre, comme si le cahier racontait quelque chose.
-- **Musique** : un thème par chapitre, et une musique qui réagit aux mots choisis.
+- **Musique** : un thème par chapitre (fait à l'itération 3 pour le I et le II) ; reste une musique qui réagit aux mots choisis.
 - **Encre sympathique, la suite** : des lettres invisibles cachées dans la page, révélées seulement quand on est soi-même invisible.
 - **Carnet des unions** : une page qui montre les mots composés déjà découverts, et des silhouettes « ? » pour les autres.

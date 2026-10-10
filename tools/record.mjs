@@ -41,14 +41,19 @@ async function load(seed) {
   await page.waitForFunction(() => window.__cap);
   await page.evaluate(() => window.__cap.ready);
 }
-// Coups de pouce du montage (itération 2 : les mots composés), appliqués à l'identique en simulation et au tournage.
+// Coups de pouce du montage (itération 3 : le chapitre II), appliqués à l'identique en simulation et au tournage.
 // Chaque étape : `skip` secondes jouées sans filmer, une action éventuelle dans la page, un sous-titre, puis `play` secondes filmées.
+// On saute la fin du chapitre I : le pilote reçoit les mots d'une partie avancée, puis la page se tourne.
 const STEPS = [
-  { play: 9 },
-  { skip: 40, cap: ['… un peu plus loin dans la page …', 'Nouveau : deux mots peuvent s’unir'], act: () => { window.__cap.grant({ POINT: 2, VIRGULE: 2, LUNE: 2, ECHO: 2 }); window.__cap.levelup(); }, play: 9.5 },
-  { act: () => window.__cap.levelup(), play: 8.5 },
-  { act: () => { window.__cap.grant({ PLUME: 2, VENT: 2 }); window.__cap.levelup(); }, play: 9 }
+  { play: 5.5 },
+  { skip: 30, cap: ['… trois minutes et une Grande Rature plus tard …', 'Nouveau : on tourne la page !'], act: () => {
+    window.__cap.grant({ ENCRE: 4, VIRGULE: 4, GUILLEMETS: 3, LUNE: 3, ECHO: 2, POINT: 3, FEU: 2, PLUME: 2, POINT_VIRGULE: 1, ECHO_DE_LUNE: 1, POINT_DE_FEU: 1 });
+    window.__cap.level(22); window.__cap.turn();
+  }, play: 9 },
+  { skip: 11.5, cap: ['Les lignes de la portée chantent quand tu les traverses'], play: 8.5 },
+  { skip: 26, play: 9 }
 ];
+const BOSS_FILM = 48;   // secondes de combat filmées au plus contre la Fausse Note
 // Joue une partie entière en accéléré (sans filmer) pour savoir comment elle se termine
 async function simulate(seed) {
   await load(seed);
@@ -56,15 +61,18 @@ async function simulate(seed) {
   for (const st of STEPS) { await page.evaluate(n => window.__cap.skip(n), st.skip || 0); if (st.act) await page.evaluate(st.act); await page.evaluate(n => window.__cap.skip(n), st.play); }
   return page.evaluate(() => { for (let i = 0; i < 320; i++) { window.__cap.skip(1); const s = window.__cap.state(); if (s.state === 'victory' || s.state === 'gameover') return s; } return window.__cap.state(); });
 }
+// une bonne graine : la Fausse Note tombe pendant qu'on filme encore
+const good = r => r.state === 'victory' && r.chapter === 2 && r.t <= 176 + BOSS_FILM - 2;
 let SEED = SEED_ARG ? parseInt(SEED_ARG, 10) : null;
 if (SEED === null && !SMOKE) {
   // on cherche une partie qui va jusqu'à la victoire, pour montrer tout le chapitre
   let best = null;
-  for (const s of [42, 7, 5, 99, 3, 11, 23, 64, 1]) {
+  for (const s of [42, 7, 5, 99, 3, 11, 23, 64, 1, 8, 13, 21]) {
     const r = await simulate(s);
-    console.log(`graine ${s} : ${r.state} à ${r.t.toFixed(0)} s (niveau ${r.level})`);
-    if (!best || (r.state === 'victory' && best.r.state !== 'victory') || (r.state === best.r.state && r.t > best.r.t && r.state !== 'victory')) best = { s, r };
-    if (r.state === 'victory') break;
+    console.log(`graine ${s} : ${r.state} au chapitre ${r.chapter}, à ${r.t.toFixed(0)} s (niveau ${r.level})`);
+    const score = x => (good(x) ? 1e6 : 0) + (x.state === 'victory' ? 1e5 - x.t : x.t);
+    if (!best || score(r) > score(best.r)) best = { s, r };
+    if (good(r)) break;
   }
   SEED = best.s;
 }
@@ -102,7 +110,7 @@ const cap = (t, d) => page.evaluate(([t, d]) => window.__cap.caption(t, d), [t, 
 /* ---------- Le « montage » : à adapter à chaque itération pour montrer les nouveautés ---------- */
 console.log(`Tournage de l'itération ${meta.iteration} : « ${meta.title} »`);
 await page.evaluate(() => window.__cap.title());
-await grab(3.5);
+await grab(3);
 await page.evaluate(() => window.__cap.start());
 await cap(`Itération ${meta.iteration} : ${meta.title}`, 3.2);
 for (const step of STEPS) {
@@ -113,13 +121,13 @@ for (const step of STEPS) {
 }
 let st = await state();
 // avance rapide jusqu'au boss (le pilote joue vraiment, on ne filme simplement pas)
-while (st.state !== 'gameover' && st.t < 175) {
-  await page.evaluate(() => { window.__cap.skip(5); const s = window.__cap.state(); if (s.state === 'levelup') window.__cap.skip(1.5); });
+while (st.state !== 'gameover' && st.state !== 'victory' && st.t < 176) {
+  await page.evaluate(() => { window.__cap.skip(1); const s = window.__cap.state(); if (s.state === 'levelup') window.__cap.skip(1.5); });
   st = await state();
 }
 if (st.state !== 'gameover') {
-  await cap('… quelques pages plus tard …', 2.4);
-  for (let i = 0; i < 42 && st.state !== 'victory' && st.state !== 'gameover'; i++) { await grab(1); st = await state(); }
+  await cap('… à la dernière mesure du chapitre II …', 2.6);
+  for (let i = 0; i < BOSS_FILM && st.state !== 'victory' && st.state !== 'gameover'; i++) { await grab(1); st = await state(); }
 }
 await grab(st.state === 'victory' || st.state === 'gameover' ? 5 : 1);
 /* ---------------------------------------------------------------------------------------------- */

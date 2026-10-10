@@ -30,6 +30,7 @@ function update(dt) {
       if (G.botPickT <= 0) chooseMot(best);
     }
   } else if (G.state === 'gameover' || G.state === 'victory') stepParticles(dt);
+  else if (G.state === 'turn' && G.stateT >= TURN_DUR) { G.state = 'play'; G.stateT = 0; setUI(); }
   // caméra
   if (G.p && G.state !== 'title') {
     const vw = W / ZOOM, vh = H / ZOOM, m = 230;
@@ -44,7 +45,7 @@ let lastT = 0;
 function frame(now) {
   const dt = Math.min(0.05, (now - lastT) / 1000 || 0.016); lastT = now;
   update(dt); render();
-  AU.tick(G.state === 'play' ? Math.min(1, G.t / 180) : 0.1, !!G.boss && G.state === 'play');
+  AU.tick(G.state === 'play' ? Math.min(1, G.t / 180) : 0.1, !!G.boss && G.state === 'play', G.state === 'title' ? 1 : G.chapter);
   requestAnimationFrame(frame);
 }
 
@@ -62,6 +63,7 @@ function primaryAction() {
   if (G.state === 'title') newGame(false);
   else if (G.state === 'pause') { G.state = 'play'; setUI(); }
   else if (G.state === 'gameover' && G.stateT > 0.8) newGame(false);
+  else if (G.state === 'victory' && G.stateT > 0.8 && G.chapter < CHAPTERS.length - 1) turnPage();
   else if (G.state === 'victory' && G.stateT > 0.8) { G.state = 'play'; G.endless = true; G.nextWave = G.t + 20; G.nextBossAt = G.t + 180; caption('Page libre : jusqu’où iras-tu ?', 3); setUI(); }
 }
 function togglePause() {
@@ -178,7 +180,7 @@ window.__cap = {
     const out = [];
     for (let i = 0; i < n; i++) {
       CAPLOG.on = true; update(dt); CAPLOG.on = false; render(); out.push(cv.toDataURL('image/jpeg', quality));
-      CAPLOG.states.push({ t: CAPLOG.t, i: G.state === 'play' ? Math.min(1, G.t / 180) : 0.1, b: !!G.boss && G.state === 'play' });
+      CAPLOG.states.push({ t: CAPLOG.t, i: G.state === 'play' ? Math.min(1, G.t / 180) : 0.1, b: !!G.boss && G.state === 'play', c: G.state === 'title' ? 1 : G.chapter || 1 });
       CAPLOG.t += dt;
     }
     return out;
@@ -188,11 +190,14 @@ window.__cap = {
   title() { initTitle(); },
   start() { newGame(true); },
   caption(t, d) { caption(t, d); },
-  state() { return { state: G.state, t: G.t, boss: !!G.boss, bossDefeated: !!G.bossDefeated, level: G.level, hp: G.p ? G.p.hp : 0, enemies: G.enemies ? G.enemies.length : 0, kills: G.kills, mots: G.mots }; },
+  state() { return { state: G.state, chapter: G.chapter || 1, t: G.t, boss: !!G.boss, bossDefeated: !!G.bossDefeated, level: G.level, hp: G.p ? G.p.hp : 0, enemies: G.enemies ? G.enemies.length : 0, kills: G.kills, mots: G.mots }; },
   heal() { if (G.p) G.p.hp = G.p.maxHp; },
   // donne des mots d'un coup (montage) puis ouvre un choix : un mot composé prêt y est toujours proposé
   grant(mots) { for (const k in mots) { G.mots[k] = Math.max(lvl(k), mots[k]); if (!G.motOrder.includes(k)) G.motOrder.push(k); } computeStats(); G.pointCd = Math.min(G.pointCd, 1.5); },
-  levelup() { if (G.state === 'play' || G.state === 'levelup') G.pendingLv++; }
+  levelup() { if (G.state === 'play' || G.state === 'levelup') G.pendingLv++; },
+  // montage : fixe le niveau affiché, puis tourne la page (chapitre suivant, mêmes mots)
+  level(n) { G.level = n; G.xp = 0; G.xpNext = xpFor(n); },
+  turn() { if (G.state === 'play' || G.state === 'victory') turnPage(); }
 };
 if (!CAPTURE) { fontsReady.then(() => { lastT = performance.now(); requestAnimationFrame(frame); }); }
 else render();

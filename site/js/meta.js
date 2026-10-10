@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 2, date: '2026-10-09', title: 'Les mots se tiennent la main', chapter: 'I', chapterName: 'Premier chapitre' };
+const GAME_META = { iteration: 3, date: '2026-10-10', title: 'On tourne la page', chapter: 'II', chapterName: 'La portée' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -22,6 +22,14 @@ const JOURNAL = [
       "Sur téléphone, les sous-titres descendent au-dessus de la dictée et ne cachent plus tes mots.",
       "Nouveau réglage « Secousses » (bouton ou touche C) pour garder la page immobile quand ça cogne.",
       "Une nouvelle note au crayon est apparue dans la marge du haut. Sauras-tu la trouver ?"
+    ] },
+  { iteration: 3, date: '2026-10-10', title: 'On tourne la page',
+    notes: [
+      "Le chapitre II est écrit : quand la Grande Rature tombe, on tourne la page, et on garde ses mots et son niveau.",
+      "La nouvelle page est une partition. Ses lignes chantent quand tu les traverses, et chaque rature biffée sonne une note.",
+      "Trois ratures musicales : la croche qui sautille, le soupir qui disparaît et réapparaît, le métronome dont le cercle frappe au quatrième tic.",
+      "Au bout de la portée t’attend la Fausse Note : gammes en spirale, accords, et des portées entières de notes où il faut trouver la respiration.",
+      "L’encre sèche doucement : les vieilles taches pâlissent, la page reste lisible même après mille ratures."
     ] }
 ];
 window.GAME_META = GAME_META;

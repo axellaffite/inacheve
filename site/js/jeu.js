@@ -24,21 +24,51 @@ function computeStats() {
   };
 }
 
+// Les chapitres du cahier. Le chapitre II (la portée) est décrit dans chapitre2.js, qui l'ajoute à la liste.
+const CHAPTERS = [null, {
+  num: 'I', name: 'Premier chapitre', done: 'Premier chapitre : écrit.', paper: 'seyes', notes: UNWRITTEN_NOTES, dictees: DICTEES,
+  intro: 'Chapitre I : tiens la page jusqu’à la Grande Rature', boss: 'boss', bossName: 'La Grande Rature', bossIntro: 'La Grande Rature approche…', bossBack: 'Elle revient, plus épaisse.', bossSound: 'boss',
+  scale: 0, rateOff: 0, rateCap: 5.5, waveCap: 'Une vague de gribouillis !', meet: {},
+  pick(t, r) { if (t > 95 && r < 0.09) return 'gomme'; if (t > 60 && r < 0.22) return 'tache'; if (t > 25 && r < 0.42) return 'biffure'; return 'gribouillis'; },
+  wave(t, i) { return t > 80 && i % 3 === 0 ? 'biffure' : 'gribouillis'; }
+}];
+const CH = () => CHAPTERS[G.chapter || 1];
+const TURN_DUR = 1.7;
+
 function newGame(demo) {
   if (!CAPTURE) { seed = (seed * 16807 + 12345) % 2147483647; }
   rand = mulberry32(seed);
+  G.chapter = 1;
   Object.assign(G, {
     demo, state: 'play', stateT: 0, t: 0, kills: 0, letters: 0, dictees: 0, level: 1, xp: 0, xpNext: xpFor(1), pendingLv: 0,
-    mots: {}, motOrder: [], enemies: [], shots: [], ebul: [], items: [], parts: [], puddles: [], points: [], texts: [], fires: [], rings: [],
+    mots: {}, motOrder: [], enemies: [], shots: [], ebul: [], items: [], parts: [], puddles: [], points: [], texts: [], fires: [], rings: [], waves: [], seen: {}, totalT: 0,
     spawnAcc: 0, nextWave: 45, boss: null, bossSpawned: false, bossDefeated: false, endless: false, nextBossAt: 180,
-    pointCd: 6, dicteeIdx: 0, dicteeWord: DICTEES[0], dicteeProg: 0, choices: [], sel: 0, score: 0, comboN: 0, comboT: 0,
+    pointCd: 6, dicteeIdx: 0, dicteeWord: CH().dictees[0], dicteeProg: 0, choices: [], sel: 0, score: 0, comboN: 0, comboT: 0,
     moonA: 0, botPickT: 0, endPhrase: '', newBest: false
   });
   const hp = demo ? 7 : 6;
   G.p = { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, r: 13, hp, maxHp: hp, inv: 1.2, dashCd: 0, dashT: 0, dx: 1, dy: 0, face: 0, fireCd: 0.5, look: 0, puddleT: 0, squash: 0, hidden: 0, gx: 0, gy: 0 };
   G.cam.x = G.p.x; G.cam.y = G.p.y;
   computeStats(); clearStains();
-  caption('Chapitre ' + GAME_META.chapter + ' : tiens la page jusqu’à la Grande Rature', 4);
+  caption(CH().intro, 4);
+  setUI();
+}
+// On tourne la page : le chapitre suivant commence, avec les mêmes mots et le même niveau
+function turnPage() {
+  if (G.chapter >= CHAPTERS.length - 1) return;
+  snapPage();
+  for (const it of G.items) G.xp += it.value;   // les lettres restées au sol comptent quand même
+  Object.assign(G, {
+    chapter: G.chapter + 1, state: 'turn', stateT: 0, totalT: G.totalT + G.t, t: 0, enemies: [], shots: [], ebul: [], items: [], parts: [], puddles: [], points: [], fires: [], rings: [], waves: [], texts: [],
+    spawnAcc: 0, nextWave: 45, boss: null, bossSpawned: false, bossDefeated: false, victoryAt: 0, endless: false, nextBossAt: 180, pointCd: 3,
+    dicteeIdx: 0, dicteeProg: 0, comboN: 0, newBest: false, captions: []
+  });
+  G.dicteeWord = CH().dictees[0];
+  const p = G.p; Object.assign(p, { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, hp: p.maxHp, inv: 2.5, dashT: 0, hidden: 0 });
+  G.cam.x = p.x; G.cam.y = p.y; clearStains();
+  while (G.xp >= G.xpNext) { G.xp -= G.xpNext; G.level++; G.xpNext = xpFor(G.level); G.pendingLv++; }
+  AU.play('turn');
+  caption(CH().intro, 4.5);
   setUI();
 }
 
@@ -52,13 +82,20 @@ const ETYPES = {
   biffure:     { r: 17, hp: 6, speed: 55, dmg: 1, xp: 2, agil: 3 },
   tache:       { r: 24, hp: 14, speed: 42, dmg: 1, xp: 4, agil: 1.6 },
   gomme:       { r: 22, hp: 24, speed: 90, dmg: 2, xp: 6, agil: 2.2 },
-  boss:        { r: 74, hp: 540, speed: 46, dmg: 2, xp: 60, agil: 1.2 }
+  boss:        { r: 74, hp: 540, speed: 46, dmg: 2, xp: 60, agil: 1.2, boss: true },
+  // chapitre II : la portée
+  croche:      { r: 15, hp: 3, speed: 104, dmg: 1, xp: 1, agil: 4 },
+  soupir:      { r: 16, hp: 7, speed: 62, dmg: 1, xp: 2, agil: 3 },
+  metronome:   { r: 26, hp: 26, speed: 40, dmg: 1, xp: 5, agil: 1.5 },
+  fausse:      { r: 70, hp: 1500, speed: 50, dmg: 2, xp: 80, agil: 1.2, boss: true }
 };
 function spawnEnemy(type, x, y) {
   const T = ETYPES[type];
-  const scale = type === 'boss' ? 1 + (G.endless ? 0.6 * Math.floor((G.t - 180) / 180 + 1) : 0) : 1 + G.t / 190 + (G.endless ? (G.t - 180) / 100 : 0);
+  const scale = T.boss ? 1 + (G.endless ? 0.6 * Math.floor((G.t - 180) / 180 + 1) : 0) : 1 + G.t / 190 + CH().scale + (G.endless ? (G.t - 180) / 100 : 0);
+  const meet = CH().meet[type];
+  if (meet && !G.seen[type]) { G.seen[type] = true; caption(meet, 3.2, 'green'); }
   const e = {
-    id: enemyId++, type, x, y, vx: 0, vy: 0, r: T.r, hp: T.hp * scale, maxHp: T.hp * scale, speed: T.speed * (1 + Math.min(0.35, G.t / 600)),
+    id: enemyId++, type, isBoss: !!T.boss, x, y, vx: 0, vy: 0, r: T.r, hp: T.hp * scale, maxHp: T.hp * scale, speed: T.speed * (1 + Math.min(0.35, G.t / 600)),
     dmg: T.dmg, xp: T.xp, agil: T.agil, shape: Math.floor(rnd((SHAPES[type] || [0]).length)), rot: rnd(TAU), spin: rnd(-1.5, 1.5),
     flash: 0, burn: 0, burnDps: 0, slow: 0, orbCd: 0, punchCd: 0, phase: 'walk', pt: rnd(1.5, 3), cx: 0, cy: 0, boilOff: rnd(3), atk: 2.5, atkN: 0, enter: 0
   };
@@ -77,18 +114,13 @@ function spawnAround(type) {
   return spawnEnemy(type, x, y);
 }
 function director(dt) {
-  const t = G.t;
+  const t = G.t, ch = CH();
   if (G.boss && !G.endless) { G.spawnAcc += dt * 0.7; }
-  else G.spawnAcc += dt * Math.min(G.endless ? 9 : 5.5, 0.9 + t * 0.03 + (G.endless ? (t - 180) * 0.02 : 0));
+  else G.spawnAcc += dt * Math.min(G.endless ? ch.rateCap + 3.5 : ch.rateCap, 0.9 + (t + ch.rateOff) * 0.03 + (G.endless ? (t - 180) * 0.02 : 0));
   while (G.spawnAcc >= 1) {
     G.spawnAcc -= 1;
     if (G.enemies.length > 240) break;
-    const r = rand();
-    let type = 'gribouillis';
-    if (t > 95 && r < 0.09) type = 'gomme';
-    else if (t > 60 && r < 0.22) type = 'tache';
-    else if (t > 25 && r < 0.42) type = 'biffure';
-    spawnAround(type);
+    spawnAround(ch.pick(t, rand()));
   }
   if (t >= G.nextWave && (!G.boss || G.endless)) {
     G.nextWave += 45;
@@ -97,17 +129,17 @@ function director(dt) {
     for (let i = 0; i < n; i++) {
       const a = i / n * TAU;
       const x = clamp(G.p.x + Math.cos(a) * ring, 30, WORLD.w - 30), y = clamp(G.p.y + Math.sin(a) * ring, 30, WORLD.h - 30);
-      spawnEnemy(t > 80 && i % 3 === 0 ? 'biffure' : 'gribouillis', x, y);
+      spawnEnemy(ch.wave(t, i), x, y);
     }
-    caption('Une vague de gribouillis !', 2.2, 'pink');
+    caption(ch.waveCap, 2.2, 'pink');
   }
   if (!G.bossSpawned && t >= 180) {
     G.bossSpawned = true;
-    const b = spawnAround('boss'); b.enter = 1; G.boss = b;
-    caption('La Grande Rature approche…', 3.5, 'pink'); G.cam.shake = 14; AU.play('boss');
+    const b = spawnAround(ch.boss); b.enter = 1; G.boss = b;
+    caption(ch.bossIntro, 3.5, 'pink'); G.cam.shake = 14; AU.play(ch.bossSound);
   }
   if (G.endless && G.bossDefeated && !G.boss && t >= G.nextBossAt) {
-    G.nextBossAt += 180; const b = spawnAround('boss'); G.boss = b; caption('Elle revient, plus épaisse.', 3, 'pink'); AU.play('boss');
+    G.nextBossAt += 180; const b = spawnAround(ch.boss); G.boss = b; caption(ch.bossBack, 3, 'pink'); AU.play(ch.bossSound);
   }
 }
 
@@ -115,25 +147,25 @@ function hurtEnemy(e, dmg, src, kx = 0, ky = 0) {
   if (e.dead) return;
   e.hp -= dmg; e.flash = 0.09;
   if (src === 'shot' && G.S.burn) { e.burn = 2.6; e.burnDps = 0.9 + 0.75 * G.S.burn; }
-  if (G.S.knock && src === 'shot' && e.type !== 'boss') { const k = 70 + 60 * G.S.knock; e.vx += kx * k; e.vy += ky * k; }
+  if (G.S.knock && src === 'shot' && !e.isBoss) { const k = 70 + 60 * G.S.knock; e.vx += kx * k; e.vy += ky * k; }
   if (src !== 'burn' && src !== 'puddle') AU.play('hit');
   if (e.hp <= 0) killEnemy(e);
 }
 function killEnemy(e) {
   e.dead = true; G.kills++;
-  G.score += e.type === 'boss' ? 2500 : Math.round(e.xp * 10);
-  splat(e.x, e.y, e.r * (e.type === 'boss' ? 1.6 : 0.9), C.ink, 0.16, e.type === 'boss' ? 26 : 8);
-  for (let i = 0; i < (e.type === 'boss' ? 70 : 9); i++) {
-    const a = rnd(TAU), s = rnd(60, e.type === 'boss' ? 520 : 260);
+  G.score += e.isBoss ? 2500 * G.chapter : Math.round(e.xp * 10);
+  splat(e.x, e.y, e.r * (e.isBoss ? 1.6 : 0.9), C.ink, 0.16, e.isBoss ? 26 : 8);
+  for (let i = 0; i < (e.isBoss ? 70 : 9); i++) {
+    const a = rnd(TAU), s = rnd(60, e.isBoss ? 520 : 260);
     G.parts.push({ x: e.x, y: e.y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: rnd(0.3, 0.8), max: 0.8, size: rnd(1.5, 4.5), color: i % 3 ? C.ink : C.graphite, drag: 4 });
   }
-  if (e.type === 'boss') {
+  if (e.isBoss) {
     G.boss = null; G.cam.shake = 26; AU.play('win');
     for (let i = 0; i < 40; i++) dropLetter(e.x + rnd(-80, 80), e.y + rnd(-80, 80), i % 4 === 0 ? 5 : 2);
     if (!G.bossDefeated) { G.bossDefeated = true; G.victoryAt = G.t + 1.6; }
     return;
   }
-  AU.play('kill');
+  if (CH().paper === 'portee') AU.play('noteKill', staffPitch(e.y)); else AU.play('kill');
   if (e.type === 'tache') { for (let i = 0; i < 2; i++) { const g = spawnEnemy('gouttelette', e.x + rnd(-10, 10), e.y + rnd(-10, 10)); g.vx = rnd(-150, 150); g.vy = rnd(-150, 150); } }
   let v = e.xp;
   const n = v <= 2 ? v : 2 + (v > 4 ? 1 : 0);
@@ -180,10 +212,13 @@ function botInput() {
       const x = p.x + dx * look, y = p.y + dy * look, w = look === 60 ? 1 : 0.6;
       for (const e of near) {
         let d = Math.hypot(e.x - x, e.y - y) - e.r;
+        if (e.ghost) continue;
         if (e.type === 'biffure' && e.phase !== 'walk') d -= 40;
-        sc -= w * (e.type === 'boss' ? 5 : e.type === 'gomme' ? 1.6 : 1) * 2900 / Math.pow(Math.max(8, d), 1.8);
+        if (e.type === 'metronome' && e.ticks % 4 === 3) d -= 150;
+        sc -= w * (e.isBoss ? 5 : e.type === 'gomme' || e.type === 'metronome' ? 1.6 : 1) * 2900 / Math.pow(Math.max(8, d), 1.8);
       }
-      for (const b of bul) sc -= w * 600 / Math.pow(Math.max(6, Math.hypot(b.x - x, b.y - y)), 1.5);
+      for (const b of bul) sc -= w * (b.wait > 0 ? 300 : 600) / Math.pow(Math.max(6, Math.hypot(b.x - x, b.y - y)), 1.5);
+      for (const wv of G.waves) { const rr = wv.r * ease(wv.t / wv.dur); if (wv.t < wv.dur && !wv.hit) sc -= w * 900 / Math.pow(Math.max(6, Math.abs(Math.hypot(wv.x - x, wv.y - y) - rr)), 1.4); }
       const wm = Math.min(x, y, WORLD.w - x, WORLD.h - y);
       if (wm < 220) sc -= (220 - wm) * 0.03 * w;
     }
@@ -210,7 +245,9 @@ function stepPlayer(dt) {
     const tx = inp.x * S.speed, ty = inp.y * S.speed, k = 1 - Math.exp(-dt * 14);
     p.vx = lerp(p.vx, tx, k); p.vy = lerp(p.vy, ty, k);
   }
+  const oy = p.y;
   p.x = clamp(p.x + p.vx * dt, p.r, WORLD.w - p.r); p.y = clamp(p.y + p.vy * dt, p.r, WORLD.h - p.r);
+  if (CH().paper === 'portee') staffCross(oy, p.y);   // les lignes de la portée chantent quand on les traverse
   const sp = Math.hypot(p.vx, p.vy);
   if (sp > 20) { const f = Math.atan2(p.vy, p.vx); let df = f - p.face; while (df > Math.PI) df -= TAU; while (df < -Math.PI) df += TAU; p.face += df * Math.min(1, dt * 12); }
   p.squash = lerp(p.squash, Math.min(1, sp / 600), Math.min(1, dt * 10));
@@ -220,7 +257,7 @@ function stepPlayer(dt) {
   p.fireCd -= dt;
   if (p.fireCd <= 0) {
     let tgt = null, bd = 600 * 600;
-    for (const e of G.enemies) { let d = (e.x - p.x) ** 2 + (e.y - p.y) ** 2; if (e.type === 'boss' && d < 480 * 480) d *= 0.15; if (d < bd) { bd = d; tgt = e; } }
+    for (const e of G.enemies) { let d = (e.x - p.x) ** 2 + (e.y - p.y) ** 2; if (e.ghost) continue; if (e.isBoss && d < 480 * 480) d *= 0.15; if (d < bd) { bd = d; tgt = e; } }
     if (tgt) {
       p.fireCd = 1 / S.rate;
       const lead = Math.sqrt(bd) / S.pspeed;
@@ -245,7 +282,7 @@ function endDash(p) {
       const dx = e.x - p.x, dy = e.y - p.y, d = Math.hypot(dx, dy) || 1;
       if (e.dead || d > R + e.r) continue;
       hurtEnemy(e, 5 * G.S.dmg, 'gust');
-      if (e.type !== 'boss') { e.vx += dx / d * 620; e.vy += dy / d * 620; }
+      if (!e.isBoss) { e.vx += dx / d * 620; e.vy += dy / d * 620; }
     }
     for (const b of G.ebul) if ((b.x - p.x) ** 2 + (b.y - p.y) ** 2 < R * R) b.life = 0;
     for (let i = 0; i < 18; i++) { const a = i / 18 * TAU; G.parts.push({ x: p.x + Math.cos(a) * 20, y: p.y + Math.sin(a) * 20, vx: Math.cos(a) * 520, vy: Math.sin(a) * 520, life: 0.4, max: 0.4, size: 2.5, color: C.inkLight, drag: 5 }); }
@@ -261,7 +298,7 @@ function hurtPlayer(n, fromX, fromY) {
   p.hp -= n; p.inv = 1.1; G.cam.shake = 12; AU.play('hurt');
   splat(p.x, p.y, 20, C.ink, 0.2, 10);
   const dx = p.x - fromX, dy = p.y - fromY, d = Math.hypot(dx, dy) || 1; p.vx += dx / d * 380; p.vy += dy / d * 380;
-  for (const e of G.enemies) { const ex = e.x - p.x, ey = e.y - p.y, ed = Math.hypot(ex, ey); if (ed < 120 && e.type !== 'boss') { e.vx += ex / ed * 260; e.vy += ey / ed * 260; } }
+  for (const e of G.enemies) { const ex = e.x - p.x, ey = e.y - p.y, ed = Math.hypot(ex, ey); if (ed < 120 && !e.isBoss) { e.vx += ex / ed * 260; e.vy += ey / ed * 260; } }
   if (p.hp <= 0) endRun(false);
 }
 
@@ -280,6 +317,7 @@ function query(x, y, r, out) {
 const tmpA = [], tmpB = [];
 
 function stepPlay(dt) {
+  if (Math.floor(G.t + dt) > Math.floor(G.t)) dryStains(0.018);   // une fois par seconde
   G.t += dt;
   const p = G.p, S = G.S;
   stepPlayer(dt);
@@ -307,12 +345,14 @@ function stepPlay(dt) {
     } else if (e.type === 'gomme') {
       if (rand() < dt * 20) eraseStain(e.x, e.y, 30);
       e.rot = Math.atan2(ty, tx) * 0.15 + Math.sin(G.t * 4 + e.id) * 0.12;
-    } else if (e.type === 'boss') {
-      stepBoss(e, dt, dx, dy, d);
+    } else if (e.isBoss) {
+      if (e.type === 'boss') stepBoss(e, dt, dx, dy, d); else stepFausse(e, dt, dx, dy, d);
       tx = e.phase === 'charge' ? e.cx * 520 : (e.phase === 'aim' ? 0 : dx / d * e.speed * slow);
       ty = e.phase === 'charge' ? e.cy * 520 : (e.phase === 'aim' ? 0 : dy / d * e.speed * slow);
       if (e.phase === 'charge') agil = 18;
       e.rot += dt * (e.hp < e.maxHp / 2 ? 1.6 : 0.8);
+    } else if (e.type === 'croche' || e.type === 'soupir' || e.type === 'metronome') {
+      stepPortee(e, dt, dx, dy, d, slow, hid); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else e.rot += e.spin * dt;
     const k = 1 - Math.exp(-dt * agil);
     e.vx = lerp(e.vx, tx, k); e.vy = lerp(e.vy, ty, k);
@@ -321,11 +361,11 @@ function stepPlay(dt) {
     for (const o of tmpA) {
       if (o === e || o.dead) continue;
       const ox = e.x - o.x, oy = e.y - o.y, od = ox * ox + oy * oy, rr = e.r + o.r;
-      if (od < rr * rr && od > 0.01) { const dd = Math.sqrt(od), push = (rr - dd) / rr * (o.type === 'boss' ? 600 : 160); e.vx += ox / dd * push * dt * 10; e.vy += oy / dd * push * dt * 10; }
+      if (od < rr * rr && od > 0.01) { const dd = Math.sqrt(od), push = (rr - dd) / rr * (o.isBoss ? 600 : 160); e.vx += ox / dd * push * dt * 10; e.vy += oy / dd * push * dt * 10; }
     }
     e.x = clamp(e.x + e.vx * dt, -40, WORLD.w + 40); e.y = clamp(e.y + e.vy * dt, -40, WORLD.h + 40);
     // contact avec le joueur
-    if ((p.x - e.x) ** 2 + (p.y - e.y) ** 2 < (e.r + p.r - 3) ** 2) hurtPlayer(e.dmg, e.x, e.y);
+    if (!e.ghost && (p.x - e.x) ** 2 + (p.y - e.y) ** 2 < (e.r + p.r - 3) ** 2) hurtPlayer(e.dmg, e.x, e.y);
   }
   // ---- gouttes du joueur
   for (const s of G.shots) {
@@ -334,7 +374,7 @@ function stepPlay(dt) {
     if (s.life <= 0) continue;
     query(s.x, s.y, s.r + 80, tmpA);
     for (const e of tmpA) {
-      if (e.dead || s.hit.has(e.id)) continue;
+      if (e.dead || e.ghost || s.hit.has(e.id)) continue;
       const rr = e.r + s.r; if ((e.x - s.x) ** 2 + (e.y - s.y) ** 2 > rr * rr) continue;
       const sp = Math.hypot(s.vx, s.vy) || 1;
       hurtEnemy(e, S.dmg, 'shot', s.vx / sp, s.vy / sp); s.hit.add(e.id);
@@ -352,10 +392,16 @@ function stepPlay(dt) {
   G.shots = G.shots.filter(s => s.life > 0);
   // ---- projectiles ennemis (traits de stylo rouge)
   for (const b of G.ebul) {
+    if (b.wait > 0) { b.wait -= dt; continue; }   // annoncée, pas encore partie
     b.x += b.vx * dt; b.y += b.vy * dt; b.life -= dt;
     if ((b.x - p.x) ** 2 + (b.y - p.y) ** 2 < (p.r + 5) ** 2) { hurtPlayer(1, b.x, b.y); b.life = 0; }
   }
   G.ebul = G.ebul.filter(b => b.life > 0);
+  for (const wv of G.waves) {   // ondes du métronome : on est touché quand le cercle passe sur soi
+    wv.t += dt; const rr = wv.r * ease(wv.t / wv.dur);
+    if (!wv.hit && wv.t < wv.dur && Math.abs(Math.hypot(p.x - wv.x, p.y - wv.y) - rr) < p.r + 9) { wv.hit = true; hurtPlayer(1, wv.x, wv.y); }
+  }
+  G.waves = G.waves.filter(wv => wv.t < wv.dur + 0.25);
   // ---- lunes en orbite
   if (S.moons) {
     G.moonA += dt * 2.7; const R = 74 + 6 * S.moons;
@@ -469,7 +515,7 @@ function collect(it) {
       G.dictees++; G.score += 150 * G.dicteeWord.length; AU.play('dicteeDone');
       caption('Dictée réussie : ' + G.dicteeWord + ' !', 2.6, 'green');
       G.p.hp = Math.min(G.p.maxHp, G.p.hp + 1); G.xp += 6 + G.dicteeWord.length * 2;
-      G.dicteeIdx++; G.dicteeWord = DICTEES[G.dicteeIdx % DICTEES.length]; G.dicteeProg = 0;
+      G.dicteeIdx++; G.dicteeWord = CH().dictees[G.dicteeIdx % CH().dictees.length]; G.dicteeProg = 0;
     }
   } else AU.play('pickup', Math.min(10, G.comboN >> 1));
   while (G.xp >= G.xpNext) { G.xp -= G.xpNext; G.level++; G.xpNext = xpFor(G.level); G.pendingLv++; }
@@ -522,6 +568,7 @@ function phrase(win) {
   const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
   if (!ws.length) return 'Une page presque blanche.';
   if (ws.length === 1) return win ? cap(ws[0]) + ' tint bon, jusqu’au point final.' : 'Il ne restait que ' + ws[0] + '.';
+  if (win && G.chapter === 2) return pick(['Grâce à ' + ws[0] + ', la Fausse Note retrouva le ton.', cap(ws[0]) + ' et ' + ws[1] + ' jouèrent juste jusqu’à la dernière mesure.']);
   if (win) return pick([cap(ws[0]) + ' et ' + ws[1] + ' tinrent la page jusqu’au bout.', 'Grâce à ' + ws[0] + ', ' + ws[1] + ' eut le dernier mot.']);
   return pick(['Ici, ' + ws[0] + ' croisa ' + ws[1] + ', puis tout fut raturé.', cap(ws[0]) + ' et ' + ws[1] + ' ont presque suffi.', 'On devinait encore ' + ws[0] + ' sous la gomme.']);
 }

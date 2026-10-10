@@ -30,7 +30,18 @@ function drawPage(v) {
   ctx.fillStyle = C.paper; ctx.fillRect(0, 0, WORLD.w, WORLD.h);
   ctx.restore();
   ctx.fillStyle = paperPattern; ctx.fillRect(Math.max(0, v.x0), Math.max(0, v.y0), Math.min(WORLD.w, v.x1) - Math.max(0, v.x0), Math.min(WORLD.h, v.y1) - Math.max(0, v.y0));
-  // réglure Seyès
+  if (CH().paper === 'portee') drawPortee(v); else drawSeyes(v);
+  // bord crayonné
+  ctx.save(); ctx.strokeStyle = C.pencil; ctx.globalAlpha = 0.55; ctx.lineWidth = 1.6; ctx.setLineDash([14, 9]);
+  ctx.strokeRect(-6, -6, WORLD.w + 12, WORLD.h + 12); ctx.restore();
+  // notes dans le non-écrit (chaque chapitre a les siennes)
+  for (const n of CH().notes) if (n.x > v.x0 - 400 && n.x < v.x1 + 400 && n.y > v.y0 - 100 && n.y < v.y1 + 100) txt(n.t, n.x, n.y, 34, { color: C.pencil, weight: 400, rot: n.r, alpha: 0.75 });
+  // taches persistantes
+  const sx0 = Math.max(0, v.x0), sy0 = Math.max(0, v.y0), sx1 = Math.min(WORLD.w, v.x1), sy1 = Math.min(WORLD.h, v.y1);
+  if (sx1 > sx0 && sy1 > sy0) ctx.drawImage(stain, sx0 * STAIN_S, sy0 * STAIN_S, (sx1 - sx0) * STAIN_S, (sy1 - sy0) * STAIN_S, sx0, sy0, sx1 - sx0, sy1 - sy0);
+}
+// Papier Seyès (chapitre I) : grands carreaux, réglure fine et marge rouge
+function drawSeyes(v) {
   const lw = 1 / ZOOM;
   const xa = Math.max(0, Math.floor(v.x0 / SQ) * SQ), xb = Math.min(WORLD.w, v.x1), ya = Math.max(0, Math.floor(v.y0 / 16) * 16), yb = Math.min(WORLD.h, v.y1);
   ctx.lineWidth = lw;
@@ -42,14 +53,6 @@ function drawPage(v) {
   for (let x = xa; x <= xb; x += SQ) { ctx.moveTo(x, Math.max(0, v.y0)); ctx.lineTo(x, Math.min(WORLD.h, v.y1)); }
   ctx.stroke();
   ctx.strokeStyle = C.margin; ctx.lineWidth = 2.2 / ZOOM; ctx.beginPath(); ctx.moveTo(MARGIN_X, 0); ctx.lineTo(MARGIN_X, WORLD.h); ctx.stroke();
-  // bord crayonné
-  ctx.save(); ctx.strokeStyle = C.pencil; ctx.globalAlpha = 0.55; ctx.lineWidth = 1.6; ctx.setLineDash([14, 9]);
-  ctx.strokeRect(-6, -6, WORLD.w + 12, WORLD.h + 12); ctx.restore();
-  // notes dans le non-écrit
-  for (const n of UNWRITTEN_NOTES) if (n.x > v.x0 - 400 && n.x < v.x1 + 400 && n.y > v.y0 - 100 && n.y < v.y1 + 100) txt(n.t, n.x, n.y, 34, { color: C.pencil, weight: 400, rot: n.r, alpha: 0.75 });
-  // taches persistantes
-  const sx0 = Math.max(0, v.x0), sy0 = Math.max(0, v.y0), sx1 = Math.min(WORLD.w, v.x1), sy1 = Math.min(WORLD.h, v.y1);
-  if (sx1 > sx0 && sy1 > sy0) ctx.drawImage(stain, sx0 * STAIN_S, sy0 * STAIN_S, (sx1 - sx0) * STAIN_S, (sy1 - sy0) * STAIN_S, sx0, sy0, sx1 - sx0, sy1 - sy0);
 }
 
 function drawEnemy(e) {
@@ -78,6 +81,10 @@ function drawEnemy(e) {
     roundRect(-26 + j, -16, 52, 32, 7); ctx.fill(); ctx.stroke();
     ctx.fillStyle = C.eraserSleeve; roundRect(-4, -17 - j, 32, 34, 3); ctx.fill(); ctx.stroke();
     ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.font = '700 13px ' + FONT_MAIN; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('GOMME', 12, 1);
+  } else if (e.type === 'fausse') {
+    drawFausse(e, fr, fl);
+  } else if (e.type === 'croche' || e.type === 'soupir' || e.type === 'metronome') {
+    drawPorteeEnemy(e, fr, fl);
   } else if (e.type === 'boss') {
     if (e.phase === 'aim') { ctx.save(); ctx.strokeStyle = C.red; ctx.globalAlpha = 0.4; ctx.setLineDash([16, 10]); ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(e.cx * 420, e.cy * 420); ctx.stroke(); ctx.restore(); }
     const pulse = 1 + Math.sin(G.time * 5) * 0.03;
@@ -186,9 +193,14 @@ function drawWorld() {
   }
   // traits rouges du boss
   ctx.strokeStyle = C.red; ctx.lineWidth = 4;
-  for (const b of G.ebul) { const n = Math.hypot(b.vx, b.vy) || 1; ctx.beginPath(); ctx.moveTo(b.x - b.vx / n * 9, b.y - b.vy / n * 9); ctx.lineTo(b.x + b.vx / n * 9, b.y + b.vy / n * 9); ctx.stroke(); }
+  for (const b of G.ebul) { if (b.note) continue; const n = Math.hypot(b.vx, b.vy) || 1; ctx.beginPath(); ctx.moveTo(b.x - b.vx / n * 9, b.y - b.vy / n * 9); ctx.lineTo(b.x + b.vx / n * 9, b.y + b.vy / n * 9); ctx.stroke(); }
+  drawNoteBullets();
+  if (G.waves) drawWaves();
+  for (const e of G.enemies) if (e.type === 'soupir' && e.phase === 'fade') {   // là où le soupir va se poser
+    ctx.save(); ctx.strokeStyle = C.pencil; ctx.globalAlpha = 0.7; ctx.setLineDash([5, 6]); ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(e.bx, e.by, 14 + 8 * (e.pt / 0.65), 0, TAU); ctx.stroke(); ctx.restore();
+  }
   drawPlayer();
-  // points qui tombent
   for (const pt of G.points) {
     if (pt.done) { const k = (pt.t - pt.fall) / 0.6; ctx.strokeStyle = 'rgba(18,39,95,' + (1 - k) + ')'; ctx.lineWidth = 6 * (1 - k) + 1; ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.r * ease(k), 0, TAU); ctx.stroke(); continue; }
     if (pt.t < 0) continue;
@@ -231,12 +243,12 @@ function drawHUD() {
   }
   txt('niveau ' + G.level, left, top + 54 * s, 24 * s, { align: 'left', color: C.graphite });
   // chapitre + chrono
-  txt('Chapitre ' + GAME_META.chapter + (G.endless ? ' · page libre' : ''), W / 2, top + 12 * s, 22 * s, { color: C.graphite, weight: 400 });
+  txt('Chapitre ' + CH().num + (G.endless ? ' · page libre' : ''), W / 2, top + 12 * s, 22 * s, { color: C.graphite, weight: 400 });
   txt(mmss(G.t), W / 2, top + 42 * s, 38 * s, { color: C.ink });
   // barre du boss
   if (G.boss) {
     const bw = Math.min(520 * s, W - 220 * s), bx = W / 2 - bw / 2, by = top + 72 * s, k = clamp(G.boss.hp / G.boss.maxHp, 0, 1);
-    txt('La Grande Rature', W / 2, by - 2 * s, 21 * s, { color: C.red });
+    txt(CH().bossName, W / 2, by - 2 * s, 21 * s, { color: C.red });
     ctx.save(); ctx.strokeStyle = C.red; ctx.lineWidth = 2; ctx.strokeRect(bx, by + 12 * s, bw, 12 * s);
     ctx.fillStyle = 'rgba(200,66,74,0.75)'; ctx.fillRect(bx + 2, by + 14 * s, (bw - 4) * k, 12 * s - 4); ctx.restore();
   }
@@ -372,6 +384,7 @@ function drawTitle() {
   txt(G.input.touch ? 'Touche l’écran pour commencer' : 'Appuie sur Entrée pour commencer', W / 2, ty + 196 * s, Math.min(38 * s, W / 18), { color: C.ink, alpha: a * (0.6 + 0.4 * Math.sin(G.time * 3)), hl: C.hl });
   if (!G.input.touch) txt('ZQSD, WASD ou flèches : bouger    Espace : pâté d’encre    Échap : pause    M : son    C : secousses', W / 2, ty + 252 * s, Math.min(22 * s, W / 40), { color: C.pencil, weight: 400, alpha: a });
   else txt('Glisse pour bouger, bouton « pâté » pour foncer', W / 2, ty + 252 * s, 22 * s, { color: C.pencil, weight: 400, alpha: a });
+  txt('Nouveau : bats la Grande Rature, puis tourne la page…', W / 2, ty + (G.best ? 322 : 290) * s, Math.min(22 * s, W / 30), { color: C.ink, weight: 400, alpha: a * 0.85 });
   if (G.best) txt('meilleur score : ' + G.best, W / 2, ty + 290 * s, 22 * s, { color: C.margin, weight: 400, alpha: a });
   drawStamp(W - SAFE.r - 110 * s, SAFE.t + 48 * s, s * 1.1);
 }
@@ -381,9 +394,10 @@ function drawEnd() {
   dimPage(Math.min(0.82, t * 1.6));
   const a = clamp(t * 2 - 0.3, 0, 1);
   const y0 = H * 0.2;
-  txt(win ? GAME_META.chapterName + ' : écrit.' : 'La page a été effacée.', W / 2, y0, Math.min(66 * s, W / 11), { font: FONT_CURSIVE, weight: 400, color: win ? C.ink : C.red, alpha: a });
+  const last = G.chapter >= CHAPTERS.length - 1;
+  txt(win ? CH().done : 'La page a été effacée.', W / 2, y0, Math.min(66 * s, W / 11), { font: FONT_CURSIVE, weight: 400, color: win ? C.ink : C.red, alpha: a });
   txt('« ' + G.endPhrase + ' »', W / 2, y0 + 82 * s, Math.min(32 * s, W / 26), { color: C.graphite, weight: 400, alpha: a });
-  const rows = [['temps', mmss(G.t)], ['ratures biffées', G.kills], ['lettres ramassées', G.letters], ['dictées réussies', G.dictees], ['niveau', G.level], ['score', G.score]];
+  const rows = [['temps', mmss((G.totalT || 0) + G.t)], ['ratures biffées', G.kills], ['lettres ramassées', G.letters], ['dictées réussies', G.dictees], ['niveau', G.level], ['score', G.score]];
   rows.forEach(([k, v], i) => {
     const y = y0 + 150 * s + i * 38 * s, aa = clamp(t * 3 - 1 - i * 0.25, 0, 1);
     txt(k, W / 2 - 14 * s, y, 26 * s, { align: 'right', color: C.pencil, weight: 400, alpha: aa });
@@ -391,9 +405,11 @@ function drawEnd() {
   });
   const by = y0 + 150 * s + rows.length * 38 * s + 26 * s, ab = clamp(t * 2 - 2.2, 0, 1);
   if (G.newBest) txt('nouveau record !', W / 2, by, 26 * s, { color: C.margin, alpha: ab });
-  const hint = win ? (G.input.touch ? 'Touche pour continuer en page libre' : 'Entrée : continuer en page libre    R : recommencer') : (G.input.touch ? 'Touche pour recommencer' : 'Entrée : recommencer');
+  const hint = win && !last ? (G.input.touch ? 'Touche pour tourner la page' : 'Entrée : tourner la page    R : recommencer')
+    : win ? (G.input.touch ? 'Touche pour continuer en page libre' : 'Entrée : continuer en page libre    R : recommencer') : (G.input.touch ? 'Touche pour recommencer' : 'Entrée : recommencer');
   txt(hint, W / 2, by + 44 * s, 30 * s, { color: C.ink, alpha: ab, hl: C.hl });
-  txt('La suite s’écrit dans douze heures. Itération n° ' + GAME_META.iteration + '.', W / 2, by + 92 * s, 22 * s, { color: C.pencil, weight: 400, alpha: ab });
+  const foot = win && !last ? 'Une autre page t’attend derrière celle-ci.' : win ? 'Le cahier s’arrête ici, pour l’instant. La suite s’écrit dans douze heures.' : 'La suite s’écrit dans douze heures. Itération n° ' + GAME_META.iteration + '.';
+  txt(foot, W / 2, by + 92 * s, 22 * s, { color: C.pencil, weight: 400, alpha: ab });
 }
 
 function render() {
@@ -406,10 +422,29 @@ function render() {
     if (G.state === 'levelup') drawLevelUp();
     else if (G.state === 'pause') { dimPage(0.7); txt('Pause', W / 2, H / 2 - 40 * U, 80 * U, { font: FONT_CURSIVE, weight: 400 }); txt(G.input.touch ? 'Touche pour reprendre' : 'Échap ou Entrée pour reprendre', W / 2, H / 2 + 40 * U, 30 * U, { hl: C.hl }); }
     else if (G.state === 'gameover' || G.state === 'victory') drawEnd();
+    else if (G.state === 'turn') drawTurn();
   }
   if (G.state !== 'levelup') drawCaptions();
   // vignette douce
   const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.45, W / 2, H / 2, Math.hypot(W, H) * 0.62);
   g.addColorStop(0, 'rgba(60,50,30,0)'); g.addColorStop(1, 'rgba(60,50,30,0.16)');
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+
+/* ===================== La page qui se tourne ===================== */
+const snapCv = document.createElement('canvas');
+function snapPage() { snapCv.width = cv.width; snapCv.height = cv.height; snapCv.getContext('2d').drawImage(cv, 0, 0); }
+// L'ancienne page se soulève par la droite et passe à gauche, en montrant son verso
+function drawTurn() {
+  const k = ease(clamp((G.stateT - 0.15) / (TURN_DUR - 0.35), 0, 1));
+  if (k >= 1) return;
+  const xf = W * (1 - k), sk = 70 * Math.sin(k * Math.PI), ft = xf + sk, fb = xf - sk, at = 2 * ft - W, ab = 2 * fb - W;
+  ctx.save(); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.max(0, at), 0); ctx.lineTo(Math.max(0, ab), H); ctx.lineTo(0, H); ctx.closePath(); ctx.clip();
+  if (snapCv.width) ctx.drawImage(snapCv, 0, 0, W, H); else { ctx.fillStyle = C.paper; ctx.fillRect(0, 0, W, H); }
+  ctx.restore();
+  const sh = ctx.createLinearGradient(xf, 0, xf + 60, 0); sh.addColorStop(0, 'rgba(40,35,20,0.28)'); sh.addColorStop(1, 'rgba(40,35,20,0)');
+  ctx.fillStyle = sh; ctx.beginPath(); ctx.moveTo(ft, 0); ctx.lineTo(ft + 70, 0); ctx.lineTo(fb + 70, H); ctx.lineTo(fb, H); ctx.closePath(); ctx.fill();
+  const back = ctx.createLinearGradient(Math.min(at, ab), 0, xf, 0); back.addColorStop(0, '#f7f4ea'); back.addColorStop(0.75, '#ece8da'); back.addColorStop(1, '#d9d4c2');
+  ctx.fillStyle = back; ctx.beginPath(); ctx.moveTo(at, 0); ctx.lineTo(ft, 0); ctx.lineTo(fb, H); ctx.lineTo(ab, H); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(60,55,40,0.35)'; ctx.lineWidth = 1.5; ctx.stroke();
 }

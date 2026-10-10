@@ -23,7 +23,7 @@ const C = {
   paper: '#fdfcf6', unwritten: '#ebeae3', dot: '#b9b8ae', ink: '#1d3a8a', inkLight: '#3e63c9', inkDeep: '#12275f',
   graphite: '#2e2e33', pencil: '#6d6d74', red: '#c8424a', margin: '#e06a6c', rule: 'rgba(140,152,214,0.55)',
   ruleMinor: 'rgba(170,180,230,0.45)', hl: 'rgba(246,231,94,0.82)', hlPink: 'rgba(255,140,190,0.6)', hlGreen: 'rgba(140,230,140,0.6)', hlGold: 'rgba(240,200,90,0.55)',
-  eraser: '#f2a0a8', eraserSleeve: '#3c66c4', gold: '#c9921b', fire: '#e8742c'
+  eraser: '#f2a0a8', eraserSleeve: '#3c66c4', gold: '#c9921b', fire: '#e8742c', wood: '#d3a06a'
 };
 const FONT_MAIN = "'Main', 'Segoe Print', 'Bradley Hand', cursive";
 const FONT_CURSIVE = "'Cursive', 'Main', cursive";
@@ -36,6 +36,7 @@ const UNWRITTEN_NOTES = [
   { x: WORLD.w / 2, y: -150, t: "— marge du haut : rien d'écrit pour l'instant —", r: -0.02 },
   { x: WORLD.w + 170, y: WORLD.h * 0.35, t: 'ici, plus tard :', r: 0.06 },
   { x: WORLD.w + 180, y: WORLD.h * 0.35 + 46, t: 'une autre page ?', r: 0.04 },
+  { x: WORLD.w + 190, y: WORLD.h * 0.35 + 96, t: '→ oui : tourne-la !', r: 0.07 },
   { x: -190, y: WORLD.h * 0.55, t: 'brouillon,', r: -0.07 },
   { x: -180, y: WORLD.h * 0.55 + 44, t: 'ne pas lire', r: -0.05 },
   { x: WORLD.w * 0.3, y: WORLD.h + 140, t: 'à suivre…', r: 0.03 },
@@ -135,6 +136,7 @@ function buildShapes() {
   make('gouttelette', 6, r => { const pts = []; let a = r() * TAU; for (let i = 0; i < 9; i++) { a += 1.9 + r() * 1.5; const rr = 3 + r() * 7.5; pts.push([Math.cos(a) * rr, Math.sin(a) * rr]); } return pts; }, 1.6, false);
   make('biffure', 6, r => { const pts = []; for (let i = 0; i <= 9; i++) { pts.push([-22 + i * 4.9, (i % 2 ? -1 : 1) * (5 + r() * 5)]); } return pts; }, 2.4, false);
   make('tache', 6, r => { const pts = []; const n = 14; for (let i = 0; i <= n; i++) { const a = i / n * TAU; const rr = 22 * (0.8 + r() * 0.35); pts.push([Math.cos(a) * rr, Math.sin(a) * rr]); } return pts; }, 2.5, true);
+  make('soupir', 3, r => [[-5, -22], [5, -11 + r() * 2], [-5, -1], [5, 9 + r() * 2], [-3, 7], [-7, 13], [1, 21]], 2, false);
   make('boss', 3, r => { const pts = []; for (let i = 0; i < 70; i++) { const a = i * 0.55; const rr = 6 + i * 0.95 + r() * 6; pts.push([Math.cos(a) * rr, Math.sin(a) * rr]); } return pts; }, 5, false);
 }
 function boilFrame(t, off = 0) { return Math.floor(t * 8 + off) % 3; }
@@ -154,12 +156,19 @@ function splat(x, y, r, color, alpha, n = 7) {
   }
   sctx.restore();
 }
+// L'encre sèche : les vieilles taches pâlissent doucement, pour que la page ne devienne jamais toute bleue
+function dryStains(alpha) {
+  sctx.save(); sctx.globalCompositeOperation = 'destination-out'; sctx.globalAlpha = alpha;
+  sctx.fillRect(0, 0, stain.width, stain.height); sctx.restore();
+}
 function eraseStain(x, y, r) {
   sctx.save(); sctx.scale(STAIN_S, STAIN_S); sctx.globalCompositeOperation = 'destination-out';
   sctx.globalAlpha = 0.25; sctx.beginPath(); sctx.arc(x, y, r, 0, TAU); sctx.fill(); sctx.restore();
 }
 
 /* ===================== Son (tout est synthétisé) ===================== */
+const STAFF_F = [698.46, 587.33, 493.88, 392, 329.63];                              // lignes de la portée, de haut en bas : fa, ré, si, sol, mi
+const NOTE_F = [329.63, 349.23, 392, 440, 493.88, 523.25, 587.33, 659.25, 698.46];  // de mi à fa, une note par ligne et par interligne
 const CAPLOG = { on: false, t: 0, events: [], states: [] };   // capture : sons rejoués hors ligne dans la vidéo
 const AU = {
   ctx: null, master: null, sfx: null, mus: null, muted: false, t0: 0, nextBeat: 0, step: 0, noiseBuf: null, last: {},
@@ -216,25 +225,38 @@ const AU = {
       case 'gust': if (this.throttle('gust', 150)) { this.noise(0.45, { f: 450, q: 0.6, vol: 0.24, sweep: 4 }); this.tone(98, 0.35, { type: 'sine', vol: 0.18, slide: 0.5 }); } break;
       case 'fire': if (this.throttle('fire', 120)) this.noise(0.5, { f: 900, q: 0.4, vol: 0.14, type: 'lowpass', sweep: 0.5 }); break;
       case 'vanish': this.tone(PENTA[8] * 2, 0.45, { vol: 0.08, slide: 0.5 }); this.noise(0.35, { f: 4000, q: 1.2, vol: 0.05, sweep: 0.3 }); break;
+      case 'staff': if (this.throttle('staff', 45)) this.tone(STAFF_F[k] || 440, 0.4, { type: 'triangle', vol: 0.06 }); break;
+      case 'noteKill': if (this.throttle('kill', 45)) { this.tone(NOTE_F[k] || 440, 0.24, { type: 'triangle', vol: 0.12 }); this.noise(0.08, { f: 2200, q: 1, vol: 0.06 }); } break;
+      case 'tick': if (this.throttle('tick', 60)) { this.noise(0.03, { f: 5200, q: 6, vol: 0.1 }); this.tone(k === 3 ? 2400 : 1800, 0.03, { type: 'square', vol: 0.02 }); } break;
+      case 'wave': if (this.throttle('wave', 100)) { this.tone(220, 0.35, { type: 'sine', vol: 0.2, slide: 0.5 }); this.noise(0.3, { f: 900, q: 1, vol: 0.12, sweep: 0.4 }); } break;
+      case 'blink': if (this.throttle('blink', 120)) this.tone(1200, 0.25, { vol: 0.04, slide: 0.5 }); break;
+      case 'boss2': this.tone(61.74, 2.4, { type: 'sawtooth', vol: 0.1, attack: 0.6 }); this.tone(87.31, 2.4, { type: 'sawtooth', vol: 0.08, attack: 0.8 }); this.tone(92.5, 2.4, { vol: 0.06, attack: 0.9 }); break;
+      case 'noteShot': if (this.throttle('noteShot', 50)) this.tone(NOTE_F[k % NOTE_F.length] * 2.06, 0.15, { type: 'square', vol: 0.03 }); break;
+      case 'wall': this.noise(0.5, { f: 1500, q: 4, vol: 0.1, sweep: 2 }); this.tone(116.54, 0.6, { type: 'sawtooth', vol: 0.06 }); break;
+      case 'accord': [246.94, 277.18, 349.23].forEach(f => this.tone(f, 0.7, { type: 'triangle', vol: 0.09 })); break;
+      case 'turn': this.noise(0.7, { f: 1800, q: 0.5, vol: 0.18, sweep: 0.35 }); this.noise(0.3, { f: 3500, q: 0.8, vol: 0.08, when: 0.55 }); break;
       case 'lose': [6, 4, 2, 0].forEach((n, i) => this.tone(PENTA[n], 0.8, { type: 'triangle', vol: 0.15, when: i * 0.18 })); break;
     }
   },
   // Musique générative : un petit kalimba en ré dorien, qui s'agite quand ça chauffe
-  tick(intensity, bossOn) {
+  tick(intensity, bossOn, chap = 1) {
     if (!this.ctx || this.muted) return;
-    const beat = 0.36, scale = [146.83, 174.61, 196, 220, 261.63, 293.66, 349.23, 392, 440];
-    const bass = [73.42, 87.31, 65.41, 98];
     while (this.nextBeat < this.ctx.currentTime + 0.15) {
-      this.beatAt(this.nextBeat - this.ctx.currentTime, this.step, intensity, bossOn);
+      this.beatAt(this.nextBeat - this.ctx.currentTime, this.step, intensity, bossOn, chap);
       this.nextBeat += this.BEAT; this.step++;
     }
   },
   BEAT: 0.36,
-  beatAt(when, s, intensity, bossOn) {
-    const beat = this.BEAT, scale = [146.83, 174.61, 196, 220, 261.63, 293.66, 349.23, 392, 440];
-    const bass = [73.42, 87.31, 65.41, 98];
+  // Chapitre I : ré dorien au kalimba. Chapitre II : boîte à musique en do lydien, avec le tic-tac d'un métronome.
+  beatAt(when, s, intensity, bossOn, chap = 1) {
+    const beat = this.BEAT, two = chap === 2;
+    const scale = two ? [261.63, 293.66, 329.63, 369.99, 392, 440, 493.88, 523.25, 587.33] : [146.83, 174.61, 196, 220, 261.63, 293.66, 349.23, 392, 440];
+    const bass = two ? [65.41, 98, 110, 82.41] : [73.42, 87.31, 65.41, 98];
     if (s % 8 === 0) this.tone(bass[(s >> 5) % 4], beat * 7, { type: 'sine', vol: 0.22, when, dest: this.mus, attack: 0.05 });
-    if (Math.random() < 0.25 + intensity * 0.55) { const n = scale[Math.floor(Math.random() * scale.length)]; this.tone(n * 2, beat * 2.2, { type: 'triangle', vol: 0.1, when, dest: this.mus }); }
+    if (two) {
+      if (s % 2 === 0) this.noise(0.02, { f: 6000, q: 4, vol: 0.02, when });
+      if (Math.random() < 0.3 + intensity * 0.5) { const n = scale[(s * 3 + Math.floor(Math.random() * 3)) % scale.length]; this.tone(n * 2, beat * 1.6, { type: 'sine', vol: 0.09, when, dest: this.mus, attack: 0.002 }); this.tone(n * 4, beat * 0.8, { vol: 0.025, when, dest: this.mus, attack: 0.002 }); }
+    } else if (Math.random() < 0.25 + intensity * 0.55) { const n = scale[Math.floor(Math.random() * scale.length)]; this.tone(n * 2, beat * 2.2, { type: 'triangle', vol: 0.1, when, dest: this.mus }); }
     if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
   },
   // Rejoue la bande-son d'une capture dans un OfflineAudioContext et renvoie un WAV (base64)
@@ -251,7 +273,7 @@ const AU = {
     const st = CAPLOG.states;
     for (let s = 0, tb = 0.05; tb < duration; s++, tb += this.BEAT) {
       let k = 0; while (k < st.length - 1 && st[k + 1].t <= tb) k++;
-      this.beatAt(tb, s, st[k] ? st[k].i : 0.1, st[k] ? st[k].b : false);
+      this.beatAt(tb, s, st[k] ? st[k].i : 0.1, st[k] ? st[k].b : false, st[k] ? st[k].c : 1);
     }
     for (const e of CAPLOG.events) { CAPLOG.t = e.t; this.t0 = e.t; this.play(e.name, e.k); }
     this.t0 = 0;
