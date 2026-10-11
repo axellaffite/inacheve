@@ -100,12 +100,38 @@ Tout est dans `chapitre3.js` (page, ratures, Règle de fer) et `figure.js` (la f
 
 - Battre la Fausse Note enregistre `inacheve.chapitre` = 3 : touche 3 ou bouton « Commencer au chapitre III ». Brouillon de 28 mots, niveau 29. `__cap.start(3)` le lance en démo (test de fumée).
 
+## Chapitre IV : la carte au trésor (itération 6)
+
+Tenu depuis la note de marge « une carte au trésor ? » du chapitre III. Tout est dans `carte.js` (page, ratures marines, Pieuvre-Buvard) et `tresor.js` (la chasse au trésor), chargés après `figure.js`. Les ratures marines sont listées dans `CARTE_TYPES` et animées par `stepCarte` (qui écrit dans `MV`). `carte.js` ajoute ses ratures à `ETYPES` avec `Object.assign`.
+
+- **Papier** (`paper: 'carte'`, `drawCarte`) : parchemin teinté, mer bleutée et vaguelettes (`SEA_MARKS`), sept îles au contour tremblé (`ISLANDS`, calculées une fois, avec leurs lignes d'eau, montagnes et palmiers), noms d'îles à la plume sépia, « Mer des Ratures », un petit navire qui tangue (`SHIP`) et une rose des vents (`ROSE`). Tout est dessiné en direct, avec un tri par ce qui est à l'écran.
+- Pas de gomme sur la carte : le crabe prend sa place dans la table d'apparition.
+- **Mouette** (base) : tourne autour du joueur (rayon ~170), s'arrête 0,55 s (trait rouge d'avertissement) puis pique en ligne droite.
+- **Crabe** (dès 25 s) : marche de travers, change de côté par à-coups, approche lentement.
+- **Tourbillon** (dès 45 s, quatre au plus sur la page) : dérive lentement et **attire** le joueur dans un rayon de 280 px (`G.pullX`, `G.pullY`, appliqués par `applyPull`, plafonnés à 170 px/s ; un pâté y échappe).
+- **Bouteille à la mer** (dès 75 s) : dérive, vise (éventail rouge), puis tire cinq bouchons (`b.cork`).
+- **La Pieuvre-Buvard** (boss à 3:00, 1 200 PV) : un buvard rose à tentacules. Cycle : balayage (un tentacule balaie un secteur de 130° annoncé 1 s en pointillés : `G.tents`, 2 dégâts), aspiration (1,8 s : elle t'attire, **boit tes gouttes** dans un rayon de 260 px et les taches de la page, puis recrache autant de pâtés roses, `b.blot`), pluie de pâtés (cercles annoncés autour de toi, `G.drops`). Sous 50 % : deux tentacules opposés, et elle appelle crabes et mouettes.
+- Dictées : CAP, PORT, TRÉSOR, ESCALE, NAVIRE, BOUSSOLE, BOUTEILLE, ARCHIPEL, LONGITUDE, EXPLORATION.
+- Musique : barcarolle à six temps en ré dorien, avec la houle (`beatAt`, `chap === 4`).
+
+### La chasse au trésor (itération 6)
+
+- 8 s après le début du chapitre IV, une piste est tracée (`writeTresor`) : un départ près du joueur, des étapes en zigzag, un X sur une île à bonne distance. 4 étapes la première fois, une de plus à chaque trésor (8 au plus).
+- Seul le premier tronçon est visible : chaque fois que tu atteins le bout des pointillés (un rond doré marqué « ? »), le tronçon suivant se dessine (`T.shown`). `tresorTarget()` donne le point attendu ; la flèche dorée du bord d'écran le montre.
+- Sur le X, il faut **rester** 1,6 s pour creuser (la jauge redescend doucement si tu t'éloignes). Pas de limite de temps : la tension vient de l'immobilité.
+- Coffre ouvert (`openTresor`) : une onde de doublons (rayon 520) frappe tout ((20 + 3 × étapes) × ENCRE, 80 sur un boss), efface les projectiles et les pâtés qui tombent, rend un cœur, de l'expérience et cinq lettrines dorées. La piste suivante vient 22 s plus tard.
+- Le pilote automatique suit la piste et reste sur le X pour creuser (`tresorDigging`), sauf danger immédiat. L'écran de fin compte les trésors (`endTally`).
+
+## Commencer au chapitre IV (itération 6)
+
+- Battre la Règle de fer enregistre `inacheve.chapitre` = 4 : touche 4 ou bouton « Commencer au chapitre IV ». Brouillon de 37 mots, niveau 38. `__cap.start(4)` le lance en démo (test de fumée).
+
 ## Réglages et mémoire
 
 - `inacheve.best` : meilleur score.
 - `inacheve.muted` : son coupé.
 - `inacheve.calme` : secousses d'écran désactivées (bouton « Secousses » ou touche C).
-- `inacheve.chapitre` : chapitre le plus loin débloqué (2 après la Grande Rature, 3 après la Fausse Note).
+- `inacheve.chapitre` : chapitre le plus loin débloqué (2 après la Grande Rature, 3 après la Fausse Note, 4 après la Règle de fer).
 
 ## Déterminisme
 
@@ -123,6 +149,8 @@ Itération 4 (départ au brouillon du chapitre II, pilote) : sur 6 graines, 1 se
 
 Itération 5 (chapitre III) : montage vidéo (mots donnés, niveau 34, deux pages tournées), 11 graines sur 12 battent la Règle de fer, entre 3:38 et 3:50 de chapitre. Au brouillon (28 mots au hasard), le pilote meurt le plus souvent entre 1:50 et 3:35 : comme pour le chapitre II, c'est un raccourci. Premiers réglages trop durs (`scale` 4, règle à 2 400 PV) : morts vers 1:40 et combats de plus d'une minute.
 
+Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois pages tournées), le pilote ouvre 6 à 7 trésors et bat la Pieuvre-Buvard sans grande peine. Au brouillon (37 mots au hasard), 4 graines sur 6 gagnent, en descendant à 2 cœurs ; les 2 autres meurent vers 2:50 et 3:10. Premiers réglages beaucoup trop faciles (`scale` 3,6, pieuvre à 2 100 PV, pas de bouteilles avant 100 s) : aucun pilote ne perdait plus de deux cœurs et le combat durait plus d'une minute.
+
 ## Outils
 
 - `tools/check.mjs` : vérifications sans navigateur.
@@ -134,7 +162,8 @@ Itération 5 (chapitre III) : montage vidéo (mots donnés, niveau 34, deux page
 
 ## Carnet d'idées (libre à toi de piocher, de modifier ou d'ignorer)
 
-- ~~**Portées musicales**~~ : fait à l'itération 3 (chapitre II). ~~**Papier millimétré**~~ : fait à l'itération 5 (chapitre III). **Chapitre IV** : la carte au trésor (promesse dans la marge du III : une page qu'on explore, un X à trouver, des pointillés), page de calligraphie, buvard qui absorbe tout.
+- ~~**Portées musicales**~~ : fait à l'itération 3 (chapitre II). ~~**Papier millimétré**~~ : fait à l'itération 5 (chapitre III). ~~**Carte au trésor**~~ : faite à l'itération 6 (chapitre IV), avec le buvard qui boit tout en patron. **Chapitre V** : la page de calligraphie (promesse dans la marge du IV : pleins et déliés, une plume qui crache, des lettres ornées), ou la page de garde, ou un cahier de brouillon tout raturé.
+- **La carte, la suite** : des îles qui comptent vraiment (sable qui ralentit, mer où l'on glisse), un perroquet qui répète la dernière attaque, une boussole à soi (mot BOUSSOLE ?) qui montre le trésor, des trésors piégés (un coffre-mimique), une carte qui se déchire.
 - **La figure, la suite** : des figures imposées (« trace un carré »), des points qui bougent, un compas à soi (mot COMPAS ?) qui trace un cercle protecteur ; des mots de géométrie comme pouvoirs (ANGLE, RAYON).
 - ~~**Commencer au chapitre II**~~ : fait à l'itération 4 (brouillon de 19 mots au hasard), et au chapitre III à l'itération 5. Pour plus tard : un écran titre qui montre les pages débloquées comme les onglets d'un classeur.
 - ~~**Refrain**~~ : fait à l'itération 4 (notes à toucher dans l'ordre). Pour plus tard : un refrain « en canon » que deux mélodies se partagent ; un refrain caché que seul l'écho d'une ligne traversée révèle ; une version du chapitre I (une phrase à recopier mot à mot, la « copie »).

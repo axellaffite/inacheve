@@ -264,6 +264,27 @@ const AU = {
         [261.63, 329.63, 392].forEach(f => this.tone(f * 2, 1.2, { vol: 0.08, when: (k + 1) * 0.08 }));
         this.noise(0.7, { f: 3000, q: 0.6, vol: 0.06, sweep: 2.5 }); break;
       }
+      // chapitre IV : la carte au trésor
+      case 'carteKill': if (this.throttle('kill', 45)) { this.tone(PENTA[3 + Math.floor(Math.random() * 6)] * 2, 0.1, { type: 'triangle', vol: 0.1 }); this.noise(0.1, { f: 1100, q: 0.8, vol: 0.09, sweep: 0.5 }); } break;
+      case 'gull': if (this.throttle('gull', 160)) { this.tone(1450, 0.16, { type: 'triangle', vol: 0.045, slide: 0.62 }); this.tone(1300, 0.18, { type: 'triangle', vol: 0.04, slide: 0.7, when: 0.13 }); } break;
+      case 'crab': if (this.throttle('crab', 140)) { this.noise(0.03, { f: 4200, q: 8, vol: 0.07 }); this.noise(0.03, { f: 3800, q: 8, vol: 0.06, when: 0.07 }); } break;
+      case 'cork': if (this.throttle('cork', 90)) { this.tone(520, 0.09, { type: 'square', vol: 0.04, slide: 2.2 }); this.noise(0.05, { f: 2000, q: 2, vol: 0.1 }); } break;
+      case 'boss4': this.tone(43.65, 2.6, { type: 'sawtooth', vol: 0.1, attack: 0.7 }); this.tone(65.41, 2.6, { type: 'sawtooth', vol: 0.07, attack: 0.9 }); this.noise(0.55, { f: 300, q: 0.5, vol: 0.2, type: 'lowpass', sweep: 0.5 }); break;
+      case 'armWarn': this.tone(98, 0.7, { type: 'sawtooth', vol: 0.05, slide: 1.4, attack: 0.2 }); break;
+      case 'sweep': this.noise(0.55, { f: 320, q: 0.6, vol: 0.24, sweep: 4 }); this.tone(73.42, 0.6, { vol: 0.2, slide: 0.6 }); break;
+      case 'inhale': this.tone(80, 2, { type: 'sawtooth', vol: 0.05, slide: 2.6, attack: 0.8 }); this.noise(0.55, { f: 700, q: 0.7, vol: 0.12, sweep: 3, when: 0.2 }); break;
+      case 'spit': this.noise(0.35, { f: 900, q: 1, vol: 0.22, sweep: 0.3 }); this.tone(150, 0.35, { vol: 0.2, slide: 0.5 }); break;
+      case 'rain': this.tone(330, 0.5, { vol: 0.05, slide: 0.5 }); break;
+      case 'plop': if (this.throttle('plop', 70)) this.tone(150 + Math.random() * 80, 0.14, { vol: 0.16, slide: 0.45 }); break;
+      case 'tresorNew': [587.33, 739.99, 880].forEach((f, i) => this.tone(f, 0.35, { type: 'triangle', vol: 0.1, when: i * 0.1 })); break;
+      case 'trail': { const F = [587.33, 659.25, 698.46, 783.99, 880, 987.77, 1046.5, 1174.66, 1318.5]; this.tone(F[k % 9], 0.4, { type: 'triangle', vol: 0.15 }); this.tone(F[k % 9] * 2, 0.25, { vol: 0.04 }); break; }
+      case 'xmark': [880, 1174.66].forEach((f, i) => this.tone(f, 0.5, { type: 'triangle', vol: 0.14, when: i * 0.12 })); break;
+      case 'dig': if (this.throttle('dig', 150)) { this.noise(0.12, { f: 900, q: 0.8, vol: 0.18, sweep: 0.5 }); this.tone(110, 0.07, { type: 'square', vol: 0.03 }); } break;
+      case 'tresor': {   // fanfare, puis une pluie de pièces
+        [0, 4, 7, 12, 16].forEach((n, i) => this.tone(293.66 * 2 * Math.pow(2, n / 12), 0.55, { type: 'triangle', vol: 0.15, when: i * 0.08 }));
+        for (let j = 0; j < 8; j++) this.tone(2637 + (j % 3) * 400, 0.12, { vol: 0.035, when: 0.4 + j * 0.06 });
+        this.noise(0.6, { f: 5000, q: 0.8, vol: 0.06, sweep: 1.5, when: 0.35 }); break;
+      }
       case 'lose': [6, 4, 2, 0].forEach((n, i) => this.tone(PENTA[n], 0.8, { type: 'triangle', vol: 0.15, when: i * 0.18 })); break;
     }
   },
@@ -285,6 +306,19 @@ const AU = {
       if (s % 8 === 0) this.tone([55, 65.41, 73.42, 49][(s >> 5) % 4], beat * 7, { type: 'sine', vol: 0.22, when, dest: this.mus, attack: 0.05 });
       if (s % 4 === 0) this.noise(0.025, { f: 3000, q: 8, vol: 0.025, when });
       if (Math.random() < 0.5 + intensity * 0.45) { const n = sc[(pat[s % 8] + ((s >> 4) % 3)) % sc.length]; this.tone(n * 2, beat * 0.9, { type: 'triangle', vol: 0.085, when, dest: this.mus, attack: 0.002 }); }
+      if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
+      return;
+    }
+    if (chap === 4) {   // une barcarolle à six temps en ré dorien, qui tangue, et la houle tous les deux temps forts
+      const sc = [146.83, 164.81, 174.61, 196, 220, 246.94, 261.63, 293.66, 329.63, 349.23, 392], bar = s % 6;
+      const root = [73.42, 65.41, 58.27, 55][Math.floor(s / 12) % 4];
+      if (bar === 0) this.tone(root, beat * 5.5, { type: 'sine', vol: 0.22, when, dest: this.mus, attack: 0.05 });
+      if (bar === 3) this.tone(root * 1.5, beat * 2.5, { type: 'sine', vol: 0.1, when, dest: this.mus, attack: 0.05 });
+      if (s % 12 === 0) this.noise(0.55, { f: 520, q: 0.5, vol: 0.04, type: 'lowpass', when, sweep: 0.6 });
+      if (Math.random() < (bar === 0 || bar === 3 ? 0.85 : 0.3) + intensity * 0.3) {
+        const n = sc[([4, 2, 3, 4, 5, 3][bar] + [0, 1, -1, 2][Math.floor(s / 6) % 4] + 2) % sc.length];
+        this.tone(n * 2, beat * (bar === 0 ? 2.2 : 1.1), { type: 'triangle', vol: 0.09, when, dest: this.mus, attack: 0.01 });
+      }
       if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
       return;
     }

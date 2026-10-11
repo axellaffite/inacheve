@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 5, date: '2026-10-11', title: 'Tout se mesure', chapter: 'III', chapterName: 'Le papier millimétré' };
+const GAME_META = { iteration: 6, date: '2026-10-11', title: 'X marque l’endroit', chapter: 'IV', chapterName: 'La carte au trésor' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -47,6 +47,15 @@ const JOURNAL = [
       "Au bout de la page t’attend la Règle de fer : ses graduations s’envolent, elle fait des moulinets et s’abat de tout son long là où tu te tiens.",
       "Les compas et les règles laissent leurs traits de crayon sur la page, comme un vrai cahier de géométrie.",
       "Une fois la Fausse Note battue, tu peux commencer directement au chapitre III."
+    ] },
+  { iteration: 6, date: '2026-10-11', title: 'X marque l’endroit',
+    notes: [
+      "Le chapitre IV est écrit : derrière la Règle de fer, une carte au trésor, avec ses îles, sa mer, son petit navire et sa rose des vents.",
+      "Suis les pointillés : ils se dessinent devant toi à mesure que tu avances, jusqu’à un X rouge. Reste dessus pour creuser, et le coffre s’ouvre dans une pluie de doublons.",
+      "Quatre ratures venues du large : la mouette qui tourne puis pique, le crabe qui marche de travers, le tourbillon qui t’attire et la bouteille à la mer qui tire ses bouchons.",
+      "Au bout de la carte t’attend la Pieuvre-Buvard : ses tentacules balaient la page, elle boit ton encre… puis te la recrache.",
+      "Une musique de marin, à six temps, qui tangue comme un bateau.",
+      "Une fois la Règle de fer battue, tu peux commencer directement au chapitre IV."
     ] }
 ];
 window.GAME_META = GAME_META;

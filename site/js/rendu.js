@@ -31,7 +31,7 @@ function drawPage(v) {
   ctx.restore();
   ctx.fillStyle = paperPattern; ctx.fillRect(Math.max(0, v.x0), Math.max(0, v.y0), Math.min(WORLD.w, v.x1) - Math.max(0, v.x0), Math.min(WORLD.h, v.y1) - Math.max(0, v.y0));
   const paper = CH().paper;
-  if (paper === 'portee') drawPortee(v); else if (paper === 'milli') drawMilli(v); else drawSeyes(v);
+  if (paper === 'portee') drawPortee(v); else if (paper === 'milli') drawMilli(v); else if (paper === 'carte') drawCarte(v); else drawSeyes(v);
   // bord crayonné
   ctx.save(); ctx.strokeStyle = C.pencil; ctx.globalAlpha = 0.55; ctx.lineWidth = 1.6; ctx.setLineDash([14, 9]);
   ctx.strokeRect(-6, -6, WORLD.w + 12, WORLD.h + 12); ctx.restore();
@@ -90,6 +90,10 @@ function drawEnemy(e) {
     drawRegle(e, fr, fl);
   } else if (MILLI_TYPES.has(e.type)) {
     drawMilliEnemy(e, fr, fl);
+  } else if (CARTE_TYPES.has(e.type)) {
+    drawCarteEnemy(e, fr, fl);
+  } else if (e.type === 'pieuvre') {
+    drawPieuvre(e, fr, fl);
   } else if (e.type === 'boss') {
     if (e.phase === 'aim') { ctx.save(); ctx.strokeStyle = C.red; ctx.globalAlpha = 0.4; ctx.setLineDash([16, 10]); ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(e.cx * 420, e.cy * 420); ctx.stroke(); ctx.restore(); }
     const pulse = 1 + Math.sin(G.time * 5) * 0.03;
@@ -180,6 +184,7 @@ function drawWorld() {
   }
   if (G.songs) drawRefrain(v);
   if (G.fills) drawFigure();
+  if (G.chests) drawTresor(v);
   // ennemis
   for (const e of G.enemies) if (inView(e.x, e.y, e.r + 300)) drawEnemy(e);
   // lunes
@@ -200,11 +205,12 @@ function drawWorld() {
   }
   // traits rouges du boss
   ctx.strokeStyle = C.red; ctx.lineWidth = 4;
-  for (const b of G.ebul) { if (b.note || b.deg) continue; const n = Math.hypot(b.vx, b.vy) || 1; ctx.beginPath(); ctx.moveTo(b.x - b.vx / n * 9, b.y - b.vy / n * 9); ctx.lineTo(b.x + b.vx / n * 9, b.y + b.vy / n * 9); ctx.stroke(); }
+  for (const b of G.ebul) { if (b.note || b.deg || b.cork || b.blot) continue; const n = Math.hypot(b.vx, b.vy) || 1; ctx.beginPath(); ctx.moveTo(b.x - b.vx / n * 9, b.y - b.vy / n * 9); ctx.lineTo(b.x + b.vx / n * 9, b.y + b.vy / n * 9); ctx.stroke(); }
   drawNoteBullets();
   drawDegBullets();
   if (G.waves) drawWaves();
   if (G.lines) drawLines();
+  if (G.tents) drawCarteFx();
   for (const e of G.enemies) if (e.type === 'soupir' && e.phase === 'fade') {   // là où le soupir va se poser
     ctx.save(); ctx.strokeStyle = C.pencil; ctx.globalAlpha = 0.7; ctx.setLineDash([5, 6]); ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(e.bx, e.by, 14 + 8 * (e.pt / 0.65), 0, TAU); ctx.stroke(); ctx.restore();
@@ -393,9 +399,10 @@ function drawTitle() {
   txt(G.input.touch ? 'Touche l’écran pour commencer' : 'Appuie sur Entrée pour commencer', W / 2, ty + 196 * s, Math.min(38 * s, W / 18), { color: C.ink, alpha: a * (0.6 + 0.4 * Math.sin(G.time * 3)), hl: C.hl });
   if (!G.input.touch) txt('ZQSD, WASD ou flèches : bouger    Espace : pâté d’encre    Échap : pause    M : son    C : secousses', W / 2, ty + 252 * s, Math.min(22 * s, W / 40), { color: C.pencil, weight: 400, alpha: a });
   else txt('Glisse pour bouger, bouton « pâté » pour foncer', W / 2, ty + 252 * s, 22 * s, { color: C.pencil, weight: 400, alpha: a });
-  const news = G.unlocked >= 3 ? (G.input.touch ? 'Nouveau : le chapitre III t’attend (bouton en bas), sur papier millimétré' : 'Nouveau : touche 3 pour commencer au chapitre III, sur papier millimétré')
-    : G.unlocked >= 2 ? (G.input.touch ? 'Nouveau : derrière la Fausse Note, une page de papier millimétré…' : 'Touche 2 : chapitre II. Et derrière la Fausse Note, une page millimétrée…')
-    : 'Nouveau : le chapitre III est écrit, sur papier millimétré. Tout se mesure…';
+  const news = G.unlocked >= 4 ? (G.input.touch ? 'Nouveau : le chapitre IV t’attend (bouton en bas). Une carte au trésor !' : 'Nouveau : touche 4 pour commencer au chapitre IV, la carte au trésor')
+    : G.unlocked >= 3 ? (G.input.touch ? 'Nouveau : derrière la Règle de fer, une carte au trésor…' : 'Touche 3 : chapitre III. Et derrière la Règle de fer, une carte au trésor…')
+    : G.unlocked >= 2 ? (G.input.touch ? 'Plus loin dans le cahier : du papier millimétré, puis une carte au trésor…' : 'Touche 2 : chapitre II. Plus loin dans le cahier, une carte au trésor…')
+    : 'Nouveau : le chapitre IV est écrit. Au bout du cahier, une carte au trésor…';
   txt(news, W / 2, ty + (G.best ? 322 : 290) * s, Math.min(22 * s, W / 30), { color: C.ink, weight: 400, alpha: a * 0.85 });
   if (G.best) txt('meilleur score : ' + G.best, W / 2, ty + 290 * s, 22 * s, { color: C.margin, weight: 400, alpha: a });
   drawStamp(W - SAFE.r - 110 * s, SAFE.t + 48 * s, s * 1.1);
@@ -406,6 +413,7 @@ function endTally() {
   const parts = [['dictées', G.dictees]];
   if (G.refrains) parts.push(['refrains', G.refrains]);
   if (G.figures) parts.push(['figures', G.figures]);
+  if (G.tresors) parts.push(['trésors', G.tresors]);
   return parts.length > 1 ? [parts.map(q => q[0]).join(' · '), parts.map(q => q[1]).join(' · ')] : ['dictées réussies', G.dictees];
 }
 function drawEnd() {
@@ -440,6 +448,7 @@ function render() {
     drawHUD();
     drawRefrainArrow();
     drawFigureArrow();
+    drawTresorArrow();
     if (G.state === 'levelup') drawLevelUp();
     else if (G.state === 'pause') { dimPage(0.7); txt('Pause', W / 2, H / 2 - 40 * U, 80 * U, { font: FONT_CURSIVE, weight: 400 }); txt(G.input.touch ? 'Touche pour reprendre' : 'Échap ou Entrée pour reprendre', W / 2, H / 2 + 40 * U, 30 * U, { hl: C.hl }); }
     else if (G.state === 'gameover' || G.state === 'victory') drawEnd();

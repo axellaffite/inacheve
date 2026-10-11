@@ -59,6 +59,7 @@ function setUI() {
   document.getElementById('btnCalm').textContent = 'Secousses : ' + (G.calm ? 'non' : 'oui');
   document.getElementById('btnCh2').classList.toggle('hidden', !(G.state === 'title' && G.unlocked >= 2));
   document.getElementById('btnCh3').classList.toggle('hidden', !(G.state === 'title' && G.unlocked >= 3));
+  document.getElementById('btnCh4').classList.toggle('hidden', !(G.state === 'title' && G.unlocked >= 4));
 }
 function primaryAction() {
   AU.init();
@@ -96,6 +97,7 @@ if (!CAPTURE) {
     }
     if ((e.code === 'Digit2' || e.code === 'Numpad2') && G.state === 'title' && G.unlocked >= 2) { newGame(false, 2); return; }
     if ((e.code === 'Digit3' || e.code === 'Numpad3') && G.state === 'title' && G.unlocked >= 3) { newGame(false, 3); return; }
+    if ((e.code === 'Digit4' || e.code === 'Numpad4') && G.state === 'title' && G.unlocked >= 4) { newGame(false, 4); return; }
     if (e.code === 'Enter' || (e.code === 'Space' && G.state !== 'play')) primaryAction();
     if ((e.code === 'Space' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') && G.state === 'play') G.input.dashQueued = true;
     if (e.code === 'Escape' || e.code === 'KeyP') togglePause();
@@ -138,6 +140,7 @@ if (!CAPTURE) {
   document.getElementById('btnCalm').addEventListener('click', toggleCalm);
   document.getElementById('btnCh2').addEventListener('click', () => { AU.init(); if (G.state === 'title') newGame(false, 2); });
   document.getElementById('btnCh3').addEventListener('click', () => { AU.init(); if (G.state === 'title') newGame(false, 3); });
+  document.getElementById('btnCh4').addEventListener('click', () => { AU.init(); if (G.state === 'title') newGame(false, 4); });
   document.getElementById('btnPause').addEventListener('click', () => togglePause());
 }
 function videoFor(n) {
@@ -196,7 +199,7 @@ window.__cap = {
   title() { initTitle(); },
   start(chapter) { newGame(true, chapter || 1); },
   caption(t, d) { caption(t, d); },
-  state() { return { state: G.state, chapter: G.chapter || 1, t: G.t, boss: !!G.boss, bossDefeated: !!G.bossDefeated, level: G.level, hp: G.p ? G.p.hp : 0, enemies: G.enemies ? G.enemies.length : 0, kills: G.kills, mots: G.mots, refrains: G.refrains || 0, refrain: G.refrain ? G.refrain.prog : -1, figures: G.figures || 0 }; },
+  state() { return { state: G.state, chapter: G.chapter || 1, t: G.t, boss: !!G.boss, bossDefeated: !!G.bossDefeated, level: G.level, hp: G.p ? G.p.hp : 0, enemies: G.enemies ? G.enemies.length : 0, kills: G.kills, mots: G.mots, refrains: G.refrains || 0, refrain: G.refrain ? G.refrain.prog : -1, figures: G.figures || 0, tresors: G.tresors || 0, tresor: G.tresor ? G.tresor.shown : -1 }; },
   heal() { if (G.p) G.p.hp = G.p.maxHp; },
   // donne des mots d'un coup (montage) puis ouvre un choix : un mot composé prêt y est toujours proposé
   grant(mots) { for (const k in mots) { G.mots[k] = Math.max(lvl(k), mots[k]); if (!G.motOrder.includes(k)) G.motOrder.push(k); } computeStats(); G.pointCd = Math.min(G.pointCd, 1.5); },

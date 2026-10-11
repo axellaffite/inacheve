@@ -44,22 +44,23 @@ async function load(seed) {
 // Coups de pouce du montage (itération 4 : le refrain du chapitre II), appliqués à l'identique en simulation et au tournage.
 // Chaque étape : `skip` secondes jouées sans filmer, une action éventuelle dans la page, un sous-titre, puis `play` secondes filmées.
 // On saute la fin du chapitre I : le pilote reçoit les mots d'une partie avancée, puis la page se tourne.
-// Le premier refrain s'écrit 8 s après le début du chapitre II : l'étape `song` doit le montrer joué en entier.
-// Montage : un aperçu des chapitres I et II, puis le chapitre III (nouveau) jusqu'à la Règle de fer
+// La première piste au trésor s'écrit 8 s après le début du chapitre IV : l'étape `tresor` doit montrer le coffre ouvert.
+// Montage : un aperçu des chapitres I à III, puis le chapitre IV (nouveau), sa chasse au trésor et la Pieuvre-Buvard
 const STEPS = [
-  { play: 4 },
+  { play: 3 },
   { cap: ['… une Grande Rature plus tard : chapitre II'], act: () => {
     window.__cap.grant({ ENCRE: 4, VIRGULE: 4, GUILLEMETS: 3, LUNE: 3, ECHO: 2, POINT: 3, FEU: 2, PLUME: 2, POINT_VIRGULE: 1, ECHO_DE_LUNE: 1, POINT_DE_FEU: 1 });
     window.__cap.level(22); window.__cap.turn();
-  }, play: 3.5 },
-  { cap: ['… une Fausse Note plus tard : chapitre III, le papier millimétré !'], act: () => {
-    window.__cap.grant({ ENCRE: 5, VIRGULE: 5, GUILLEMETS: 4, LUNE: 4, ECHO: 3, POINT: 4, FEU: 3, PLUME: 3, ITALIQUE: 2, SOUFFLE: 1, PLUME_AU_VENT: 1 });
-    window.__cap.level(34); window.__cap.turn();
+  }, play: 2.2 },
+  { cap: ['… une Fausse Note plus tard : chapitre III'], act: () => { window.__cap.level(34); window.__cap.turn(); }, play: 2.2 },
+  { cap: ['… une Règle de fer plus tard : chapitre IV, la carte au trésor !'], act: () => {
+    window.__cap.grant({ ENCRE: 5, VIRGULE: 5, GUILLEMETS: 4, LUNE: 5, ECHO: 4, POINT: 5, FEU: 4, PLUME: 4, ITALIQUE: 3, SOUFFLE: 2, AIMANT: 2, PLUME_AU_VENT: 1, POINT_VIRGULE: 1, ECHO_DE_LUNE: 1, POINT_DE_FEU: 1 });
+    window.__cap.level(46); window.__cap.turn();
   }, play: 7 },
-  { figure: true, play: 12 },
-  { skip: 40, cap: ['Le compas trace des cercles, l’équerre des angles droits'], play: 7 }
+  { tresor: true, play: 13 },
+  { skip: 40, cap: ['Mouettes, crabes et tourbillons : la mer est agitée'], play: 6 }
 ];
-const BOSS_FILM = 45;   // secondes de combat filmées au plus contre la Règle de fer
+const BOSS_FILM = 42;   // secondes de combat filmées au plus contre la Pieuvre-Buvard
 // Joue une partie entière en accéléré (sans filmer) pour savoir comment elle se termine
 async function simulate(seed) {
   await load(seed);
@@ -67,20 +68,20 @@ async function simulate(seed) {
   let sung = 0;
   for (const st of STEPS) {
     await page.evaluate(n => window.__cap.skip(n), st.skip || 0); if (st.act) await page.evaluate(st.act); await page.evaluate(n => window.__cap.skip(n), st.play);
-    if (st.figure) sung = (await page.evaluate(() => window.__cap.state())).figures;
+    if (st.tresor) sung = (await page.evaluate(() => window.__cap.state())).tresors;
   }
   const end = await page.evaluate(() => { for (let i = 0; i < 320; i++) { window.__cap.skip(1); const s = window.__cap.state(); if (s.state === 'victory' || s.state === 'gameover') return s; } return window.__cap.state(); });
   return { ...end, sung };
 }
 // une bonne graine : le refrain est joué à l'écran, et la Fausse Note tombe pendant qu'on filme encore
-const good = r => r.sung >= 1 && r.state === 'victory' && r.chapter === 3 && r.t <= 176 + BOSS_FILM - 2;
+const good = r => r.sung >= 1 && r.state === 'victory' && r.chapter === 4 && r.t <= 176 + BOSS_FILM - 2;
 let SEED = SEED_ARG ? parseInt(SEED_ARG, 10) : null;
 if (SEED === null && !SMOKE) {
   // on cherche une partie qui va jusqu'à la victoire, pour montrer tout le chapitre
   let best = null;
   for (const s of [42, 7, 5, 99, 3, 11, 23, 64, 1, 8, 13, 21]) {
     const r = await simulate(s);
-    console.log(`graine ${s} : ${r.state} au chapitre ${r.chapter}, à ${r.t.toFixed(0)} s (niveau ${r.level}, figure filmée : ${r.sung ? 'oui' : 'non'}, ${r.figures} figure(s))`);
+    console.log(`graine ${s} : ${r.state} au chapitre ${r.chapter}, à ${r.t.toFixed(0)} s (niveau ${r.level}, trésor filmé : ${r.sung ? 'oui' : 'non'}, ${r.tresors} trésor(s))`);
     const score = x => (good(x) ? 1e6 : 0) + (x.sung ? 2e5 : 0) + (x.state === 'victory' ? 1e5 - x.t : x.t);
     if (!best || score(r) > score(best.r)) best = { s, r };
     if (good(r)) break;
@@ -92,7 +93,7 @@ const meta = await page.evaluate(() => window.__cap.meta);
 const fail = msg => { console.error('ÉCHEC : ' + msg); if (errors.length) console.error(errors.join('\n')); process.exitCode = 1; };
 
 if (SMOKE) {
-  await page.evaluate(() => { window.__cap.start(); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(2); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(3); window.__cap.skip(30); window.__cap.frames(3); });
+  await page.evaluate(() => { window.__cap.start(); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(2); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(3); window.__cap.skip(30); window.__cap.frames(3); window.__cap.start(4); window.__cap.skip(30); window.__cap.frames(3); });
   const st = await page.evaluate(() => window.__cap.state());
   console.log('smoke :', JSON.stringify(st));
   if (errors.length) fail('erreurs JavaScript'); else console.log('OK, aucune erreur.');
@@ -137,7 +138,7 @@ while (st.state !== 'gameover' && st.state !== 'victory' && st.t < 176) {
   st = await state();
 }
 if (st.state !== 'gameover') {
-  await cap('… trois minutes plus tard, la Règle de fer …', 2.6);
+  await cap('… trois minutes plus tard, la Pieuvre-Buvard …', 2.6);
   for (let i = 0; i < BOSS_FILM && st.state !== 'victory' && st.state !== 'gameover'; i++) { await grab(1); st = await state(); }
 }
 await grab(st.state === 'victory' || st.state === 'gameover' ? 5 : 1);
