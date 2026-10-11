@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 4, date: '2026-10-10', title: 'Le refrain', chapter: 'II', chapterName: 'La portée' };
+const GAME_META = { iteration: 5, date: '2026-10-11', title: 'Tout se mesure', chapter: 'III', chapterName: 'Le papier millimétré' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -38,6 +38,15 @@ const JOURNAL = [
       "Chaque refrain réussi en appelle un autre, un peu plus long. Une flèche dorée montre où il t’attend.",
       "Une fois la Grande Rature battue, tu peux commencer directement au chapitre II, avec un brouillon de mots tirés au hasard.",
       "Dans la marge, la promesse du refrain est tenue. Une autre l’a remplacée…"
+    ] },
+  { iteration: 5, date: '2026-10-11', title: 'Tout se mesure',
+    notes: [
+      "Le chapitre III est écrit : derrière la Fausse Note, une page de papier millimétré où tout se mesure.",
+      "Quatre ratures de géométrie : le segment qui fait des moulinets, l’équerre qui trace un angle droit sur toi, le compas qui dessine des cercles et le rapporteur qui tire en éventail.",
+      "Relie les points A, B, C… dans l’ordre, puis reviens au point A : la figure fermée se hachure et frappe tout ce qu’elle enferme.",
+      "Au bout de la page t’attend la Règle de fer : ses graduations s’envolent, elle fait des moulinets et s’abat de tout son long là où tu te tiens.",
+      "Les compas et les règles laissent leurs traits de crayon sur la page, comme un vrai cahier de géométrie.",
+      "Une fois la Fausse Note battue, tu peux commencer directement au chapitre III."
     ] }
 ];
 window.GAME_META = GAME_META;

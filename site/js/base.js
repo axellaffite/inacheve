@@ -244,6 +244,26 @@ const AU = {
         [0, 2, 4].forEach(n => this.tone(NOTE_F[n + 2] * 2, 1.2, { type: 'sine', vol: 0.08, when: ds.length * 0.1 }));
         this.noise(0.8, { f: 3000, q: 0.6, vol: 0.06, sweep: 2.5 }); break;
       }
+      // chapitre III : le papier millimétré
+      case 'mmKill': if (this.throttle('kill', 45)) { this.tone(PENTA[4 + Math.floor(Math.random() * 5)] * 2, 0.09, { type: 'triangle', vol: 0.09 }); this.noise(0.06, { f: 2600, q: 2, vol: 0.09, sweep: 0.5 }); } break;
+      case 'squareAim': if (this.throttle('squareAim', 90)) this.tone(1318.5, 0.14, { vol: 0.04, slide: 1.3 }); break;
+      case 'squareSnap': if (this.throttle('squareSnap', 70)) { this.noise(0.1, { f: 3800, q: 5, vol: 0.14 }); this.tone(220, 0.08, { type: 'square', vol: 0.025 }); } break;
+      case 'compas': if (this.throttle('compas', 250)) this.noise(0.32, { f: 5200, q: 2.5, vol: 0.05, sweep: 0.8 }); break;
+      case 'protract': if (this.throttle('protract', 120)) [0, 1, 2].forEach(i => this.tone(880 * (1 + i * 0.125), 0.07, { type: 'square', vol: 0.02, when: i * 0.04 })); break;
+      case 'mesure': if (this.throttle('mesure', 150)) { this.noise(0.15, { f: 2400, q: 6, vol: 0.09 }); [0, 1, 2, 3].forEach(i => this.tone(1567.98, 0.04, { type: 'square', vol: 0.015, when: i * 0.05 })); } break;
+      case 'spin': this.noise(1.6, { f: 420, q: 0.7, vol: 0.16, sweep: 3 }); this.tone(110, 1.4, { type: 'sawtooth', vol: 0.04, slide: 1.5 }); break;
+      case 'lift': this.tone(160, 0.9, { vol: 0.08, slide: 2.2 }); break;
+      case 'slam': this.tone(58, 0.55, { vol: 0.4, slide: 0.5 }); this.noise(0.35, { f: 2500, q: 0.6, vol: 0.24, sweep: 0.3 }); this.tone(1567.98, 0.9, { vol: 0.035 }); this.tone(2349.3, 0.7, { vol: 0.02 }); break;
+      case 'boss3': this.tone(49, 2.4, { type: 'sawtooth', vol: 0.1, attack: 0.6 }); this.tone(73.42, 2.4, { type: 'sawtooth', vol: 0.07, attack: 0.8 }); this.tone(1046.5, 1.8, { vol: 0.03, attack: 0.3 }); break;
+      case 'figureNew': [523.25, 659.25, 783.99].forEach((f, i) => this.tone(f * 2, 0.3, { vol: 0.07, when: i * 0.08 })); break;
+      case 'figurePt': { const F = [523.25, 659.25, 783.99, 1046.5, 1318.5, 1567.98]; this.tone(F[k % 6], 0.55, { type: 'triangle', vol: 0.17 }); this.tone(F[k % 6] * 2, 0.35, { vol: 0.05 }); break; }
+      case 'figureLost': this.noise(0.4, { f: 1400, q: 0.8, vol: 0.12, sweep: 0.5 }); this.tone(311.13, 0.5, { type: 'triangle', vol: 0.08, slide: 0.85 }); break;
+      case 'figure': {   // les sommets rejoués d'un trait, puis l'accord de la figure
+        const F = [523.25, 659.25, 783.99, 1046.5, 1318.5, 1567.98];
+        for (let i = 0; i <= k; i++) this.tone(F[i % k] * (i === k ? 2 : 1), 0.4, { type: 'triangle', vol: 0.15, when: i * 0.08 });
+        [261.63, 329.63, 392].forEach(f => this.tone(f * 2, 1.2, { vol: 0.08, when: (k + 1) * 0.08 }));
+        this.noise(0.7, { f: 3000, q: 0.6, vol: 0.06, sweep: 2.5 }); break;
+      }
       case 'lose': [6, 4, 2, 0].forEach((n, i) => this.tone(PENTA[n], 0.8, { type: 'triangle', vol: 0.15, when: i * 0.18 })); break;
     }
   },
@@ -257,8 +277,17 @@ const AU = {
   },
   BEAT: 0.36,
   // Chapitre I : ré dorien au kalimba. Chapitre II : boîte à musique en do lydien, avec le tic-tac d'un métronome.
+  // Chapitre III : arpèges réguliers en la mineur, comme des figures qu'on répète, et le cliquetis d'une règle.
   beatAt(when, s, intensity, bossOn, chap = 1) {
     const beat = this.BEAT, two = chap === 2;
+    if (chap === 3) {
+      const sc = [220, 261.63, 293.66, 329.63, 392, 440, 523.25, 587.33, 659.25], pat = [0, 2, 4, 6, 4, 2, 1, 3];
+      if (s % 8 === 0) this.tone([55, 65.41, 73.42, 49][(s >> 5) % 4], beat * 7, { type: 'sine', vol: 0.22, when, dest: this.mus, attack: 0.05 });
+      if (s % 4 === 0) this.noise(0.025, { f: 3000, q: 8, vol: 0.025, when });
+      if (Math.random() < 0.5 + intensity * 0.45) { const n = sc[(pat[s % 8] + ((s >> 4) % 3)) % sc.length]; this.tone(n * 2, beat * 0.9, { type: 'triangle', vol: 0.085, when, dest: this.mus, attack: 0.002 }); }
+      if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
+      return;
+    }
     const scale = two ? [261.63, 293.66, 329.63, 369.99, 392, 440, 493.88, 523.25, 587.33] : [146.83, 174.61, 196, 220, 261.63, 293.66, 349.23, 392, 440];
     const bass = two ? [65.41, 98, 110, 82.41] : [73.42, 87.31, 65.41, 98];
     if (s % 8 === 0) this.tone(bass[(s >> 5) % 4], beat * 7, { type: 'sine', vol: 0.22, when, dest: this.mus, attack: 0.05 });

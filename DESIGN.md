@@ -75,12 +75,37 @@ Tenu depuis la note de marge « un refrain ? » du chapitre II. Tout est dans `r
 - Perdre ou recommencer (R) ramène au chapitre où la partie a commencé (`G.startChapter`).
 - `__cap.start(2)` lance la démo au chapitre II (utilisé par le test de fumée).
 
+## Chapitre III : le papier millimétré (itération 5)
+
+Tout est dans `chapitre3.js` (page, ratures, Règle de fer) et `figure.js` (la figure), chargés après `refrain.js`. Les ratures géométriques sont listées dans `MILLI_TYPES` et animées par `stepMilli` (qui écrit dans `MV`, comme `stepPortee`).
+
+- **Papier** (`paper: 'milli'`, `drawMilli`) : lignes orangées au millimètre (8 px, masquées quand l'écran est très dézoomé), plus marquées tous les 5 mm et tous les centimètres, et un repère O, x, y tracé au crayon en bas à gauche.
+- **Traits de crayon** (`pencilStain`) : les compas, les équerres, la règle et les figures laissent des traits gris sur la couche des taches ; ils sèchent comme l'encre.
+- **Segment** (base) : avance en faisant des moulinets.
+- **Équerre** (dès 25 s) : s'arrête et trace un angle droit (`G.lines`) dont un côté passe par le joueur : 0,85 s en pointillés rouges, puis 0,3 s actif.
+- **Compas** (dès 55 s) : plante sa pointe, ouvre ses branches (le cercle est annoncé en pointillés), puis trace un cercle complet en 2,3 s. Sa mine (la rature elle-même, `e.x`, `e.y`) fait mal ; la pointe (`e.cx`, `e.cy`) non.
+- **Rapporteur** (dès 105 s) : vise, puis tire cinq rayons de 24° en 24°, deux fois. Ses projectiles et ceux de la règle sont des « ° » rouges (`b.deg`).
+- **La Règle de fer** (boss à 3:00, 1 700 PV, `REGLE` : 540 × 54 px) : on se cogne sur toute sa longueur (`regleDist`, `segDist`). Cycle : graduations (tirs perpendiculaires depuis 9 points de la règle, en 2 ou 3 volées), moulinet (cercle annoncé 0,9 s, puis 2,6 s de rotation rapide), trait (elle se soulève, intouchable, son ombre vise un trait qui passe par le joueur, puis elle s'abat : 2 dégâts ; deux fois de suite quand elle est en colère). Sous 50 % : appel d'équerres et de segments.
+- Dictées : ANGLE, CERCLE, RAYON, CARRÉ, COMPAS, ÉQUERRE, TRIANGLE…
+- Musique : arpèges réguliers en la mineur et cliquetis de règle (`beatAt`, `chap === 3`).
+
+### La figure (itération 5)
+
+- 8 s après le début du chapitre III, des points A, B, C… sont posés sur la page (`writeFigure`) : 3 sommets d'abord (un triangle), un de plus à chaque figure réussie (6 au plus, l'hexagone).
+- On les touche dans l'ordre, puis on revient au point A (« ferme ! ») : `figureTarget()` donne le point attendu. Un crayon en pointillés suit le joueur depuis le dernier sommet. Plus de 6 s entre deux points : la gomme passe, on reprend du point A.
+- Figure fermée (`closeFigure`) : hachures dorées, et tout ce qui est dedans ou touche un côté prend (24 + 4 × sommets) × ENCRE (95 sur un boss) ; les projectiles et les angles droits à l'intérieur disparaissent ; un cœur et de l'expérience. La suivante vient 20 s plus tard.
+- Le pilote automatique va vers la figure comme vers le refrain. L'écran de fin compte « dictées · refrains · figures » (`endTally`).
+
+## Commencer au chapitre III (itération 5)
+
+- Battre la Fausse Note enregistre `inacheve.chapitre` = 3 : touche 3 ou bouton « Commencer au chapitre III ». Brouillon de 28 mots, niveau 29. `__cap.start(3)` le lance en démo (test de fumée).
+
 ## Réglages et mémoire
 
 - `inacheve.best` : meilleur score.
 - `inacheve.muted` : son coupé.
 - `inacheve.calme` : secousses d'écran désactivées (bouton « Secousses » ou touche C).
-- `inacheve.chapitre` : chapitre le plus loin débloqué (2 après la Grande Rature).
+- `inacheve.chapitre` : chapitre le plus loin débloqué (2 après la Grande Rature, 3 après la Fausse Note).
 
 ## Déterminisme
 
@@ -96,6 +121,8 @@ Itération 3 (chapitre II, parties naturelles : chapitre I joué en entier puis 
 
 Itération 4 (départ au brouillon du chapitre II, pilote) : sur 6 graines, 1 seule bat la Fausse Note ; les autres meurent entre 1:40 et 3:10. Le brouillon (mots au hasard) est nettement plus faible qu'une vraie partie : c'est voulu, c'est un raccourci, pas une récompense. Dans le montage vidéo (graines 42 et 7, chapitre I abrégé), le pilote joue 4 à 5 refrains et bat la Fausse Note vers 3:30 à 3:50.
 
+Itération 5 (chapitre III) : montage vidéo (mots donnés, niveau 34, deux pages tournées), 11 graines sur 12 battent la Règle de fer, entre 3:38 et 3:50 de chapitre. Au brouillon (28 mots au hasard), le pilote meurt le plus souvent entre 1:50 et 3:35 : comme pour le chapitre II, c'est un raccourci. Premiers réglages trop durs (`scale` 4, règle à 2 400 PV) : morts vers 1:40 et combats de plus d'une minute.
+
 ## Outils
 
 - `tools/check.mjs` : vérifications sans navigateur.
@@ -107,8 +134,9 @@ Itération 4 (départ au brouillon du chapitre II, pilote) : sur 6 graines, 1 se
 
 ## Carnet d'idées (libre à toi de piocher, de modifier ou d'ignorer)
 
-- ~~**Portées musicales**~~ : fait à l'itération 3 (chapitre II). **Chapitre III** : papier millimétré (géométrie : ennemis-compas, équerres, rapporteur), carte au trésor, page de calligraphie, buvard qui absorbe tout.
-- ~~**Commencer au chapitre II**~~ : fait à l'itération 4 (brouillon de 19 mots au hasard). Pour plus tard : un écran titre qui montre les pages débloquées comme les onglets d'un classeur.
+- ~~**Portées musicales**~~ : fait à l'itération 3 (chapitre II). ~~**Papier millimétré**~~ : fait à l'itération 5 (chapitre III). **Chapitre IV** : la carte au trésor (promesse dans la marge du III : une page qu'on explore, un X à trouver, des pointillés), page de calligraphie, buvard qui absorbe tout.
+- **La figure, la suite** : des figures imposées (« trace un carré »), des points qui bougent, un compas à soi (mot COMPAS ?) qui trace un cercle protecteur ; des mots de géométrie comme pouvoirs (ANGLE, RAYON).
+- ~~**Commencer au chapitre II**~~ : fait à l'itération 4 (brouillon de 19 mots au hasard), et au chapitre III à l'itération 5. Pour plus tard : un écran titre qui montre les pages débloquées comme les onglets d'un classeur.
 - ~~**Refrain**~~ : fait à l'itération 4 (notes à toucher dans l'ordre). Pour plus tard : un refrain « en canon » que deux mélodies se partagent ; un refrain caché que seul l'écho d'une ligne traversée révèle ; une version du chapitre I (une phrase à recopier mot à mot, la « copie »).
 - **Les paroles** (TODO dans la marge, et nouvelle promesse « les paroles ? » à côté du refrain) : des syllabes sous les notes du refrain, qui forment un mot ; les dictées du chapitre II écrites sous la portée, comme des paroles de chanson.
 - **Bons points** : de petites cartes illustrées à collectionner, gagnées par des exploits ; une page « collection » dans le carnet de bord.
@@ -117,7 +145,8 @@ Itération 4 (départ au brouillon du chapitre II, pilote) : sur 6 graines, 1 se
 - ~~**Combinaisons de mots**~~ : fait à l'itération 2 (cinq mots composés). Pour plus tard : d'autres unions (GUILLEMETS + ITALIQUE = « CITATION » ? SOUFFLE + LUNE = « CLAIR DE LUNE » ?), et un mot composé à trois mots, très rare.
 - ~~**Accessibilité : secousses**~~ : fait à l'itération 2 (réglage « Secousses »). Restent : contraste renforcé, vitesse du jeu, daltonisme.
 - **Nouvelles ratures** : le tipp-ex qui recouvre la page de blanc, la tache de café, le trombone, le taille-crayon qui aspire les lettres, la règle qui balaie la page.
-- **Patrons de chapitres** : le Correcteur au stylo rouge, la Photocopieuse qui duplique tout, le Cartable.
+- **Patrons de chapitres** : le Correcteur au stylo rouge, la Photocopieuse qui duplique tout, le Cartable (la Règle de fer est faite).
+- **Lisibilité** : quand la page est très tachée en fin de chapitre, les taches pourraient sécher plus vite (ou une option « page propre »).
 - **Accessibilité** : options de contraste, vitesse du jeu, daltonisme (les secousses sont faites).
 - **Histoire** : une phrase d'histoire se révèle à chaque chapitre, comme si le cahier racontait quelque chose.
 - **Musique** : un thème par chapitre (fait à l'itération 3 pour le I et le II) ; reste une musique qui réagit aux mots choisis.

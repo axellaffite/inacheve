@@ -127,8 +127,11 @@ function drawRefrain(v) {
 // Hors de l'écran : une flèche dorée au bord indique où attend le refrain
 function drawRefrainArrow() {
   const R = G.refrain; if (!R || G.state !== 'play') return;
-  const nt = R.notes[R.prog]; if (!nt) return;
-  const sx = W / 2 + (nt.x - G.cam.x) * ZOOM, sy = H / 2 + (nt.y - G.cam.y) * ZOOM, m = 60 * U;
+  const nt = R.notes[R.prog]; if (nt) edgeArrow(nt.x, nt.y);
+}
+// Une flèche dorée au bord de l'écran, vers un point du monde hors champ (refrain, figure)
+function edgeArrow(wx, wy) {
+  const sx = W / 2 + (wx - G.cam.x) * ZOOM, sy = H / 2 + (wy - G.cam.y) * ZOOM, m = 60 * U;
   if (sx > m && sx < W - m && sy > m && sy < H - m) return;
   const a = Math.atan2(sy - H / 2, sx - W / 2), ex = W / 2 - m, ey = H / 2 - m;
   const k = Math.min(ex / Math.abs(Math.cos(a) || 1e-6), ey / Math.abs(Math.sin(a) || 1e-6));

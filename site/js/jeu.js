@@ -48,13 +48,14 @@ function newGame(demo, start = 1) {
     spawnAcc: 0, nextWave: 45, boss: null, bossSpawned: false, bossDefeated: false, endless: false, nextBossAt: 180,
     pointCd: 6, dicteeIdx: 0, dicteeWord: CH().dictees[0], dicteeProg: 0, choices: [], sel: 0, score: 0, comboN: 0, comboT: 0,
     moonA: 0, botPickT: 0, endPhrase: '', newBest: false,
-    refrain: null, refrains: 0, nextRefrain: REFRAIN.first, songs: [], refrainSeen: false
+    refrain: null, refrains: 0, nextRefrain: REFRAIN.first, songs: [], refrainSeen: false,
+    lines: [], figure: null, figures: 0, nextFigure: FIGURE.first, fills: [], figureSeen: false
   });
   const hp = demo ? 7 : 6;
   G.p = { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, r: 13, hp, maxHp: hp, inv: 1.2, dashCd: 0, dashT: 0, dx: 1, dy: 0, face: 0, fireCd: 0.5, look: 0, puddleT: 0, squash: 0, hidden: 0, gx: 0, gy: 0 };
   G.cam.x = G.p.x; G.cam.y = G.p.y;
   computeStats(); clearStains();
-  if (start > 1) draft(19);
+  if (start > 1) draft(start === 2 ? 19 : 28);
   caption(CH().intro, 4);
   if (start > 1) caption('Au brouillon : tes mots sont tirés au hasard', 4, 'green');
   setUI();
@@ -78,7 +79,8 @@ function turnPage() {
   Object.assign(G, {
     chapter: G.chapter + 1, state: 'turn', stateT: 0, totalT: G.totalT + G.t, t: 0, enemies: [], shots: [], ebul: [], items: [], parts: [], puddles: [], points: [], fires: [], rings: [], waves: [], texts: [],
     spawnAcc: 0, nextWave: 45, boss: null, bossSpawned: false, bossDefeated: false, victoryAt: 0, endless: false, nextBossAt: 180, pointCd: 3,
-    dicteeIdx: 0, dicteeProg: 0, comboN: 0, newBest: false, captions: [], refrain: null, nextRefrain: REFRAIN.first, songs: []
+    dicteeIdx: 0, dicteeProg: 0, comboN: 0, newBest: false, captions: [], refrain: null, nextRefrain: REFRAIN.first, songs: [],
+    lines: [], figure: null, nextFigure: FIGURE.first, fills: []
   });
   G.dicteeWord = CH().dictees[0];
   const p = G.p; Object.assign(p, { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, hp: p.maxHp, inv: 2.5, dashT: 0, hidden: 0 });
@@ -104,7 +106,13 @@ const ETYPES = {
   croche:      { r: 15, hp: 3, speed: 104, dmg: 1, xp: 1, agil: 4 },
   soupir:      { r: 16, hp: 7, speed: 62, dmg: 1, xp: 2, agil: 3 },
   metronome:   { r: 26, hp: 26, speed: 40, dmg: 1, xp: 5, agil: 1.5 },
-  fausse:      { r: 70, hp: 1500, speed: 50, dmg: 2, xp: 80, agil: 1.2, boss: true }
+  fausse:      { r: 70, hp: 1500, speed: 50, dmg: 2, xp: 80, agil: 1.2, boss: true },
+  // chapitre III : le papier millimétré
+  segment:     { r: 15, hp: 3.5, speed: 100, dmg: 1, xp: 1, agil: 4 },
+  equerre:     { r: 22, hp: 9, speed: 62, dmg: 1, xp: 3, agil: 3 },
+  compas:      { r: 17, hp: 20, speed: 72, dmg: 1, xp: 5, agil: 2.5 },
+  rapporteur:  { r: 26, hp: 30, speed: 40, dmg: 1, xp: 6, agil: 1.5 },
+  regle:       { r: 58, hp: 1700, speed: 44, dmg: 1, xp: 100, agil: 1.2, boss: true }
 };
 function spawnEnemy(type, x, y) {
   const T = ETYPES[type];
@@ -182,7 +190,7 @@ function killEnemy(e) {
     if (!G.bossDefeated) { G.bossDefeated = true; G.victoryAt = G.t + 1.6; unlockChapter(Math.min(CHAPTERS.length - 1, G.chapter + 1)); }
     return;
   }
-  if (CH().paper === 'portee') AU.play('noteKill', staffPitch(e.y)); else AU.play('kill');
+  if (CH().paper === 'portee') AU.play('noteKill', staffPitch(e.y)); else if (CH().paper === 'milli') AU.play('mmKill'); else AU.play('kill');
   if (e.type === 'tache') { for (let i = 0; i < 2; i++) { const g = spawnEnemy('gouttelette', e.x + rnd(-10, 10), e.y + rnd(-10, 10)); g.vx = rnd(-150, 150); g.vy = rnd(-150, 150); } }
   let v = e.xp;
   const n = v <= 2 ? v : 2 + (v > 4 ? 1 : 0);
@@ -217,7 +225,7 @@ function botInput() {
   let goal = null, gd = 1e9;
   const need = G.dicteeWord[G.dicteeProg];
   for (const it of G.items) { const d = Math.hypot(it.x - p.x, it.y - p.y) - (it.ch === need ? 160 : 0) - (it.rare ? 80 : 0); if (d < gd && d < 520) { gd = d; goal = it; } }
-  const rn = G.refrain && G.refrain.notes[G.refrain.prog];   // le refrain passe avant les lettres
+  const rn = (G.refrain && G.refrain.notes[G.refrain.prog]) || figureTarget();   // le refrain et la figure passent avant les lettres
   const toSong = rn && Math.hypot(rn.x - p.x, rn.y - p.y) < 1600;
   if (toSong) goal = rn;
   if (!goal) goal = { x: WORLD.w / 2 + Math.cos(G.t * 0.21) * 700, y: WORLD.h / 2 + Math.sin(G.t * 0.17) * 420 };
@@ -232,12 +240,15 @@ function botInput() {
       const x = p.x + dx * look, y = p.y + dy * look, w = look === 60 ? 1 : 0.6;
       for (const e of near) {
         let d = Math.hypot(e.x - x, e.y - y) - e.r;
-        if (e.ghost) continue;
+        if (e.type === 'regle') d = regleDist(e, x, y);
+        else if (e.ghost) continue;
+        if (e.type === 'compas' && e.phase !== 'walk') d = Math.min(d, Math.abs(Math.hypot(e.cx - x, e.cy - y) - e.Rt) - 10);
         if (e.type === 'biffure' && e.phase !== 'walk') d -= 40;
         if (e.type === 'metronome' && e.ticks % 4 === 3) d -= 150;
         sc -= w * (e.isBoss ? 5 : e.type === 'gomme' || e.type === 'metronome' ? 1.6 : 1) * 2900 / Math.pow(Math.max(8, d), 1.8);
       }
       for (const b of bul) sc -= w * (b.wait > 0 ? 300 : 600) / Math.pow(Math.max(6, Math.hypot(b.x - x, b.y - y)), 1.5);
+      for (const l of G.lines) if (l.t < l.warn + l.act) for (const a of [l.a, l.a + l.side * Math.PI / 2]) sc -= w * 700 / Math.pow(Math.max(6, segDist(x, y, l.x, l.y, l.x + Math.cos(a) * l.len, l.y + Math.sin(a) * l.len)), 1.4);
       for (const wv of G.waves) { const rr = wv.r * ease(wv.t / wv.dur); if (wv.t < wv.dur && !wv.hit) sc -= w * 900 / Math.pow(Math.max(6, Math.abs(Math.hypot(wv.x - x, wv.y - y) - rr)), 1.4); }
       const wm = Math.min(x, y, WORLD.w - x, WORLD.h - y);
       if (wm < 220) sc -= (220 - wm) * 0.03 * w;
@@ -365,6 +376,8 @@ function stepPlay(dt) {
     } else if (e.type === 'gomme') {
       if (rand() < dt * 20) eraseStain(e.x, e.y, 30);
       e.rot = Math.atan2(ty, tx) * 0.15 + Math.sin(G.t * 4 + e.id) * 0.12;
+    } else if (e.type === 'regle') {
+      stepRegle(e, dt, dx, dy, d, slow); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else if (e.isBoss) {
       if (e.type === 'boss') stepBoss(e, dt, dx, dy, d); else stepFausse(e, dt, dx, dy, d);
       tx = e.phase === 'charge' ? e.cx * 520 : (e.phase === 'aim' ? 0 : dx / d * e.speed * slow);
@@ -373,6 +386,8 @@ function stepPlay(dt) {
       e.rot += dt * (e.hp < e.maxHp / 2 ? 1.6 : 0.8);
     } else if (e.type === 'croche' || e.type === 'soupir' || e.type === 'metronome') {
       stepPortee(e, dt, dx, dy, d, slow, hid); tx = MV.x; ty = MV.y; agil = MV.agil;
+    } else if (MILLI_TYPES.has(e.type)) {
+      stepMilli(e, dt, dx, dy, d, slow, hid); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else e.rot += e.spin * dt;
     const k = 1 - Math.exp(-dt * agil);
     e.vx = lerp(e.vx, tx, k); e.vy = lerp(e.vy, ty, k);
@@ -422,6 +437,7 @@ function stepPlay(dt) {
     if (!wv.hit && wv.t < wv.dur && Math.abs(Math.hypot(p.x - wv.x, p.y - wv.y) - rr) < p.r + 9) { wv.hit = true; hurtPlayer(1, wv.x, wv.y); }
   }
   G.waves = G.waves.filter(wv => wv.t < wv.dur + 0.25);
+  stepLines(dt);   // angles droits des équerres
   // ---- lunes en orbite
   if (S.moons) {
     G.moonA += dt * 2.7; const R = 74 + 6 * S.moons;
@@ -481,6 +497,7 @@ function stepPlay(dt) {
   for (const r of G.rings) r.t += dt;
   G.rings = G.rings.filter(r => r.t < r.dur);
   stepRefrain(dt);
+  stepFigure(dt);
   for (const sg of G.songs) sg.t += dt;
   G.songs = G.songs.filter(sg => sg.t < sg.dur);
   G.enemies = G.enemies.filter(e => !e.dead);
@@ -591,6 +608,7 @@ function phrase(win) {
   const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
   if (!ws.length) return 'Une page presque blanche.';
   if (ws.length === 1) return win ? cap(ws[0]) + ' tint bon, jusqu’au point final.' : 'Il ne restait que ' + ws[0] + '.';
+  if (win && G.chapter === 3) return pick(['Grâce à ' + ws[0] + ', la Règle de fer plia enfin.', cap(ws[0]) + ' et ' + ws[1] + ' tracèrent le dernier trait, bien droit.']);
   if (win && G.chapter === 2) return pick(['Grâce à ' + ws[0] + ', la Fausse Note retrouva le ton.', cap(ws[0]) + ' et ' + ws[1] + ' jouèrent juste jusqu’à la dernière mesure.']);
   if (win) return pick([cap(ws[0]) + ' et ' + ws[1] + ' tinrent la page jusqu’au bout.', 'Grâce à ' + ws[0] + ', ' + ws[1] + ' eut le dernier mot.']);
   return pick(['Ici, ' + ws[0] + ' croisa ' + ws[1] + ', puis tout fut raturé.', cap(ws[0]) + ' et ' + ws[1] + ' ont presque suffi.', 'On devinait encore ' + ws[0] + ' sous la gomme.']);
