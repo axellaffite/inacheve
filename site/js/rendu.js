@@ -152,7 +152,7 @@ function drawWorld() {
   ctx.scale(ZOOM, ZOOM); ctx.translate(-G.cam.x, -G.cam.y);
   drawPage(v);
   const inView = (x, y, m = 80) => x > v.x0 - m && x < v.x1 + m && y > v.y0 - m && y < v.y1 + m;
-  if (G.state === 'title') { for (const d of G.deco) if (inView(d.x, d.y)) drawEnemy(d); ctx.restore(); return; }
+  if (G.state === 'title' || (G.state === 'bestiaire' && G.bestFrom === 'title')) { for (const d of G.deco) if (inView(d.x, d.y)) drawEnemy(d); ctx.restore(); return; }
   // flaques
   for (const pd of G.puddles) { ctx.globalAlpha = 0.28 * Math.min(1, pd.life / pd.max * 2); ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(pd.x, pd.y, pd.r * (0.85 + 0.15 * Math.sin(pd.life * 6)), 0, TAU); ctx.fill(); }
   ctx.globalAlpha = 1;
@@ -311,6 +311,7 @@ function drawCaptions() {
   let y = SAFE.t + (G.state === 'title' ? 60 : 150) * U;
   // écran étroit : les sous-titres passent au-dessus de la dictée, loin de la liste des mots
   if (W < 700 && G.state !== 'title') y = H - SAFE.b - (190 + 52 * (G.captions.length - 1)) * U;
+  if (G.state === 'bestiaire') y = H - SAFE.b - (104 + 52 * (G.captions.length - 1)) * U;
   for (const c of G.captions) {
     const a = Math.min(1, c.t * 4, (c.dur - c.t) * 2.5);
     const hl = c.style === 'pink' ? C.hlPink : c.style === 'green' ? C.hlGreen : C.hl;
@@ -397,13 +398,15 @@ function drawTitle() {
   const a = clamp((t - 1.2) * 2, 0, 1);
   txt('un jeu qui s’écrit tout seul, toutes les douze heures', W / 2, ty + 128 * s, Math.min(32 * s, W / 22), { color: C.graphite, weight: 400, alpha: a });
   txt(G.input.touch ? 'Touche l’écran pour commencer' : 'Appuie sur Entrée pour commencer', W / 2, ty + 196 * s, Math.min(38 * s, W / 18), { color: C.ink, alpha: a * (0.6 + 0.4 * Math.sin(G.time * 3)), hl: C.hl });
-  if (!G.input.touch) txt('ZQSD, WASD ou flèches : bouger    Espace : pâté d’encre    Échap : pause    M : son    C : secousses', W / 2, ty + 252 * s, Math.min(22 * s, W / 40), { color: C.pencil, weight: 400, alpha: a });
+  if (!G.input.touch) txt('ZQSD, WASD ou flèches : bouger    Espace : pâté d’encre    Échap : pause    B : bestiaire    M : son    C : secousses', W / 2, ty + 252 * s, Math.min(22 * s, W / 40), { color: C.pencil, weight: 400, alpha: a });
   else txt('Glisse pour bouger, bouton « pâté » pour foncer', W / 2, ty + 252 * s, 22 * s, { color: C.pencil, weight: 400, alpha: a });
   const news = G.unlocked >= 4 ? (G.input.touch ? 'Nouveau : le chapitre IV t’attend (bouton en bas). Une carte au trésor !' : 'Nouveau : touche 4 pour commencer au chapitre IV, la carte au trésor')
     : G.unlocked >= 3 ? (G.input.touch ? 'Nouveau : derrière la Règle de fer, une carte au trésor…' : 'Touche 3 : chapitre III. Et derrière la Règle de fer, une carte au trésor…')
     : G.unlocked >= 2 ? (G.input.touch ? 'Plus loin dans le cahier : du papier millimétré, puis une carte au trésor…' : 'Touche 2 : chapitre II. Plus loin dans le cahier, une carte au trésor…')
     : 'Nouveau : le chapitre IV est écrit. Au bout du cahier, une carte au trésor…';
   txt(news, W / 2, ty + (G.best ? 322 : 290) * s, Math.min(22 * s, W / 30), { color: C.ink, weight: 400, alpha: a * 0.85 });
+  const bn = bestCount(), bnews = bn ? 'Bestiaire : ' + bn + ' / ' + BEST_TYPES.size + ' ratures croquées' + (G.input.touch ? '' : ' (touche B)') : 'Nouveau : le bestiaire se remplit à chaque rature biffée' + (G.input.touch ? '' : ' (touche B)');
+  txt(bnews, W / 2, ty + (G.best ? 354 : 322) * s, Math.min(22 * s, W / 30), { color: C.margin, weight: 400, alpha: a * 0.9 });
   if (G.best) txt('meilleur score : ' + G.best, W / 2, ty + 290 * s, 22 * s, { color: C.margin, weight: 400, alpha: a });
   drawStamp(W - SAFE.r - 110 * s, SAFE.t + 48 * s, s * 1.1);
 }
@@ -425,6 +428,7 @@ function drawEnd() {
   txt(win ? CH().done : 'La page a été effacée.', W / 2, y0, Math.min(66 * s, W / 11), { font: FONT_CURSIVE, weight: 400, color: win ? C.ink : C.red, alpha: a });
   txt('« ' + G.endPhrase + ' »', W / 2, y0 + 82 * s, Math.min(32 * s, W / 26), { color: C.graphite, weight: 400, alpha: a });
   const rows = [['temps', mmss((G.totalT || 0) + G.t)], ['ratures biffées', G.kills], ['lettres ramassées', G.letters], endTally(), ['niveau', G.level], ['score', G.score]];
+  if (G.newCroquis) rows.splice(4, 0, ['nouveaux croquis', G.newCroquis]);
   rows.forEach(([k, v], i) => {
     const y = y0 + 150 * s + i * 38 * s, aa = clamp(t * 3 - 1 - i * 0.25, 0, 1);
     txt(k, W / 2 - 14 * s, y, 26 * s, { align: 'right', color: C.pencil, weight: 400, alpha: aa });
@@ -443,14 +447,16 @@ function render() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.fillStyle = C.unwritten; ctx.fillRect(0, 0, W, H);
   drawWorld();
-  if (G.state === 'title') drawTitle();
+  if (G.state === 'bestiaire') { if (G.bestFrom !== 'title') drawHUD(); drawBestiaire(); }
+  else if (G.state === 'title') drawTitle();
   else {
     drawHUD();
     drawRefrainArrow();
     drawFigureArrow();
     drawTresorArrow();
+    if (G.state === 'play') drawBestToast();
     if (G.state === 'levelup') drawLevelUp();
-    else if (G.state === 'pause') { dimPage(0.7); txt('Pause', W / 2, H / 2 - 40 * U, 80 * U, { font: FONT_CURSIVE, weight: 400 }); txt(G.input.touch ? 'Touche pour reprendre' : 'Échap ou Entrée pour reprendre', W / 2, H / 2 + 40 * U, 30 * U, { hl: C.hl }); }
+    else if (G.state === 'pause') { dimPage(0.7); txt('Pause', W / 2, H / 2 - 40 * U, 80 * U, { font: FONT_CURSIVE, weight: 400 }); txt(G.input.touch ? 'Touche pour reprendre' : 'Échap ou Entrée pour reprendre', W / 2, H / 2 + 40 * U, 30 * U, { hl: C.hl }); if (!G.input.touch) txt('B : ouvrir le bestiaire', W / 2, H / 2 + 92 * U, 22 * U, { color: C.pencil, weight: 400 }); }
     else if (G.state === 'gameover' || G.state === 'victory') drawEnd();
     else if (G.state === 'turn') drawTurn();
   }

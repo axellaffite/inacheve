@@ -126,12 +126,24 @@ Tenu depuis la note de marge « une carte au trésor ? » du chapitre III. Tout 
 
 - Battre la Règle de fer enregistre `inacheve.chapitre` = 4 : touche 4 ou bouton « Commencer au chapitre IV ». Brouillon de 37 mots, niveau 38. `__cap.start(4)` le lance en démo (test de fumée).
 
+## Le bestiaire (itération 7)
+
+Tout est dans `bestiaire.js` (chargé après `tresor.js`). Une page du cahier par chapitre (`BESTIAIRE[n]` : type, nom, note au crayon), dessinée sur le canevas dans l'état `bestiaire`.
+
+- **Croquer** : `killEnemy` appelle `noteBestiaire(type)`, qui compte les ratures biffées par type dans `G.bestiary`. La première fois, un polaroïd « croqué ! » glisse depuis le bord gauche pendant 3,4 s (`G.bestToasts`, une à la fois, seulement en jeu), avec le bruit d'un crayon qui gratte (`croquis`). Une page complète déclenche un sous-titre.
+- **Les croquis** sont les vraies ratures : `drawCroquis` construit une fausse rature (`bestFake`) et appelle `drawEnemy`, mise à l'échelle par `BEST_VIS` (rayon apparent), découpée dans sa case. `G.p` est remplacé le temps du dessin, pour que les yeux des patrons suivent un point invisible.
+- **La page** : feuille à lignes bleues, marge rouge, trous de classeur, croquis scotchés de travers ; cases inconnues hachurées avec un « ? » (« pas encore croisé·e », ou « se cache plus loin dans le cahier » pour un chapitre pas encore atteint). Chaque fiche dit combien de fois la rature a été biffée. Page complète : un bon point doré. Trois colonnes, deux sur écran étroit.
+- **Ouvrir** : touche B ou bouton « Bestiaire » (titre, pause, fin de partie). Depuis le jeu, la partie passe d'abord en pause ; on revient toujours à l'état d'origine (`G.bestFrom`). Feuilleter : ← → ou Q D (`KeyA`, `KeyD`), ou toucher les flèches et les bords de l'écran ; refermer : Échap, B, Entrée ou la croix.
+- L'écran de fin compte les « nouveaux croquis » de la partie ; l'écran titre dit où en est le bestiaire.
+- Capture : le bestiaire part vide et n'est jamais enregistré. `__cap.bestiaire(page)`, `__cap.feuilleter(±1)`, `__cap.refermer()`, et `__cap.croque(types)` pour le remplir d'avance (le montage s'en sert pour les chapitres I à III).
+
 ## Réglages et mémoire
 
 - `inacheve.best` : meilleur score.
 - `inacheve.muted` : son coupé.
 - `inacheve.calme` : secousses d'écran désactivées (bouton « Secousses » ou touche C).
 - `inacheve.chapitre` : chapitre le plus loin débloqué (2 après la Grande Rature, 3 après la Fausse Note, 4 après la Règle de fer).
+- `inacheve.bestiaire` : le bestiaire, `{ type: nombre de ratures biffées }` (validé au chargement, enregistré à chaque nouveau croquis, en fin de partie et quand on quitte la page).
 
 ## Déterminisme
 
@@ -168,8 +180,8 @@ Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois page
 - ~~**Commencer au chapitre II**~~ : fait à l'itération 4 (brouillon de 19 mots au hasard), et au chapitre III à l'itération 5. Pour plus tard : un écran titre qui montre les pages débloquées comme les onglets d'un classeur.
 - ~~**Refrain**~~ : fait à l'itération 4 (notes à toucher dans l'ordre). Pour plus tard : un refrain « en canon » que deux mélodies se partagent ; un refrain caché que seul l'écho d'une ligne traversée révèle ; une version du chapitre I (une phrase à recopier mot à mot, la « copie »).
 - **Les paroles** (TODO dans la marge, et nouvelle promesse « les paroles ? » à côté du refrain) : des syllabes sous les notes du refrain, qui forment un mot ; les dictées du chapitre II écrites sous la portée, comme des paroles de chanson.
-- **Bons points** : de petites cartes illustrées à collectionner, gagnées par des exploits ; une page « collection » dans le carnet de bord.
-- **Bestiaire** : une page qui se remplit de croquis annotés à chaque nouvelle rature rencontrée.
+- **Bons points** : de petites cartes illustrées à collectionner, gagnées par des exploits ; une page « collection » dans le carnet de bord. (Le bestiaire donne déjà un bon point doré par page complète : on pourrait les compter sur l'écran titre.)
+- ~~**Bestiaire**~~ : fait à l'itération 7. Pour plus tard : un croquis qui montre l'attaque de la rature quand on le touche ; des ratures « rares » (une gomme dorée, un gribouillis à l'envers) qui n'ont qu'une case en pointillés ; une page de patrons à part, avec leurs phrases de fin.
 - **Page du jour** : une graine commune pour tous les joueurs, chaque jour, avec un défi.
 - ~~**Combinaisons de mots**~~ : fait à l'itération 2 (cinq mots composés). Pour plus tard : d'autres unions (GUILLEMETS + ITALIQUE = « CITATION » ? SOUFFLE + LUNE = « CLAIR DE LUNE » ?), et un mot composé à trois mots, très rare.
 - ~~**Accessibilité : secousses**~~ : fait à l'itération 2 (réglage « Secousses »). Restent : contraste renforcé, vitesse du jeu, daltonisme.

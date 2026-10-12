@@ -234,6 +234,8 @@ const AU = {
       case 'noteShot': if (this.throttle('noteShot', 50)) this.tone(NOTE_F[k % NOTE_F.length] * 2.06, 0.15, { type: 'square', vol: 0.03 }); break;
       case 'wall': this.noise(0.5, { f: 1500, q: 4, vol: 0.1, sweep: 2 }); this.tone(116.54, 0.6, { type: 'sawtooth', vol: 0.06 }); break;
       case 'accord': [246.94, 277.18, 349.23].forEach(f => this.tone(f, 0.7, { type: 'triangle', vol: 0.09 })); break;
+      case 'croquis': [0, 1, 2, 3].forEach(i => this.noise(0.07, { f: 2600 + i * 500, q: 3, vol: 0.07, when: i * 0.06, sweep: 1.4 })); this.tone(PENTA[7] * 2, 0.4, { type: 'triangle', vol: 0.09, when: 0.28 }); this.tone(PENTA[9] * 2, 0.5, { type: 'triangle', vol: 0.08, when: 0.36 }); break;
+      case 'feuille': this.noise(0.32, { f: 2200, q: 0.6, vol: 0.1, sweep: 0.45 }); break;
       case 'turn': this.noise(0.7, { f: 1800, q: 0.5, vol: 0.18, sweep: 0.35 }); this.noise(0.3, { f: 3500, q: 0.8, vol: 0.08, when: 0.55 }); break;
       case 'refrainNew': [4, 6, 8].forEach((n, i) => this.tone(NOTE_F[n] * 2, 0.35, { type: 'sine', vol: 0.07, when: i * 0.09 })); break;
       case 'refrainNote': this.tone(NOTE_F[k] * 2, 0.6, { type: 'triangle', vol: 0.18 }); this.tone(NOTE_F[k] * 4, 0.4, { vol: 0.05 }); break;

@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 6, date: '2026-10-11', title: 'X marque l’endroit', chapter: 'IV', chapterName: 'La carte au trésor' };
+const GAME_META = { iteration: 7, date: '2026-10-12', title: 'Le bestiaire', chapter: 'IV', chapterName: 'La carte au trésor' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -56,6 +56,14 @@ const JOURNAL = [
       "Au bout de la carte t’attend la Pieuvre-Buvard : ses tentacules balaient la page, elle boit ton encre… puis te la recrache.",
       "Une musique de marin, à six temps, qui tangue comme un bateau.",
       "Une fois la Règle de fer battue, tu peux commencer directement au chapitre IV."
+    ] },
+  { iteration: 7, date: '2026-10-12', title: 'Le bestiaire',
+    notes: [
+      "Le cahier a maintenant son bestiaire : une page par chapitre, où chaque rature est croquée, scotchée et annotée au crayon.",
+      "La première fois que tu biffes une rature, son croquis glisse au bord de l’écran. Il rejoint aussitôt le bestiaire, et il y reste d’une partie à l’autre.",
+      "Les croquis bougent encore un peu : le métronome bat la mesure, le crabe pince, les yeux des patrons te cherchent.",
+      "Chaque fiche compte combien de fois tu as biffé sa rature. Une page complète gagne un bon point doré.",
+      "Ouvre le bestiaire avec la touche B, ou le bouton « Bestiaire » de l’écran titre, de la pause et de la fin de partie."
     ] }
 ];
 window.GAME_META = GAME_META;

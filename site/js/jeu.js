@@ -50,7 +50,8 @@ function newGame(demo, start = 1) {
     moonA: 0, botPickT: 0, endPhrase: '', newBest: false,
     refrain: null, refrains: 0, nextRefrain: REFRAIN.first, songs: [], refrainSeen: false,
     lines: [], figure: null, figures: 0, nextFigure: FIGURE.first, fills: [], figureSeen: false,
-    tents: [], drops: [], tresor: null, tresors: 0, nextTresor: TRESOR.first, chests: [], coins: [], tresorSeen: false, pullX: 0, pullY: 0
+    tents: [], drops: [], tresor: null, tresors: 0, nextTresor: TRESOR.first, chests: [], coins: [], tresorSeen: false, pullX: 0, pullY: 0,
+    newCroquis: 0, bestToasts: []
   });
   const hp = demo ? 7 : 6;
   G.p = { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, r: 13, hp, maxHp: hp, inv: 1.2, dashCd: 0, dashT: 0, dx: 1, dy: 0, face: 0, fireCd: 0.5, look: 0, puddleT: 0, squash: 0, hidden: 0, gx: 0, gy: 0 };
@@ -180,6 +181,7 @@ function hurtEnemy(e, dmg, src, kx = 0, ky = 0) {
 }
 function killEnemy(e) {
   e.dead = true; G.kills++;
+  noteBestiaire(e.type);
   G.score += e.isBoss ? 2500 * G.chapter : Math.round(e.xp * 10);
   splat(e.x, e.y, e.r * (e.isBoss ? 1.6 : 0.9), C.ink, 0.16, e.isBoss ? 26 : 8);
   for (let i = 0; i < (e.isBoss ? 70 : 9); i++) {
@@ -633,6 +635,7 @@ function endRun(win) {
   G.state = win ? 'victory' : 'gameover'; G.stateT = 0;
   G.score += Math.floor(G.t) * 5;
   G.endPhrase = phrase(win);
+  saveBestiaire();
   if (!G.demo && G.score > G.best) { G.best = G.score; G.newBest = true; try { localStorage.setItem('inacheve.best', String(G.best)); } catch (e) { /* rien */ } }
   if (!win) { AU.play('lose'); splat(G.p.x, G.p.y, 50, C.ink, 0.35, 20); }
   setUI();

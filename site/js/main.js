@@ -21,7 +21,12 @@ function update(dt) {
     G.cam.x = WORLD.w / 2 + Math.sin(G.time * 0.08) * 120; G.cam.y = WORLD.h / 2 + Math.cos(G.time * 0.06) * 60;
     return;
   }
-  if (G.state === 'play') stepPlay(dt);
+  if (G.state === 'bestiaire') {
+    G.bestFlip += dt;
+    if (G.bestFrom === 'title') { for (const d of G.deco) { d.x += d.vx * dt; d.y += d.vy * dt; d.rot += d.spin * dt; } }
+    return;
+  }
+  if (G.state === 'play') { stepPlay(dt); stepBestToasts(dt); }
   else if (G.state === 'levelup') {
     if (G.demo) {
       G.botPickT -= dt;
@@ -83,6 +88,13 @@ if (!CAPTURE) {
     keys[e.code] = true;
     if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
     AU.init();
+    if (G.state === 'bestiaire') {
+      if (e.code === 'ArrowLeft' || e.code === 'KeyA') flipBestiaire(-1);
+      else if (e.code === 'ArrowRight' || e.code === 'KeyD') flipBestiaire(1);
+      else if (e.code === 'Escape' || e.code === 'KeyB' || e.code === 'Enter' || e.code === 'Space' || e.code === 'Backspace') closeBestiaire();
+      return;
+    }
+    if (e.code === 'KeyB' && ['title', 'play', 'pause', 'gameover', 'victory'].includes(G.state)) { openBestiaire(); return; }
     if (e.code === 'KeyM') toggleMute();
     if (e.code === 'KeyC') toggleCalm();
     if (G.state === 'levelup') {
@@ -104,6 +116,7 @@ if (!CAPTURE) {
     if (e.code === 'KeyR' && (G.state === 'victory' || G.state === 'gameover')) newGame(false, G.startChapter);
   });
   addEventListener('keyup', e => { keys[e.code] = false; });
+  addEventListener('pagehide', saveBestiaire);
   addEventListener('blur', () => { for (const k in keys) keys[k] = false; if (G.state === 'play') togglePause(); });
   document.addEventListener('visibilitychange', () => { if (document.hidden && G.state === 'play') togglePause(); });
   G.input.joy = { active: false };
@@ -111,6 +124,11 @@ if (!CAPTURE) {
     cv.focus(); AU.init();
     const touch = e.pointerType === 'touch'; if (touch !== G.input.touch) { G.input.touch = touch; setUI(); }
     const x = e.clientX, y = e.clientY;
+    if (G.state === 'bestiaire') {
+      const h = bestHit(x, y);
+      if (h === 'close') closeBestiaire(); else if (h === 'prev') flipBestiaire(-1); else if (h === 'next') flipBestiaire(1);
+      return;
+    }
     if (G.state === 'levelup') {
       if (G.stateT < 0.35) return;
       cardRects().forEach((r, i) => { if (x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) chooseMot(i); });
@@ -136,6 +154,7 @@ if (!CAPTURE) {
   document.getElementById('btnJournal').addEventListener('click', () => { buildJournal(); if (G.state === 'play') togglePause(); dlg.showModal(); });
   document.getElementById('btnCloseJournal').addEventListener('click', () => dlg.close());
   dlg.addEventListener('close', () => cv.focus());
+  document.getElementById('btnBest').addEventListener('click', () => { AU.init(); openBestiaire(); cv.focus(); });
   document.getElementById('btnSound').addEventListener('click', toggleMute);
   document.getElementById('btnCalm').addEventListener('click', toggleCalm);
   document.getElementById('btnCh2').addEventListener('click', () => { AU.init(); if (G.state === 'title') newGame(false, 2); });
@@ -199,7 +218,11 @@ window.__cap = {
   title() { initTitle(); },
   start(chapter) { newGame(true, chapter || 1); },
   caption(t, d) { caption(t, d); },
-  state() { return { state: G.state, chapter: G.chapter || 1, t: G.t, boss: !!G.boss, bossDefeated: !!G.bossDefeated, level: G.level, hp: G.p ? G.p.hp : 0, enemies: G.enemies ? G.enemies.length : 0, kills: G.kills, mots: G.mots, refrains: G.refrains || 0, refrain: G.refrain ? G.refrain.prog : -1, figures: G.figures || 0, tresors: G.tresors || 0, tresor: G.tresor ? G.tresor.shown : -1 }; },
+  state() { return { state: G.state, chapter: G.chapter || 1, t: G.t, boss: !!G.boss, bossDefeated: !!G.bossDefeated, level: G.level, hp: G.p ? G.p.hp : 0, enemies: G.enemies ? G.enemies.length : 0, kills: G.kills, mots: G.mots, refrains: G.refrains || 0, refrain: G.refrain ? G.refrain.prog : -1, figures: G.figures || 0, tresors: G.tresors || 0, tresor: G.tresor ? G.tresor.shown : -1, croquis: bestCount(), page: G.bestPage }; },
+  bestiaire(page) { openBestiaire(page); },
+  croque(types) { types.forEach((k, i) => { if (BEST_TYPES.has(k)) G.bestiary[k] = (G.bestiary[k] || 0) + 4 + (i * 37) % 90; }); },
+  feuilleter(d) { flipBestiaire(d); },
+  refermer() { closeBestiaire(); },
   heal() { if (G.p) G.p.hp = G.p.maxHp; },
   // donne des mots d'un coup (montage) puis ouvre un choix : un mot composé prêt y est toujours proposé
   grant(mots) { for (const k in mots) { G.mots[k] = Math.max(lvl(k), mots[k]); if (!G.motOrder.includes(k)) G.motOrder.push(k); } computeStats(); G.pointCd = Math.min(G.pointCd, 1.5); },

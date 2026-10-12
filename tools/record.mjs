@@ -45,9 +45,10 @@ async function load(seed) {
 // Chaque étape : `skip` secondes jouées sans filmer, une action éventuelle dans la page, un sous-titre, puis `play` secondes filmées.
 // On saute la fin du chapitre I : le pilote reçoit les mots d'une partie avancée, puis la page se tourne.
 // La première piste au trésor s'écrit 8 s après le début du chapitre IV : l'étape `tresor` doit montrer le coffre ouvert.
-// Montage : un aperçu des chapitres I à III, puis le chapitre IV (nouveau), sa chasse au trésor et la Pieuvre-Buvard
+// Montage (itération 7) : un aperçu des chapitres I à IV, les croquis qui arrivent en jouant, la Pieuvre-Buvard, puis le bestiaire feuilleté
 const STEPS = [
-  { play: 3 },
+  // le bestiaire d'un joueur qui a déjà feuilleté les trois premiers chapitres ; la page du chapitre IV se remplit pendant le film
+  { act: () => window.__cap.croque(['gribouillis', 'gouttelette', 'biffure', 'tache', 'boss', 'croche', 'soupir', 'metronome', 'fausse', 'segment', 'equerre', 'compas', 'regle']), play: 3 },
   { cap: ['… une Grande Rature plus tard : chapitre II'], act: () => {
     window.__cap.grant({ ENCRE: 4, VIRGULE: 4, GUILLEMETS: 3, LUNE: 3, ECHO: 2, POINT: 3, FEU: 2, PLUME: 2, POINT_VIRGULE: 1, ECHO_DE_LUNE: 1, POINT_DE_FEU: 1 });
     window.__cap.level(22); window.__cap.turn();
@@ -58,9 +59,9 @@ const STEPS = [
     window.__cap.level(46); window.__cap.turn();
   }, play: 7 },
   { tresor: true, play: 13 },
-  { skip: 40, cap: ['Mouettes, crabes et tourbillons : la mer est agitée'], play: 6 }
+  { skip: 40, cap: ['Chaque nouvelle rature biffée est croquée pour le bestiaire'], play: 5 }
 ];
-const BOSS_FILM = 42;   // secondes de combat filmées au plus contre la Pieuvre-Buvard
+const BOSS_FILM = 36;   // secondes de combat filmées au plus contre la Pieuvre-Buvard
 // Joue une partie entière en accéléré (sans filmer) pour savoir comment elle se termine
 async function simulate(seed) {
   await load(seed);
@@ -141,7 +142,14 @@ if (st.state !== 'gameover') {
   await cap('… trois minutes plus tard, la Pieuvre-Buvard …', 2.6);
   for (let i = 0; i < BOSS_FILM && st.state !== 'victory' && st.state !== 'gameover'; i++) { await grab(1); st = await state(); }
 }
-await grab(st.state === 'victory' || st.state === 'gameover' ? 5 : 1);
+await grab(st.state === 'victory' || st.state === 'gameover' ? 4 : 1);
+// le bestiaire (nouveau) : la page du chapitre IV, remplie pendant la partie, puis on feuillette jusqu'au chapitre I
+await page.evaluate(() => window.__cap.bestiaire(4));
+await cap('Nouveau : le bestiaire des ratures (touche B)', 4);
+await grab(3.6);
+for (let i = 0; i < 3; i++) { await page.evaluate(() => window.__cap.feuilleter(-1)); await grab(1.5); }
+await cap('Il reste des ratures à croquer…', 2.6);
+await grab(2.2);
 /* ---------------------------------------------------------------------------------------------- */
 
 ff.stdin.end();
