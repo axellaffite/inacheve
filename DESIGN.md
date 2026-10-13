@@ -164,6 +164,19 @@ Tenu depuis la note de marge « la calligraphie ? » du chapitre IV. Tout est da
 - Battre la Pieuvre-Buvard enregistre `inacheve.chapitre` = 5 : touche 5 ou bouton « Commencer au chapitre V ». Brouillon de 46 mots, niveau 47. `__cap.start(5)` le lance en démo (test de fumée).
 - Le bestiaire a une cinquième page (délié, plume d'oie, arabesque, majuscule, Grand Paraphe).
 
+## Les unions (itération 9)
+
+Tout est dans `unions.js` (chargé après `bestiaire.js`), qui ajoute trois mots composés à `MOTS` avec `Object.assign`. `UNIONS` liste les huit mots composés. Le pilote les prend en priorité (`BOT_PRIORITY`).
+
+- **CALLIGRAPHIE** (PLUME + ENCRE) : le joueur laisse un sillage (`G.trail`, un point tous les 12 px, 1,4 s de vie) dessiné en pleins et déliés (`nibW`), bleu nuit puis pâlissant vers le papier (`trailInk`, opaque pour que les bouts ronds ne fassent pas de pointillés). Une rature qui touche un point du sillage prend 2,2 × ENCRE, au plus une fois toutes les 0,3 s (`e.trailT`), sans bruit de coup. Un trait sur quatre marque la page (`inkLine`) et sèche.
+- **CITATION** (GUILLEMETS + ITALIQUE) : toutes les 4 s, une phrase entre guillemets (`CITATIONS`) part vers l'attroupement le plus dense (les patrons comptent pour six) : `G.quotes`, 480 px/s, 1,9 s. Elle s'écrit en 0,3 s, surlignée en jaune, jamais la tête en bas. Collision : un segment de la longueur du texte (`segDist`, `regleDist` pour la Règle de fer), épaisseur 18 px ; (9 + 2 × GUILLEMETS) × ENCRE une fois par rature (le double sur un patron). Les projectiles qu'elle traverse disparaissent (« elle coupe la parole »).
+- **LUNE ROUSSE** (LUNE + FEU) : les lunes deviennent orange, avec une traîne de feu, et chaque coup de lune enflamme la rature (`moonFire`).
+- **Le carnet des unions** : la dernière page du bestiaire (`unionPage()` = `CHAPTERS.length`, donc toujours après le dernier chapitre). Huit fiches bristol, quatre colonnes (deux sur écran étroit) : une union découverte montre son nom surligné d'or, sa formule, sa description et son effet ; les autres sont hachurées, avec « ? ? ? » et un indice (le premier mot de l'union). Une union entre au carnet quand on la **choisit** (`noteUnion`, depuis `chooseMot`) ; les mots du brouillon ne comptent pas. Un petit texte doré « au carnet des unions : n / 8 » s'envole au-dessus de la goutte. Bon point doré quand les huit sont trouvées.
+- L'écran titre compte croquis et unions ; l'écran de fin compte les « nouvelles unions » de la partie.
+- La liste des mots du HUD rapetisse (lettres et points compris) quand elle s'allonge, jusqu'à la moitié de sa taille : une vingtaine de mots tiennent sans se chevaucher.
+- **Brouillon** : un mot composé n'y compte plus que pour un demi-mot (`draft`), sinon les huit unions mangeaient les niveaux des mots simples.
+- Capture : `__cap.unir(keys)` remplit le carnet d'avance (le carnet part vide et n'est jamais enregistré en capture) ; `__cap.state()` donne `unions` et `quotes`.
+
 ## Réglages et mémoire
 
 - `inacheve.best` : meilleur score.
@@ -171,6 +184,7 @@ Tenu depuis la note de marge « la calligraphie ? » du chapitre IV. Tout est da
 - `inacheve.calme` : secousses d'écran désactivées (bouton « Secousses » ou touche C).
 - `inacheve.chapitre` : chapitre le plus loin débloqué (2 après la Grande Rature, 3 après la Fausse Note, 4 après la Règle de fer, 5 après la Pieuvre-Buvard).
 - `inacheve.bestiaire` : le bestiaire, `{ type: nombre de ratures biffées }` (validé au chargement, enregistré à chaque nouveau croquis, en fin de partie et quand on quitte la page).
+- `inacheve.unions` : le carnet des unions, la liste des mots composés déjà choisis (validée au chargement, enregistrée à chaque nouvelle union).
 
 ## Déterminisme
 
@@ -189,6 +203,8 @@ Itération 4 (départ au brouillon du chapitre II, pilote) : sur 6 graines, 1 se
 Itération 5 (chapitre III) : montage vidéo (mots donnés, niveau 34, deux pages tournées), 11 graines sur 12 battent la Règle de fer, entre 3:38 et 3:50 de chapitre. Au brouillon (28 mots au hasard), le pilote meurt le plus souvent entre 1:50 et 3:35 : comme pour le chapitre II, c'est un raccourci. Premiers réglages trop durs (`scale` 4, règle à 2 400 PV) : morts vers 1:40 et combats de plus d'une minute.
 
 Itération 8 (chapitre V) : premiers réglages trop généreux en majuscules (7 % des apparitions sans limite : une vingtaine à l'écran, la page couverte de fleurons) ; limitées à trois à la fois. Lettrine d'abord dorée en 5 s (82 %, pinceau de 46 px) : relevée à 90 % et 40 px, et une toutes les 25 s. Au brouillon (46 mots au hasard), `scale` 6,6 puis 8 : 6 graines sur 6 gagnaient sans jamais descendre sous 2 cœurs ; à 11, 3 sur 6 mouraient avant 2:30. Retenu : `scale` 10,5, `rateCap` 13, Grand Paraphe à 1 800 PV puis 1 400 (pour que le combat du montage tienne en 40 s) : 4 graines sur 6 gagnent (souvent à 1 ou 2 cœurs), 2 meurent vers 1:40–1:55. Montage vidéo (mots donnés, niveau 55) : 12 graines sur 12 battent le Grand Paraphe ; à 1 400 PV, entre 3:29 et 3:53, avec 4 à 6 lettrines.
+
+Itération 9 (les unions) : au brouillon du chapitre V, avec les huit unions comptées comme des mots entiers, 4 graines sur 12 seulement gagnaient ; comptées pour rien, 12 sur 12 sans jamais descendre sous 2 cœurs. Retenu : un demi-mot chacune, 10 graines sur 12 gagnent, le plus souvent à 1 ou 2 cœurs. Au brouillon du chapitre II, 5 sur 12. Chapitre I en partie normale : 4 graines sur 6 battent la Grande Rature. Montage vidéo (graine 42) : le Grand Paraphe tombe vers 3:24.
 
 Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois pages tournées), le pilote ouvre 6 à 7 trésors et bat la Pieuvre-Buvard sans grande peine. Au brouillon (37 mots au hasard), 4 graines sur 6 gagnent, en descendant à 2 cœurs ; les 2 autres meurent vers 2:50 et 3:10. Premiers réglages beaucoup trop faciles (`scale` 3,6, pieuvre à 2 100 PV, pas de bouteilles avant 100 s) : aucun pilote ne perdait plus de deux cœurs et le combat durait plus d'une minute.
 
@@ -212,7 +228,7 @@ Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois page
 - **Bons points** : de petites cartes illustrées à collectionner, gagnées par des exploits ; une page « collection » dans le carnet de bord. (Le bestiaire donne déjà un bon point doré par page complète : on pourrait les compter sur l'écran titre.)
 - ~~**Bestiaire**~~ : fait à l'itération 7. Pour plus tard : un croquis qui montre l'attaque de la rature quand on le touche ; des ratures « rares » (une gomme dorée, un gribouillis à l'envers) qui n'ont qu'une case en pointillés ; une page de patrons à part, avec leurs phrases de fin.
 - **Page du jour** : une graine commune pour tous les joueurs, chaque jour, avec un défi.
-- ~~**Combinaisons de mots**~~ : fait à l'itération 2 (cinq mots composés). Pour plus tard : d'autres unions (GUILLEMETS + ITALIQUE = « CITATION » ? SOUFFLE + LUNE = « CLAIR DE LUNE » ?), et un mot composé à trois mots, très rare.
+- ~~**Combinaisons de mots**~~ : fait à l'itération 2 (cinq mots composés), puis trois de plus à l'itération 9 (CITATION, CALLIGRAPHIE, LUNE ROUSSE). Pour plus tard : CLAIR DE LUNE (SOUFFLE + LUNE, les lunes soignent ?), VENT + VIRGULE, un mot composé à trois mots très rare (une « phrase » ?), des unions propres à un chapitre (une union qui n'existe que sur la portée).
 - ~~**Accessibilité : secousses**~~ : fait à l'itération 2 (réglage « Secousses »). Restent : contraste renforcé, vitesse du jeu, daltonisme.
 - **Nouvelles ratures** : le tipp-ex qui recouvre la page de blanc, la tache de café, le trombone, le taille-crayon qui aspire les lettres, la règle qui balaie la page.
 - **Patrons de chapitres** : le Correcteur au stylo rouge, la Photocopieuse qui duplique tout, le Cartable (la Règle de fer est faite).
@@ -223,4 +239,5 @@ Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois page
 - **Encre sympathique, la suite** : des lettres invisibles cachées dans la page, révélées seulement quand on est soi-même invisible.
 - **La calligraphie, la suite** : une lettrine à dorer avec un motif imposé (rouge puis or), un mot à recopier lettre par lettre en suivant des pointillés (la « copie »), un encrier à soi qui recharge la plume, un mot composé PLUME + ENCRE = « CALLIGRAPHIE » qui laisserait derrière toi un trait qui brûle les ratures.
 - **Lisibilité, chapitre V** : en fin de chapitre, la page est très chargée (lettres au sol, taches, encre) ; on pourrait ramasser automatiquement les lettres très anciennes, ou alléger les taches.
-- **Carnet des unions** : une page qui montre les mots composés déjà découverts, et des silhouettes « ? » pour les autres.
+- ~~**Carnet des unions**~~ : fait à l'itération 9 (dernière page du bestiaire). Pour plus tard : la phrase de fin écrite au bas du carnet, une fiche qui montre l'effet en petit quand on la touche.
+- **Citations, la suite** : des citations qui dépendent du chapitre (« do, ré, mi » sur la portée, « X marque l'endroit » sur la carte), une citation qu'on pourrait lire en entier en pause.

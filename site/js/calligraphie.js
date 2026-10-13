@@ -14,7 +14,9 @@ const NOTES_CALLI = [
   { x: WORLD.w * 0.28, y: WORLD.h + 140, t: 'penche ta plume à 45°', r: 0.03 },
   { x: WORLD.w * 0.7, y: WORLD.h + 150, t: '(TODO : ne pas faire de pâtés… trop tard)', r: -0.03 },
   { x: WORLD.w + 165, y: WORLD.h * 0.78, t: 'signé : ?', r: 0.08 },
-  { x: -170, y: WORLD.h * 0.15, t: 'cf. ch. IV, le buvard', r: 0.05 }
+  { x: -170, y: WORLD.h * 0.15, t: 'cf. ch. IV, le buvard', r: 0.05 },
+  { x: WORLD.w * 0.3, y: -96, t: '« citation » (c’est fait, entre guillemets)', r: -0.02 },
+  { x: -180, y: WORLD.h * 0.72, t: 'une union à trois mots ?', r: -0.06 }
 ];
 const DICTEES_CALLI = ['PLEIN', 'DÉLIÉ', 'ENCRE', 'PLUMIER', 'ENCRIER', 'LETTRINE', 'ARABESQUE', 'MAJUSCULE', 'ENLUMINURE', 'CALLIGRAPHIE'];
 const CALLI_TYPES = new Set(['delie', 'plumeoie', 'arabesque', 'majuscule']);

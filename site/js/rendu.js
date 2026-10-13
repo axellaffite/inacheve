@@ -190,6 +190,7 @@ function drawWorld() {
   if (G.fills) drawFigure();
   if (G.chests) drawTresor(v);
   if (G.glows) drawEnlu(v);
+  if (G.trail) drawTrail();
   // ennemis
   for (const e of G.enemies) if (inView(e.x, e.y, e.r + 300)) drawEnemy(e);
   // lunes
@@ -197,8 +198,9 @@ function drawWorld() {
     const R = 74 + 6 * G.S.moons;
     for (let i = 0; i < G.S.moons; i++) {
       const a = G.moonA + i / G.S.moons * TAU, mx = G.p.x + Math.cos(a) * R, my = G.p.y + Math.sin(a) * R;
-      ctx.strokeStyle = 'rgba(29,58,138,0.18)'; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(G.p.x, G.p.y, R, a - 0.5, a); ctx.stroke();
-      ctx.font = '700 34px ' + FONT_MAIN; ctx.fillStyle = C.ink; ctx.fillText('o', mx, my - 3);
+      const rousse = lvl('LUNE_ROUSSE');   // la lune rousse : orange, avec une traîne de feu
+      ctx.strokeStyle = rousse ? 'rgba(232,116,44,0.3)' : 'rgba(29,58,138,0.18)'; ctx.lineWidth = rousse ? 9 : 6; ctx.beginPath(); ctx.arc(G.p.x, G.p.y, R, a - (rousse ? 0.8 : 0.5), a); ctx.stroke();
+      ctx.font = '700 34px ' + FONT_MAIN; ctx.fillStyle = rousse ? C.fire : C.ink; ctx.fillText('o', mx, my - 3);
     }
   }
   // gouttes
@@ -208,6 +210,7 @@ function drawWorld() {
     ctx.fillStyle = s.echo ? C.inkLight : G.S.burn ? '#2b4fb5' : C.ink; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, TAU); ctx.fill();
     if (G.S.burn) { ctx.fillStyle = C.fire; ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 0.45, 0, TAU); ctx.fill(); }
   }
+  if (G.quotes) drawCitations();
   // traits rouges du boss
   ctx.strokeStyle = C.red; ctx.lineWidth = 4;
   for (const b of G.ebul) { if (b.note || b.deg || b.cork || b.blot || b.ink || b.fleur) continue; const n = Math.hypot(b.vx, b.vy) || 1; ctx.beginPath(); ctx.moveTo(b.x - b.vx / n * 9, b.y - b.vy / n * 9); ctx.lineTo(b.x + b.vx / n * 9, b.y + b.vy / n * 9); ctx.stroke(); }
@@ -279,11 +282,13 @@ function drawHUD() {
   // mots acquis
   let y = top + (compact ? 136 : 84) * s;
   // la liste se resserre quand elle s'allonge (mots composés), pour ne jamais descendre sur la dictée
-  const room = bottom - 110 * s - y, need = G.motOrder.reduce((n, k) => n + (isCompose(k) ? 34 : 40), 0) * s, sq = need > room ? Math.max(0.62, room / need) : 1;
+  // (depuis l'itération 9, les lettres rapetissent avec l'interligne : vingt mots tiennent sans se chevaucher)
+  const room = bottom - 110 * s - y, need = G.motOrder.reduce((n, k) => n + (isCompose(k) ? 34 : 40), 0) * s, sq = need > room ? Math.max(0.5, room / need) : 1;
+  const fz = 21 * s * Math.min(1, 0.15 + sq), ds = s * Math.min(1, 0.1 + sq);
   for (const k of G.motOrder) {
-    if (isCompose(k)) { txt(MOTS[k].label, right - 4 * s, y + 6 * s, 21 * s, { align: 'right', color: C.ink, hl: C.hlGold }); y += 34 * s * sq; continue; }
-    txt(MOTS[k].label, right - 4 * s, y, 21 * s, { align: 'right', color: C.ink });
-    for (let i = 0; i < MOTS[k].max; i++) { ctx.fillStyle = i < lvl(k) ? C.ink : 'rgba(29,58,138,0.2)'; ctx.beginPath(); ctx.arc(right - 4 * s - (MOTS[k].max - 1 - i) * 9 * s, y + 15 * s, 3 * s, 0, TAU); ctx.fill(); }
+    if (isCompose(k)) { txt(MOTS[k].label, right - 4 * s, y + 6 * ds, fz, { align: 'right', color: C.ink, hl: C.hlGold }); y += 34 * s * sq; continue; }
+    txt(MOTS[k].label, right - 4 * s, y, fz, { align: 'right', color: C.ink });
+    for (let i = 0; i < MOTS[k].max; i++) { ctx.fillStyle = i < lvl(k) ? C.ink : 'rgba(29,58,138,0.2)'; ctx.beginPath(); ctx.arc(right - 4 * s - (MOTS[k].max - 1 - i) * 9 * ds, y + 15 * ds, 3 * ds, 0, TAU); ctx.fill(); }
     y += 40 * s * sq;
   }
   // dictée
@@ -406,13 +411,16 @@ function drawTitle() {
   txt(G.input.touch ? 'Touche l’écran pour commencer' : 'Appuie sur Entrée pour commencer', W / 2, ty + 196 * s, Math.min(38 * s, W / 18), { color: C.ink, alpha: a * (0.6 + 0.4 * Math.sin(G.time * 3)), hl: C.hl });
   if (!G.input.touch) txt('ZQSD, WASD ou flèches : bouger    Espace : pâté d’encre    Échap : pause    B : bestiaire    M : son    C : secousses', W / 2, ty + 252 * s, Math.min(22 * s, W / 40), { color: C.pencil, weight: 400, alpha: a });
   else txt('Glisse pour bouger, bouton « pâté » pour foncer', W / 2, ty + 252 * s, 22 * s, { color: C.pencil, weight: 400, alpha: a });
-  const news = G.unlocked >= 5 ? (G.input.touch ? 'Nouveau : le chapitre V t’attend (bouton en bas). À vos plumes !' : 'Nouveau : touche 5 pour commencer au chapitre V, la page de calligraphie')
+  const news = G.unlocked >= 5 ? (G.input.touch ? 'Le chapitre V t’attend (bouton en bas). Et trois mots de plus savent s’unir…' : 'Touche 5 : chapitre V. Nouveau : trois mots de plus savent s’unir…')
     : G.unlocked >= 4 ? (G.input.touch ? 'Nouveau : derrière la Pieuvre-Buvard, une page de calligraphie…' : 'Touche 4 : chapitre IV. Et derrière la Pieuvre-Buvard, une page de calligraphie…')
     : G.unlocked >= 3 ? (G.input.touch ? 'Plus loin dans le cahier : une carte, puis une page de calligraphie…' : 'Touche 3 : chapitre III. Plus loin dans le cahier, une page de calligraphie…')
     : G.unlocked >= 2 ? (G.input.touch ? 'Plus loin dans le cahier : une page de calligraphie, à la plume…' : 'Touche 2 : chapitre II. Plus loin dans le cahier, une page de calligraphie…')
-    : 'Nouveau : le chapitre V est écrit. Au bout du cahier, une page de calligraphie…';
+    : 'Nouveau : trois mots de plus savent s’unir. Au bout du cahier, une page de calligraphie…';
   txt(news, W / 2, ty + (G.best ? 322 : 290) * s, Math.min(22 * s, W / 30), { color: C.ink, weight: 400, alpha: a * 0.85 });
-  const bn = bestCount(), bnews = bn ? 'Bestiaire : ' + bn + ' / ' + BEST_TYPES.size + ' ratures croquées' + (G.input.touch ? '' : ' (touche B)') : 'Nouveau : le bestiaire se remplit à chaque rature biffée' + (G.input.touch ? '' : ' (touche B)');
+  const bn = bestCount(), un = unionCount(), keyB = G.input.touch ? '' : ' (touche B)';
+  const bnews = !(bn || un) ? 'Nouveau : le carnet des unions, au bout du bestiaire' + keyB
+    : W < 760 ? 'Bestiaire : ' + bn + ' / ' + BEST_TYPES.size + ' · unions : ' + un + ' / ' + UNIONS.length
+    : 'Bestiaire : ' + bn + ' / ' + BEST_TYPES.size + ' ratures croquées · carnet des unions : ' + un + ' / ' + UNIONS.length + keyB;
   txt(bnews, W / 2, ty + (G.best ? 354 : 322) * s, Math.min(22 * s, W / 30), { color: C.margin, weight: 400, alpha: a * 0.9 });
   if (G.best) txt('meilleur score : ' + G.best, W / 2, ty + 290 * s, 22 * s, { color: C.margin, weight: 400, alpha: a });
   drawStamp(W - SAFE.r - 110 * s, SAFE.t + 48 * s, s * 1.1);
@@ -437,6 +445,7 @@ function drawEnd() {
   txt('« ' + G.endPhrase + ' »', W / 2, y0 + 82 * s, Math.min(32 * s, W / 26), { color: C.graphite, weight: 400, alpha: a });
   const rows = [['temps', mmss((G.totalT || 0) + G.t)], ['ratures biffées', G.kills], ['lettres ramassées', G.letters], endTally(), ['niveau', G.level], ['score', G.score]];
   if (G.newCroquis) rows.splice(4, 0, ['nouveaux croquis', G.newCroquis]);
+  if (G.newUnions) rows.splice(4, 0, ['nouvelles unions', G.newUnions]);
   rows.forEach(([k, v], i) => {
     const y = y0 + 150 * s + i * 38 * s, aa = clamp(t * 3 - 1 - i * 0.25, 0, 1);
     txt(k, W / 2 - 14 * s, y, 26 * s, { align: 'right', color: C.pencil, weight: 400, alpha: aa });

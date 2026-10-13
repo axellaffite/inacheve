@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 8, date: '2026-10-13', title: 'Pleins et déliés', chapter: 'V', chapterName: 'La page de calligraphie' };
+const GAME_META = { iteration: 9, date: '2026-10-13', title: 'Entre guillemets', chapter: 'V', chapterName: 'La page de calligraphie' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -73,6 +73,14 @@ const JOURNAL = [
       "Au bout de la page t’attend le Grand Paraphe : il annonce sa signature en pointillés, puis la trace d’un seul trait, et fait tomber de gros points sur les i.",
       "Une valse au clavecin accompagne la plume, et le bestiaire gagne une cinquième page.",
       "Une fois la Pieuvre-Buvard battue, tu peux commencer directement au chapitre V."
+    ] },
+  { iteration: 9, date: '2026-10-13', title: 'Entre guillemets',
+    notes: [
+      "Trois mots de plus savent s’unir. GUILLEMETS + ITALIQUE = CITATION : une phrase entre guillemets traverse la page, frappe tout ce qu’elle croise et coupe la parole aux traits rouges.",
+      "PLUME + ENCRE = CALLIGRAPHIE : tu écris en marchant, en pleins et en déliés, et ton sillage brûle les ratures qui marchent dessus.",
+      "LUNE + FEU = LUNE ROUSSE : tes lunes s’embrasent et mettent le feu à tout ce qu’elles cognent.",
+      "Le bestiaire a une dernière page : le carnet des unions. Chaque mot composé que tu choisis y est rangé pour de bon ; les autres attendent, avec un indice.",
+      "L’écran titre et la fin de partie comptent tes unions."
     ] }
 ];
 window.GAME_META = GAME_META;

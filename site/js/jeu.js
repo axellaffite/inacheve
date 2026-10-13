@@ -52,7 +52,7 @@ function newGame(demo, start = 1) {
     lines: [], figure: null, figures: 0, nextFigure: FIGURE.first, fills: [], figureSeen: false,
     tents: [], drops: [], tresor: null, tresors: 0, nextTresor: TRESOR.first, chests: [], coins: [], tresorSeen: false, pullX: 0, pullY: 0,
     strokes: [], strokeN: 0, sigs: [], sigSeen: false, enlu: null, enlus: 0, nextEnlu: ENLU.first, glows: [], enluSeen: false,
-    newCroquis: 0, bestToasts: []
+    newCroquis: 0, bestToasts: [], trail: [], quotes: [], quoteCd: 1.5, newUnions: 0
   });
   const hp = demo ? 7 : 6;
   G.p = { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, r: 13, hp, maxHp: hp, inv: 1.2, dashCd: 0, dashT: 0, dx: 1, dy: 0, face: 0, fireCd: 0.5, look: 0, puddleT: 0, squash: 0, hidden: 0, gx: 0, gy: 0 };
@@ -65,12 +65,14 @@ function newGame(demo, start = 1) {
 }
 // Brouillon : on commence plus loin dans le cahier, avec des mots choisis au hasard (comme une partie déjà jouée)
 function draft(n) {
-  for (let i = 0; i < n; i++) {
+  // un mot composé ne compte que pour un demi-mot : il y en a huit depuis l'itération 9, ils mangeaient le brouillon
+  for (let i = 0; i < n;) {
     const avail = Object.keys(MOTS).filter(k => !isCompose(k) && lvl(k) < MOTS[k].max && k !== 'SOUFFLE');
     const ready = Object.keys(MOTS).filter(composeReady);
     const k = ready.length && rand() < 0.5 ? pick(ready) : avail.length ? pick(avail) : null;
     if (!k) break;
     G.mots[k] = lvl(k) + 1; if (!G.motOrder.includes(k)) G.motOrder.push(k);
+    i += isCompose(k) ? 0.5 : 1;
   }
   G.level = n + 1; G.xpNext = xpFor(G.level); computeStats();
 }
@@ -85,7 +87,7 @@ function turnPage() {
     dicteeIdx: 0, dicteeProg: 0, comboN: 0, newBest: false, captions: [], refrain: null, nextRefrain: REFRAIN.first, songs: [],
     lines: [], figure: null, nextFigure: FIGURE.first, fills: [],
     tents: [], drops: [], tresor: null, nextTresor: TRESOR.first, chests: [], coins: [],
-    strokes: [], strokeN: 0, sigs: [], enlu: null, nextEnlu: ENLU.first, glows: []
+    strokes: [], strokeN: 0, sigs: [], enlu: null, nextEnlu: ENLU.first, glows: [], trail: [], quotes: []
   });
   G.dicteeWord = CH().dictees[0];
   const p = G.p; Object.assign(p, { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, hp: p.maxHp, inv: 2.5, dashT: 0, hidden: 0 });
@@ -178,7 +180,7 @@ function hurtEnemy(e, dmg, src, kx = 0, ky = 0) {
   e.hp -= dmg; e.flash = 0.09;
   if (src === 'shot' && G.S.burn) { e.burn = 2.6; e.burnDps = 0.9 + 0.75 * G.S.burn; }
   if (G.S.knock && src === 'shot' && !e.isBoss) { const k = 70 + 60 * G.S.knock; e.vx += kx * k; e.vy += ky * k; }
-  if (src !== 'burn' && src !== 'puddle') AU.play('hit');
+  if (src !== 'burn' && src !== 'puddle' && src !== 'trail') AU.play('hit');
   if (e.hp <= 0) killEnemy(e);
 }
 function killEnemy(e) {
@@ -461,6 +463,7 @@ function stepPlay(dt) {
   stepLines(dt);   // angles droits des équerres
   stepCarteFx(dt);   // tentacules et pluie de pâtés
   stepCalliFx(dt);   // l'encre fraîche des plumes
+  stepUnions(dt);   // CALLIGRAPHIE, CITATION, LUNE ROUSSE
   // ---- lunes en orbite
   if (S.moons) {
     G.moonA += dt * 2.7; const R = 74 + 6 * S.moons;
@@ -470,6 +473,7 @@ function stepPlay(dt) {
       for (const e of tmpA) if (!e.dead && e.orbCd <= 0 && (e.x - mx) ** 2 + (e.y - my) ** 2 < (e.r + 13) ** 2) {
         e.orbCd = 0.33; hurtEnemy(e, (1.6 + 0.5 * S.moons) * S.dmg, 'moon', Math.cos(a), Math.sin(a));
         if (lvl('ECHO_DE_LUNE')) moonEcho(mx, my, e);
+        if (lvl('LUNE_ROUSSE')) moonFire(e, mx, my);
       }
     }
   }
@@ -618,6 +622,7 @@ function chooseMot(i) {
   if (isCompose(k)) {
     AU.play('fusion'); G.cam.shake = Math.max(G.cam.shake, 8);
     caption('Mot composé : ' + MOTS[k].from.map(f => MOTS[f].label).join(' + ') + ' = ' + MOTS[k].label, 3.2, 'green');
+    noteUnion(k);
     G.rings.push({ x: G.p.x, y: G.p.y, t: 0, dur: 0.7, r: 220, color: C.gold });
     for (let i = 0; i < 40; i++) { const a = rnd(TAU), sp = rnd(140, 420); G.parts.push({ x: G.p.x, y: G.p.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0.9, max: 0.9, size: rnd(2, 5), color: i % 2 ? C.gold : C.ink, drag: 3 }); }
   } else AU.play('choose');
@@ -626,7 +631,7 @@ function chooseMot(i) {
   if (G.pendingLv > 0) openLevelUp();
   setUI();
 }
-const BOT_PRIORITY = ['POINT_VIRGULE', 'ECHO_DE_LUNE', 'POINT_DE_FEU', 'PLUME_AU_VENT', 'ENCRE_SYMPATHIQUE', 'LUNE', 'GUILLEMETS', 'VIRGULE', 'ENCRE', 'POINT', 'ECHO', 'FEU', 'SOUFFLE', 'ITALIQUE', 'PLUME', 'AIMANT', 'VENT'];
+const BOT_PRIORITY = ['POINT_VIRGULE', 'CITATION', 'ECHO_DE_LUNE', 'LUNE_ROUSSE', 'POINT_DE_FEU', 'CALLIGRAPHIE', 'PLUME_AU_VENT', 'ENCRE_SYMPATHIQUE', 'LUNE', 'GUILLEMETS', 'VIRGULE', 'ENCRE', 'POINT', 'ECHO', 'FEU', 'SOUFFLE', 'ITALIQUE', 'PLUME', 'AIMANT', 'VENT'];
 
 /* ===================== Fins de partie ===================== */
 function phrase(win) {

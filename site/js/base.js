@@ -224,6 +224,7 @@ const AU = {
       case 'fusion': [0, 3, 5, 7, 10].forEach((n, i) => { this.tone(PENTA[n] * 2, 0.7, { type: 'triangle', vol: 0.13, when: i * 0.06 }); this.tone(PENTA[n] * 3, 0.5, { vol: 0.04, when: i * 0.06 + 0.03 }); }); this.noise(0.6, { f: 3000, q: 0.6, vol: 0.06, sweep: 2.5 }); break;
       case 'gust': if (this.throttle('gust', 150)) { this.noise(0.45, { f: 450, q: 0.6, vol: 0.24, sweep: 4 }); this.tone(98, 0.35, { type: 'sine', vol: 0.18, slide: 0.5 }); } break;
       case 'fire': if (this.throttle('fire', 120)) this.noise(0.5, { f: 900, q: 0.4, vol: 0.14, type: 'lowpass', sweep: 0.5 }); break;
+      case 'citation': [0, 2, 4].forEach((n, i) => this.noise(0.06, { f: 3000 + n * 400, q: 4, vol: 0.06, when: i * 0.05 })); this.tone(PENTA[6] * 2, 0.5, { type: 'triangle', vol: 0.09, when: 0.12, slide: 1.06 }); this.noise(0.4, { f: 1600, q: 0.8, vol: 0.07, sweep: 2.2, when: 0.1 }); break;
       case 'vanish': this.tone(PENTA[8] * 2, 0.45, { vol: 0.08, slide: 0.5 }); this.noise(0.35, { f: 4000, q: 1.2, vol: 0.05, sweep: 0.3 }); break;
       case 'staff': if (this.throttle('staff', 45)) this.tone(STAFF_F[k] || 440, 0.4, { type: 'triangle', vol: 0.06 }); break;
       case 'noteKill': if (this.throttle('kill', 45)) { this.tone(NOTE_F[k] || 440, 0.24, { type: 'triangle', vol: 0.12 }); this.noise(0.08, { f: 2200, q: 1, vol: 0.06 }); } break;
