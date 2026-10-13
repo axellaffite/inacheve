@@ -137,12 +137,39 @@ Tout est dans `bestiaire.js` (chargé après `tresor.js`). Une page du cahier pa
 - L'écran de fin compte les « nouveaux croquis » de la partie ; l'écran titre dit où en est le bestiaire.
 - Capture : le bestiaire part vide et n'est jamais enregistré. `__cap.bestiaire(page)`, `__cap.feuilleter(±1)`, `__cap.refermer()`, et `__cap.croque(types)` pour le remplir d'avance (le montage s'en sert pour les chapitres I à III).
 
+## Chapitre V : la page de calligraphie (itération 8)
+
+Tenu depuis la note de marge « la calligraphie ? » du chapitre IV. Tout est dans `calligraphie.js` (page, ratures à la plume, encre fraîche, Grand Paraphe) et `enluminure.js` (la lettrine), chargés après `tresor.js` et avant `bestiaire.js`. Les ratures à la plume sont listées dans `CALLI_TYPES` et animées par `stepCalli` (qui écrit dans `MV`).
+
+- **Papier** (`paper: 'calli'`, `drawCalli`) : papier crème, lignes d'écriture tous les 192 px (hampe, hauteur d'x, ligne de base marquée), obliques de pente à 55° (masquées quand l'écran est très dézoomé), marge rouge, et cinq grandes lettres pâles en filigrane (`BIG_LETTERS`).
+- **Pleins et déliés** : `nibW` donne l'épaisseur d'un trait selon sa direction, comme une plume tenue à 45° (plein en descendant vers la droite, délié en montant). Tous les traits d'encre du chapitre l'utilisent.
+- **L'encre fraîche** (`G.strokes`) : des traits faits de points datés. Un point brûle (1 dégât) à partir de 0,22 s (`STROKE_HOT`, plus pâle avant) et s'efface au bout de la vie du trait ; 700 points au plus en tout (`STROKE_MAX`). Un point sur trois marque la page (`inkLine`), puis sèche comme l'encre. Le pilote les évite (`calliNear`, `calliDanger`).
+- **Délié** (base) : zigzague vers toi, un trait plein à la tête et délié à la queue.
+- **Plume d'oie** (dès 25 s) : garde ses distances, vise 0,65 s (trait rouge) puis crache trois gouttes d'encre l'une après l'autre (`b.ink`, annoncées par `b.wait`).
+- **Arabesque** (dès 50 s, quatre au plus) : tourne autour de toi en faisant des boucles (cycloïde) et laisse un trait d'encre de 2,3 s.
+- **Majuscule** (dès 90 s, trois au plus) : une lettre ornée dans un cadre rouge et or ; elle s'enlumine 0,75 s puis lâche une couronne de dix fleurons (`b.fleur`).
+- **Le Grand Paraphe** (boss à 3:00, 1 400 PV) : une signature à boucles, deux yeux et une plume d'oie. Cycle : signature (`startSig` : une cycloïde allongée qui part de lui, passe près de toi et file plus loin, annoncée 1 s en pointillés rouges, puis il la parcourt en 1,25 s en laissant un trait d'encre de 2,6 s), pleins et déliés (une couronne qui alterne grosses gouttes lentes et traits rouges rapides), points sur les i (de gros points d'encre, `G.drops` avec `ink`, tombent là où tu vas). Sous 50 % : deux couronnes, une seconde signature aussitôt après la première, et il appelle déliés et arabesques.
+- Dictées : PLEIN, DÉLIÉ, ENCRE, PLUMIER, ENCRIER, LETTRINE, ARABESQUE, MAJUSCULE, ENLUMINURE, CALLIGRAPHIE.
+- Musique : une valse en sol majeur (`beatAt`, `chap === 5`), basse puis deux accords pincés au clavecin.
+
+### La lettrine (itération 8)
+
+- 8 s après le début du chapitre V, une grande lettre (la première lettre du mot de la dictée en cours) s'écrit dans un cadre rouge et or, à 460–860 px du joueur (`writeEnlu`). Sa forme est lue dans un petit canevas (`enluMask`) et découpée en cases de 26 px.
+- Passer dessus dore les cases dans un rayon de 40 px autour de la goutte ; la feuille d'or est découpée à la forme exacte de la lettre (`destination-in`). Il faut dorer 90 % des cases. Pas de limite de temps : la difficulté vient des ratures qui tournent autour.
+- Lettrine dorée (`illuminate`) : une onde d'or (rayon 560) frappe tout ((22 + 0,12 × cases) × ENCRE, 90 sur un boss), efface projectiles, points qui tombent et encre fraîche, rend un cœur, de l'expérience et cinq lettrines d'or à ramasser. La lettre reste imprimée en or pâle sur la page. La suivante vient 22 s plus tard, 40 px plus grande (450 px au plus).
+- Le pilote vise la case non dorée la plus proche (`enluTarget`). L'écran de fin compte les lettrines (`endTally`).
+
+## Commencer au chapitre V (itération 8)
+
+- Battre la Pieuvre-Buvard enregistre `inacheve.chapitre` = 5 : touche 5 ou bouton « Commencer au chapitre V ». Brouillon de 46 mots, niveau 47. `__cap.start(5)` le lance en démo (test de fumée).
+- Le bestiaire a une cinquième page (délié, plume d'oie, arabesque, majuscule, Grand Paraphe).
+
 ## Réglages et mémoire
 
 - `inacheve.best` : meilleur score.
 - `inacheve.muted` : son coupé.
 - `inacheve.calme` : secousses d'écran désactivées (bouton « Secousses » ou touche C).
-- `inacheve.chapitre` : chapitre le plus loin débloqué (2 après la Grande Rature, 3 après la Fausse Note, 4 après la Règle de fer).
+- `inacheve.chapitre` : chapitre le plus loin débloqué (2 après la Grande Rature, 3 après la Fausse Note, 4 après la Règle de fer, 5 après la Pieuvre-Buvard).
 - `inacheve.bestiaire` : le bestiaire, `{ type: nombre de ratures biffées }` (validé au chargement, enregistré à chaque nouveau croquis, en fin de partie et quand on quitte la page).
 
 ## Déterminisme
@@ -161,6 +188,8 @@ Itération 4 (départ au brouillon du chapitre II, pilote) : sur 6 graines, 1 se
 
 Itération 5 (chapitre III) : montage vidéo (mots donnés, niveau 34, deux pages tournées), 11 graines sur 12 battent la Règle de fer, entre 3:38 et 3:50 de chapitre. Au brouillon (28 mots au hasard), le pilote meurt le plus souvent entre 1:50 et 3:35 : comme pour le chapitre II, c'est un raccourci. Premiers réglages trop durs (`scale` 4, règle à 2 400 PV) : morts vers 1:40 et combats de plus d'une minute.
 
+Itération 8 (chapitre V) : premiers réglages trop généreux en majuscules (7 % des apparitions sans limite : une vingtaine à l'écran, la page couverte de fleurons) ; limitées à trois à la fois. Lettrine d'abord dorée en 5 s (82 %, pinceau de 46 px) : relevée à 90 % et 40 px, et une toutes les 25 s. Au brouillon (46 mots au hasard), `scale` 6,6 puis 8 : 6 graines sur 6 gagnaient sans jamais descendre sous 2 cœurs ; à 11, 3 sur 6 mouraient avant 2:30. Retenu : `scale` 10,5, `rateCap` 13, Grand Paraphe à 1 800 PV puis 1 400 (pour que le combat du montage tienne en 40 s) : 4 graines sur 6 gagnent (souvent à 1 ou 2 cœurs), 2 meurent vers 1:40–1:55. Montage vidéo (mots donnés, niveau 55) : 12 graines sur 12 battent le Grand Paraphe ; à 1 400 PV, entre 3:29 et 3:53, avec 4 à 6 lettrines.
+
 Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois pages tournées), le pilote ouvre 6 à 7 trésors et bat la Pieuvre-Buvard sans grande peine. Au brouillon (37 mots au hasard), 4 graines sur 6 gagnent, en descendant à 2 cœurs ; les 2 autres meurent vers 2:50 et 3:10. Premiers réglages beaucoup trop faciles (`scale` 3,6, pieuvre à 2 100 PV, pas de bouteilles avant 100 s) : aucun pilote ne perdait plus de deux cœurs et le combat durait plus d'une minute.
 
 ## Outils
@@ -174,7 +203,7 @@ Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois page
 
 ## Carnet d'idées (libre à toi de piocher, de modifier ou d'ignorer)
 
-- ~~**Portées musicales**~~ : fait à l'itération 3 (chapitre II). ~~**Papier millimétré**~~ : fait à l'itération 5 (chapitre III). ~~**Carte au trésor**~~ : faite à l'itération 6 (chapitre IV), avec le buvard qui boit tout en patron. **Chapitre V** : la page de calligraphie (promesse dans la marge du IV : pleins et déliés, une plume qui crache, des lettres ornées), ou la page de garde, ou un cahier de brouillon tout raturé.
+- ~~**Portées musicales**~~ : fait à l'itération 3 (chapitre II). ~~**Papier millimétré**~~ : fait à l'itération 5 (chapitre III). ~~**Carte au trésor**~~ : faite à l'itération 6 (chapitre IV), avec le buvard qui boit tout en patron. ~~**Calligraphie**~~ : faite à l'itération 8 (chapitre V). **Chapitre VI** : la page de garde (promesse dans la marge du V : papier marbré, ex-libris, le nom du propriétaire du cahier à écrire ?), ou un cahier de brouillon tout raturé, ou le dos de la couverture avec ses tables de multiplication.
 - **La carte, la suite** : des îles qui comptent vraiment (sable qui ralentit, mer où l'on glisse), un perroquet qui répète la dernière attaque, une boussole à soi (mot BOUSSOLE ?) qui montre le trésor, des trésors piégés (un coffre-mimique), une carte qui se déchire.
 - **La figure, la suite** : des figures imposées (« trace un carré »), des points qui bougent, un compas à soi (mot COMPAS ?) qui trace un cercle protecteur ; des mots de géométrie comme pouvoirs (ANGLE, RAYON).
 - ~~**Commencer au chapitre II**~~ : fait à l'itération 4 (brouillon de 19 mots au hasard), et au chapitre III à l'itération 5. Pour plus tard : un écran titre qui montre les pages débloquées comme les onglets d'un classeur.
@@ -192,4 +221,6 @@ Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois page
 - **Histoire** : une phrase d'histoire se révèle à chaque chapitre, comme si le cahier racontait quelque chose.
 - **Musique** : un thème par chapitre (fait à l'itération 3 pour le I et le II) ; reste une musique qui réagit aux mots choisis.
 - **Encre sympathique, la suite** : des lettres invisibles cachées dans la page, révélées seulement quand on est soi-même invisible.
+- **La calligraphie, la suite** : une lettrine à dorer avec un motif imposé (rouge puis or), un mot à recopier lettre par lettre en suivant des pointillés (la « copie »), un encrier à soi qui recharge la plume, un mot composé PLUME + ENCRE = « CALLIGRAPHIE » qui laisserait derrière toi un trait qui brûle les ratures.
+- **Lisibilité, chapitre V** : en fin de chapitre, la page est très chargée (lettres au sol, taches, encre) ; on pourrait ramasser automatiquement les lettres très anciennes, ou alléger les taches.
 - **Carnet des unions** : une page qui montre les mots composés déjà découverts, et des silhouettes « ? » pour les autres.

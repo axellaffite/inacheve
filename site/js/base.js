@@ -287,6 +287,23 @@ const AU = {
         for (let j = 0; j < 8; j++) this.tone(2637 + (j % 3) * 400, 0.12, { vol: 0.035, when: 0.4 + j * 0.06 });
         this.noise(0.6, { f: 5000, q: 0.8, vol: 0.06, sweep: 1.5, when: 0.35 }); break;
       }
+      // chapitre V : la page de calligraphie
+      case 'calliKill': if (this.throttle('kill', 45)) { this.noise(0.09, { f: 3600, q: 3, vol: 0.08, sweep: 0.6 }); this.tone([392, 440, 493.88, 587.33, 659.25][Math.floor(Math.random() * 5)] * 2, 0.16, { type: 'square', vol: 0.025 }); } break;
+      case 'quill': if (this.throttle('quill', 120)) this.noise(0.25, { f: 4200, q: 4, vol: 0.05, sweep: 0.7 }); break;
+      case 'spitInk': if (this.throttle('spitInk', 90)) { [0, 1, 2].forEach(i => this.tone(260 - i * 30, 0.08, { vol: 0.12, slide: 0.5, when: i * 0.13 })); } break;
+      case 'fleurWarn': if (this.throttle('fleurWarn', 150)) this.tone(1567.98, 0.6, { vol: 0.03, attack: 0.3 }); break;
+      case 'fleur': if (this.throttle('fleur', 120)) [1174.66, 1567.98, 1975.53].forEach((f, i) => this.tone(f, 0.5, { type: 'triangle', vol: 0.05, when: i * 0.03 })); break;
+      case 'boss5': this.tone(49, 2.6, { type: 'sawtooth', vol: 0.1, attack: 0.6 }); this.tone(73.42, 2.6, { type: 'sawtooth', vol: 0.07, attack: 0.8 }); this.noise(1.6, { f: 3000, q: 2, vol: 0.06, sweep: 0.4, when: 0.4 }); break;
+      case 'signWarn': this.tone(392, 0.9, { type: 'triangle', vol: 0.05, slide: 1.5, attack: 0.3 }); break;
+      case 'sign': this.noise(1.3, { f: 2600, q: 2.5, vol: 0.16, sweep: 1.6 }); this.tone(130.81, 1.2, { type: 'sawtooth', vol: 0.05, slide: 1.5 }); break;
+      case 'pleins': [196, 293.66].forEach((f, i) => this.tone(f, 0.4, { type: 'square', vol: 0.04, when: i * 0.08, slide: 0.7 })); this.noise(0.3, { f: 1500, q: 1, vol: 0.1 }); break;
+      case 'enluNew': [783.99, 987.77, 1174.66, 1567.98].forEach((f, i) => this.tone(f, 0.4, { type: 'triangle', vol: 0.07, when: i * 0.07 })); break;
+      case 'enluCell': if (this.throttle('enluCell', 90)) this.tone([587.33, 659.25, 739.99, 783.99, 880, 987.77, 1108.73, 1174.66, 1318.51, 1479.98, 1567.98][Math.min(10, k)] * 2, 0.22, { vol: 0.05 }); break;
+      case 'enlu': {   // un glissando de harpe, puis un accord doré
+        [0, 2, 4, 5, 7, 9, 11, 12, 14, 16].forEach((n, i) => this.tone(392 * Math.pow(2, n / 12), 0.6, { type: 'triangle', vol: 0.1, when: i * 0.045 }));
+        [392, 493.88, 587.33, 783.99].forEach(f => this.tone(f * 2, 1.4, { vol: 0.07, when: 0.5 }));
+        this.noise(0.8, { f: 6000, q: 0.7, vol: 0.05, sweep: 1.5, when: 0.45 }); break;
+      }
       case 'lose': [6, 4, 2, 0].forEach((n, i) => this.tone(PENTA[n], 0.8, { type: 'triangle', vol: 0.15, when: i * 0.18 })); break;
     }
   },
@@ -321,6 +338,15 @@ const AU = {
         const n = sc[([4, 2, 3, 4, 5, 3][bar] + [0, 1, -1, 2][Math.floor(s / 6) % 4] + 2) % sc.length];
         this.tone(n * 2, beat * (bar === 0 ? 2.2 : 1.1), { type: 'triangle', vol: 0.09, when, dest: this.mus, attack: 0.01 });
       }
+      if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
+      return;
+    }
+    if (chap === 5) {   // une valse en sol majeur, au clavecin : la basse, puis deux accords pincés
+      const bar = s % 3, root = [98, 130.81, 146.83, 98][Math.floor(s / 6) % 4], maj = [1, 1.26, 1.5];
+      if (bar === 0) this.tone(root, beat * 2.6, { type: 'sine', vol: 0.22, when, dest: this.mus, attack: 0.03 });
+      else maj.forEach(m => this.tone(root * 2 * m, beat * 0.45, { type: 'square', vol: 0.016, when, dest: this.mus, attack: 0.002 }));
+      const sc = [392, 440, 493.88, 523.25, 587.33, 659.25, 739.99, 783.99];
+      if (Math.random() < (bar === 0 ? 0.75 : 0.35) + intensity * 0.3) this.tone(sc[(bar * 2 + Math.floor(s / 3) * 3) % sc.length], beat * (bar === 0 ? 1.8 : 0.9), { type: 'triangle', vol: 0.085, when, dest: this.mus, attack: 0.004 });
       if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
       return;
     }

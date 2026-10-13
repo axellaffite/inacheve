@@ -44,24 +44,26 @@ async function load(seed) {
 // Coups de pouce du montage (itération 4 : le refrain du chapitre II), appliqués à l'identique en simulation et au tournage.
 // Chaque étape : `skip` secondes jouées sans filmer, une action éventuelle dans la page, un sous-titre, puis `play` secondes filmées.
 // On saute la fin du chapitre I : le pilote reçoit les mots d'une partie avancée, puis la page se tourne.
-// La première piste au trésor s'écrit 8 s après le début du chapitre IV : l'étape `tresor` doit montrer le coffre ouvert.
-// Montage (itération 7) : un aperçu des chapitres I à IV, les croquis qui arrivent en jouant, la Pieuvre-Buvard, puis le bestiaire feuilleté
+// La première lettrine s'écrit 8 s après le début du chapitre V : l'étape `enlu` doit la montrer dorée et illuminée.
+// Montage (itération 8) : les chapitres I à IV en coup de vent, puis la page de calligraphie, sa lettrine, ses arabesques,
+// le Grand Paraphe, et la nouvelle page du bestiaire.
 const STEPS = [
-  // le bestiaire d'un joueur qui a déjà feuilleté les trois premiers chapitres ; la page du chapitre IV se remplit pendant le film
-  { act: () => window.__cap.croque(['gribouillis', 'gouttelette', 'biffure', 'tache', 'boss', 'croche', 'soupir', 'metronome', 'fausse', 'segment', 'equerre', 'compas', 'regle']), play: 3 },
+  // le bestiaire d'un joueur qui a déjà traversé les quatre premiers chapitres ; la page du chapitre V se remplit pendant le film
+  { act: () => window.__cap.croque(['gribouillis', 'gouttelette', 'biffure', 'tache', 'gomme', 'boss', 'croche', 'soupir', 'metronome', 'fausse', 'segment', 'equerre', 'compas', 'rapporteur', 'regle', 'mouette', 'crabe', 'tourbillon', 'bouteille', 'pieuvre']), play: 3 },
   { cap: ['… une Grande Rature plus tard : chapitre II'], act: () => {
     window.__cap.grant({ ENCRE: 4, VIRGULE: 4, GUILLEMETS: 3, LUNE: 3, ECHO: 2, POINT: 3, FEU: 2, PLUME: 2, POINT_VIRGULE: 1, ECHO_DE_LUNE: 1, POINT_DE_FEU: 1 });
     window.__cap.level(22); window.__cap.turn();
-  }, play: 2.2 },
-  { cap: ['… une Fausse Note plus tard : chapitre III'], act: () => { window.__cap.level(34); window.__cap.turn(); }, play: 2.2 },
-  { cap: ['… une Règle de fer plus tard : chapitre IV, la carte au trésor !'], act: () => {
+  }, play: 1.9 },
+  { cap: ['… chapitre III'], act: () => { window.__cap.level(34); window.__cap.turn(); }, play: 1.9 },
+  { cap: ['… chapitre IV'], act: () => { window.__cap.level(46); window.__cap.turn(); }, play: 1.9 },
+  { cap: ['… une Pieuvre-Buvard plus tard : chapitre V, la page de calligraphie !'], act: () => {
     window.__cap.grant({ ENCRE: 5, VIRGULE: 5, GUILLEMETS: 4, LUNE: 5, ECHO: 4, POINT: 5, FEU: 4, PLUME: 4, ITALIQUE: 3, SOUFFLE: 2, AIMANT: 2, PLUME_AU_VENT: 1, POINT_VIRGULE: 1, ECHO_DE_LUNE: 1, POINT_DE_FEU: 1 });
-    window.__cap.level(46); window.__cap.turn();
+    window.__cap.level(55); window.__cap.turn();
   }, play: 7 },
-  { tresor: true, play: 13 },
-  { skip: 40, cap: ['Chaque nouvelle rature biffée est croquée pour le bestiaire'], play: 5 }
+  { enlu: true, play: 12 },
+  { skip: 40, cap: ['L’encre fraîche des arabesques brûle : ne marche pas dessus !'], play: 5 }
 ];
-const BOSS_FILM = 36;   // secondes de combat filmées au plus contre la Pieuvre-Buvard
+const BOSS_FILM = 40;   // secondes de combat filmées au plus contre le Grand Paraphe
 // Joue une partie entière en accéléré (sans filmer) pour savoir comment elle se termine
 async function simulate(seed) {
   await load(seed);
@@ -69,20 +71,20 @@ async function simulate(seed) {
   let sung = 0;
   for (const st of STEPS) {
     await page.evaluate(n => window.__cap.skip(n), st.skip || 0); if (st.act) await page.evaluate(st.act); await page.evaluate(n => window.__cap.skip(n), st.play);
-    if (st.tresor) sung = (await page.evaluate(() => window.__cap.state())).tresors;
+    if (st.enlu) sung = (await page.evaluate(() => window.__cap.state())).enlus;
   }
   const end = await page.evaluate(() => { for (let i = 0; i < 320; i++) { window.__cap.skip(1); const s = window.__cap.state(); if (s.state === 'victory' || s.state === 'gameover') return s; } return window.__cap.state(); });
   return { ...end, sung };
 }
-// une bonne graine : le refrain est joué à l'écran, et la Fausse Note tombe pendant qu'on filme encore
-const good = r => r.sung >= 1 && r.state === 'victory' && r.chapter === 4 && r.t <= 176 + BOSS_FILM - 2;
+// une bonne graine : la lettrine s'illumine à l'écran, et le Grand Paraphe tombe pendant qu'on filme encore
+const good = r => r.sung >= 1 && r.state === 'victory' && r.chapter === 5 && r.t <= 176 + BOSS_FILM - 2;
 let SEED = SEED_ARG ? parseInt(SEED_ARG, 10) : null;
 if (SEED === null && !SMOKE) {
   // on cherche une partie qui va jusqu'à la victoire, pour montrer tout le chapitre
   let best = null;
   for (const s of [42, 7, 5, 99, 3, 11, 23, 64, 1, 8, 13, 21]) {
     const r = await simulate(s);
-    console.log(`graine ${s} : ${r.state} au chapitre ${r.chapter}, à ${r.t.toFixed(0)} s (niveau ${r.level}, trésor filmé : ${r.sung ? 'oui' : 'non'}, ${r.tresors} trésor(s))`);
+    console.log(`graine ${s} : ${r.state} au chapitre ${r.chapter}, à ${r.t.toFixed(0)} s (niveau ${r.level}, lettrine filmée : ${r.sung ? 'oui' : 'non'}, ${r.enlus} lettrine(s))`);
     const score = x => (good(x) ? 1e6 : 0) + (x.sung ? 2e5 : 0) + (x.state === 'victory' ? 1e5 - x.t : x.t);
     if (!best || score(r) > score(best.r)) best = { s, r };
     if (good(r)) break;
@@ -94,7 +96,7 @@ const meta = await page.evaluate(() => window.__cap.meta);
 const fail = msg => { console.error('ÉCHEC : ' + msg); if (errors.length) console.error(errors.join('\n')); process.exitCode = 1; };
 
 if (SMOKE) {
-  await page.evaluate(() => { window.__cap.start(); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(2); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(3); window.__cap.skip(30); window.__cap.frames(3); window.__cap.start(4); window.__cap.skip(30); window.__cap.frames(3); });
+  await page.evaluate(() => { window.__cap.start(); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(2); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(3); window.__cap.skip(30); window.__cap.frames(3); window.__cap.start(4); window.__cap.skip(30); window.__cap.frames(3); window.__cap.start(5); window.__cap.skip(40); window.__cap.frames(3); });
   const st = await page.evaluate(() => window.__cap.state());
   console.log('smoke :', JSON.stringify(st));
   if (errors.length) fail('erreurs JavaScript'); else console.log('OK, aucune erreur.');
@@ -139,17 +141,17 @@ while (st.state !== 'gameover' && st.state !== 'victory' && st.t < 176) {
   st = await state();
 }
 if (st.state !== 'gameover') {
-  await cap('… trois minutes plus tard, la Pieuvre-Buvard …', 2.6);
+  await cap('… trois minutes plus tard, le Grand Paraphe …', 2.6);
   for (let i = 0; i < BOSS_FILM && st.state !== 'victory' && st.state !== 'gameover'; i++) { await grab(1); st = await state(); }
 }
 await grab(st.state === 'victory' || st.state === 'gameover' ? 4 : 1);
-// le bestiaire (nouveau) : la page du chapitre IV, remplie pendant la partie, puis on feuillette jusqu'au chapitre I
-await page.evaluate(() => window.__cap.bestiaire(4));
-await cap('Nouveau : le bestiaire des ratures (touche B)', 4);
+// le bestiaire : sa nouvelle page, celle du chapitre V, remplie pendant la partie
+await page.evaluate(() => window.__cap.bestiaire(5));
+await cap('Le bestiaire a une nouvelle page', 3);
 await grab(3.6);
-for (let i = 0; i < 3; i++) { await page.evaluate(() => window.__cap.feuilleter(-1)); await grab(1.5); }
-await cap('Il reste des ratures à croquer…', 2.6);
-await grab(2.2);
+await page.evaluate(() => window.__cap.feuilleter(-1)); await grab(1.6);
+await cap('La suite s’écrit dans douze heures…', 2.6);
+await grab(2.4);
 /* ---------------------------------------------------------------------------------------------- */
 
 ff.stdin.end();

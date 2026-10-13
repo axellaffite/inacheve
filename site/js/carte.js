@@ -7,7 +7,7 @@ const NOTES_CARTE = [
   { x: WORLD.w / 2, y: -150, t: '— chapitre IV : la carte au trésor —', r: -0.02 },
   { x: WORLD.w * 0.7, y: -96, t: 'ajouté : une carte au trésor (c’est fait)', r: 0.025 },
   { x: WORLD.w + 175, y: WORLD.h * 0.3, t: 'ici, plus tard :', r: 0.06 },
-  { x: WORLD.w + 190, y: WORLD.h * 0.3 + 46, t: 'la calligraphie ?', r: 0.04 },
+  { x: WORLD.w + 190, y: WORLD.h * 0.3 + 46, t: 'la calligraphie ? → à la plume !', r: 0.04 },
   { x: -185, y: WORLD.h * 0.45, t: 'terra', r: -0.07 },
   { x: -175, y: WORLD.h * 0.45 + 44, t: 'incognita', r: -0.05 },
   { x: WORLD.w * 0.28, y: WORLD.h + 140, t: 'échelle : un carreau = une lieue ?', r: 0.03 },
@@ -210,7 +210,7 @@ function stepCarteFx(dt) {
   for (const dr of G.drops) {
     dr.t += dt;
     if (!dr.done && dr.t >= dr.fall) {
-      dr.done = true; splat(dr.x, dr.y, dr.r * 0.45, '#c86a86', 0.16, 6); AU.play('plop');
+      dr.done = true; splat(dr.x, dr.y, dr.r * 0.45, dr.ink ? INK : '#c86a86', 0.16, 6); AU.play('plop');
       if ((p.x - dr.x) ** 2 + (p.y - dr.y) ** 2 < (dr.r + p.r - 4) ** 2) hurtPlayer(1, dr.x, dr.y);
     }
   }
@@ -393,10 +393,12 @@ function drawCarteFx() {
     if (!dr.done) {
       ctx.save(); ctx.strokeStyle = C.red; ctx.globalAlpha = 0.35 + 0.25 * Math.sin(G.time * 20); ctx.setLineDash([8, 7]); ctx.lineWidth = 2.5;
       ctx.beginPath(); ctx.arc(dr.x, dr.y, dr.r, 0, TAU); ctx.stroke(); ctx.restore();
-      ctx.fillStyle = 'rgba(200,106,134,' + (0.08 + 0.2 * k) + ')'; ctx.beginPath(); ctx.arc(dr.x, dr.y, dr.r * k, 0, TAU); ctx.fill();
-      const h = (1 - k) * 380; ctx.fillStyle = '#c86a86'; ctx.beginPath(); ctx.ellipse(dr.x, dr.y - h, 9, 13, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = (dr.ink ? 'rgba(58,36,24,' : 'rgba(200,106,134,') + (0.08 + 0.2 * k) + ')'; ctx.beginPath(); ctx.arc(dr.x, dr.y, dr.r * k, 0, TAU); ctx.fill();
+      const h = (1 - k) * 380; ctx.fillStyle = dr.ink ? INK : '#c86a86'; ctx.beginPath();
+      if (dr.ink) ctx.arc(dr.x, dr.y - h, 16, 0, TAU); else ctx.ellipse(dr.x, dr.y - h, 9, 13, 0, 0, TAU);   // le point sur le i, ou un pâté rose
+      ctx.fill();
     } else {
-      const q = (dr.t - dr.fall) / 0.5; ctx.save(); ctx.globalAlpha = 1 - q; ctx.strokeStyle = '#c86a86'; ctx.lineWidth = 5 * (1 - q) + 1;
+      const q = (dr.t - dr.fall) / 0.5; ctx.save(); ctx.globalAlpha = 1 - q; ctx.strokeStyle = dr.ink ? INK : '#c86a86'; ctx.lineWidth = 5 * (1 - q) + 1;
       ctx.beginPath(); ctx.arc(dr.x, dr.y, dr.r * (0.6 + 0.6 * q), 0, TAU); ctx.stroke(); ctx.restore();
     }
   }

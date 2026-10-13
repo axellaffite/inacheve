@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 7, date: '2026-10-12', title: 'Le bestiaire', chapter: 'IV', chapterName: 'La carte au trésor' };
+const GAME_META = { iteration: 8, date: '2026-10-13', title: 'Pleins et déliés', chapter: 'V', chapterName: 'La page de calligraphie' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -64,6 +64,15 @@ const JOURNAL = [
       "Les croquis bougent encore un peu : le métronome bat la mesure, le crabe pince, les yeux des patrons te cherchent.",
       "Chaque fiche compte combien de fois tu as biffé sa rature. Une page complète gagne un bon point doré.",
       "Ouvre le bestiaire avec la touche B, ou le bouton « Bestiaire » de l’écran titre, de la pause et de la fin de partie."
+    ] },
+  { iteration: 8, date: '2026-10-13', title: 'Pleins et déliés',
+    notes: [
+      "Le chapitre V est écrit : derrière la Pieuvre-Buvard, une page de calligraphie, avec ses lignes d’écriture et ses grandes lettres pâles.",
+      "Une lettrine attend dans son cadre rouge et or. Passe et repasse dessus pour la couvrir de feuille d’or : une fois dorée, elle s’illumine et frappe toute la page autour d’elle.",
+      "Quatre ratures à la plume : le délié qui zigzague, la plume d’oie qui crache son encre, l’arabesque dont les boucles brûlent tant qu’elles sont fraîches, et la majuscule et sa couronne de fleurons.",
+      "Au bout de la page t’attend le Grand Paraphe : il annonce sa signature en pointillés, puis la trace d’un seul trait, et fait tomber de gros points sur les i.",
+      "Une valse au clavecin accompagne la plume, et le bestiaire gagne une cinquième page.",
+      "Une fois la Pieuvre-Buvard battue, tu peux commencer directement au chapitre V."
     ] }
 ];
 window.GAME_META = GAME_META;
