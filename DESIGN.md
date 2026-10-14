@@ -209,6 +209,22 @@ Tenu depuis la note de marge « la page de garde ? » du chapitre V. C'est la de
 
 - CITATION pioche aussi dans des phrases propres à la page (`CITATIONS_CH`) : « do, ré, mi » sur la portée, « CQFD » sur le papier millimétré, « X marque l'endroit » sur la carte, « pleins et déliés » en calligraphie, « prête-moi ta plume » sur la page de garde.
 
+## Le devoir du jour (itération 11)
+
+Tout est dans `devoir.js` (chargé après `unions.js`). Un mode de jeu à part, lancé depuis l'écran titre (touche J ou bouton « Devoir du jour »).
+
+- **Une page par jour, la même pour tous** : `devoirDuJour(date)` hache la date UTC (`hashStr` : FNV-1a puis un brassage final, sinon deux dates voisines donnaient presque le même devoir) et en tire le chapitre (I à VI, même s'il n'est pas encore débloqué : c'est une façon de découvrir les pages), une consigne, un coup de pouce et la graine de `rand`. Le brouillon de départ et les premières ratures sont donc identiques pour tout le monde. En capture, la date est `GAME_META.date`.
+- **Consignes** (`CONSIGNES`, avec un bonus de note) : pas de pâtés (`sansPate`, le pâté est désactivé), copie à rendre plus tôt (`presse`, patron à 2:00, `devoirBossT`), interligne double (`double`, 1,8 × plus de ratures à 55 % de vie), écrire sans trembler (`fragile`, quatre cœurs), courant d'air (`courant` : `G.wind`, 95 px/s, tourne toutes les 16 s, pousse la goutte et les lettres ; traits de vent dessinés à l'écran par `drawWind`), brouillard de gomme (`brouillard` : un dégradé radial couleur gomme autour de la goutte, de 200 à 420 px, dans `drawDevoirFx`).
+- **Coups de pouce** (`COUPS_DE_POUCE`) : pluie de lettrines (lettres dorées dix fois plus fréquentes), page propre (l'encre sèche vite, les lettres de plus de 9 s viennent à toi), deux cœurs de rechange, grand aimant (aimant × 2). « Sans trembler » et « cœurs de rechange » ne tombent jamais ensemble.
+- **La note** (`gradeDevoir`) : gagné, au moins 11 : + dictées (2,5 au plus), + exploits de la page (refrains, figures, trésors, lettrines, ex-libris, ou une étoile par 120 ratures au chapitre I ; 2,5 au plus), + 2 × la part de cœurs restants, + le bonus de la consigne ; perdu, jamais la moyenne (9,5 au plus, selon le temps tenu). Arrondie au demi-point. L'écran de fin la montre entourée au stylo rouge, avec une appréciation (`drawNote`).
+- **Mémoire** : `inacheve.devoir` garde la meilleure note du jour (`{ date, best }`). L'écran titre l'épingle sur la fiche du devoir (`drawDevoirSlip`, en haut à gauche sur grand écran ; le titre descend de 26 px pour lui faire de la place).
+- Un devoir ne débloque pas de chapitre et ne compte pas pour le meilleur score. Entrée ou R le refont ; T ou le bouton « Retour au titre » ramènent au titre (aussi en pause et en fin de partie normale).
+- Capture : `__cap.jour(over)` impose le devoir du jour (pour la fiche du titre), `__cap.devoir(over)` le lance en démo ; `over` peut fixer `chapter`, `consigne`, `pouce` et `seed`. `__cap.state()` donne `devoir` et `note`.
+
+## Vitesse du jeu (itération 11)
+
+- Bouton « Vitesse » ou touche V : 100 %, 80 % ou 60 % (`G.speed`, appliqué au pas de temps dans `frame`, jamais en capture). Gardé dans `inacheve.vitesse`.
+
 ## Réglages et mémoire
 
 - `inacheve.best` : meilleur score.
@@ -216,6 +232,8 @@ Tenu depuis la note de marge « la page de garde ? » du chapitre V. C'est la de
 - `inacheve.calme` : secousses d'écran désactivées (bouton « Secousses » ou touche C).
 - `inacheve.chapitre` : chapitre le plus loin débloqué (2 après la Grande Rature, 3 après la Fausse Note, 4 après la Règle de fer, 5 après la Pieuvre-Buvard, 6 après le Grand Paraphe).
 - `inacheve.bestiaire` : le bestiaire, `{ type: nombre de ratures biffées }` (validé au chargement, enregistré à chaque nouveau croquis, en fin de partie et quand on quitte la page).
+- `inacheve.devoir` : la meilleure note du devoir du jour, `{ date, best }` (validée au chargement).
+- `inacheve.vitesse` : vitesse du jeu (1, 0,8 ou 0,6).
 - `inacheve.unions` : le carnet des unions, la liste des mots composés déjà choisis (validée au chargement, enregistrée à chaque nouvelle union).
 
 ## Déterminisme
@@ -240,6 +258,8 @@ Itération 9 (les unions) : au brouillon du chapitre V, avec les huit unions com
 
 Itération 10 (chapitre VI) : au brouillon (52 mots, presque tout au maximum), premiers réglages (`scale` 12, `rateCap` 13,5) : 8 graines sur 8 gagnent sans peine ; à 15 : 7 sur 8. Retenu : `scale` 19, `rateCap` 16 : 8 graines sur 10 gagnent (vers 3:35–4:00, souvent à 2 ou 3 cœurs), 2 meurent vers 1:50–2:10. Le Cartable, d'abord à 1 500 PV, tombait en 35 à 55 s (31 à 48 s dans le montage, trop long pour la vidéo) : ramené à 1 300 PV. Le papier marbré coûte environ 0,5 s de calcul en tout, étalé sur le chapitre V.
 
+Itération 11 (devoir du jour, pilote) : sur 6 devoirs variés, les premiers réglages donnaient 19 à 20 sur 20 à chaque victoire (trop généreux) et « sans trembler » à trois cœurs faisait mourir le pilote en une minute au chapitre VI. Retenu : la note actuelle (victoires entre 15,5 et 19, défaites plafonnées à 9,5) et quatre cœurs. Comme pour les brouillons de chapitre, le pilote perd environ un devoir sur deux. Montage vidéo (devoir C, chapitre III, mots donnés) : la Règle de fer tombe entre 147 et 185 s ; il a fallu un brouillon bien garni pour que le combat tienne dans la vidéo.
+
 Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois pages tournées), le pilote ouvre 6 à 7 trésors et bat la Pieuvre-Buvard sans grande peine. Au brouillon (37 mots au hasard), 4 graines sur 6 gagnent, en descendant à 2 cœurs ; les 2 autres meurent vers 2:50 et 3:10. Premiers réglages beaucoup trop faciles (`scale` 3,6, pieuvre à 2 100 PV, pas de bouteilles avant 100 s) : aucun pilote ne perdait plus de deux cœurs et le combat durait plus d'une minute.
 
 ## Outils
@@ -261,13 +281,13 @@ Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois page
 - **Les paroles** (TODO dans la marge, et nouvelle promesse « les paroles ? » à côté du refrain) : des syllabes sous les notes du refrain, qui forment un mot ; les dictées du chapitre II écrites sous la portée, comme des paroles de chanson.
 - **Bons points** : de petites cartes illustrées à collectionner, gagnées par des exploits ; une page « collection » dans le carnet de bord. (Le bestiaire donne déjà un bon point doré par page complète : on pourrait les compter sur l'écran titre.)
 - ~~**Bestiaire**~~ : fait à l'itération 7. Pour plus tard : un croquis qui montre l'attaque de la rature quand on le touche ; des ratures « rares » (une gomme dorée, un gribouillis à l'envers) qui n'ont qu'une case en pointillés ; une page de patrons à part, avec leurs phrases de fin.
-- **Page du jour** : une graine commune pour tous les joueurs, chaque jour, avec un défi.
+- ~~**Page du jour**~~ : faite à l'itération 11 (le devoir du jour). Pour plus tard : d'autres consignes (« écris en miroir », « dictée à l'envers », « une seule lettre compte »), un devoir du week-end plus long (deux pages d'affilée), un carnet de notes qui garde les sept derniers jours, un code du jour à recopier pour comparer sa note avec un ami (sans aucun serveur).
 - ~~**Combinaisons de mots**~~ : fait à l'itération 2 (cinq mots composés), puis trois de plus à l'itération 9 (CITATION, CALLIGRAPHIE, LUNE ROUSSE). Pour plus tard : CLAIR DE LUNE (SOUFFLE + LUNE, les lunes soignent ?), VENT + VIRGULE, un mot composé à trois mots très rare (une « phrase » ?), des unions propres à un chapitre (une union qui n'existe que sur la portée).
-- ~~**Accessibilité : secousses**~~ : fait à l'itération 2 (réglage « Secousses »). Restent : contraste renforcé, vitesse du jeu, daltonisme.
+- ~~**Accessibilité : secousses**~~ : fait à l'itération 2 (réglage « Secousses »). ~~Vitesse du jeu~~ : faite à l'itération 11. Restent : contraste renforcé, daltonisme.
 - **Nouvelles ratures** : le tipp-ex qui recouvre la page de blanc, la tache de café, le trombone, le taille-crayon qui aspire les lettres, la règle qui balaie la page.
 - **Patrons de chapitres** : le Correcteur au stylo rouge, la Photocopieuse qui duplique tout, le Cartable (la Règle de fer est faite).
 - **Lisibilité** : quand la page est très tachée en fin de chapitre, les taches pourraient sécher plus vite (ou une option « page propre »).
-- **Accessibilité** : options de contraste, vitesse du jeu, daltonisme (les secousses sont faites).
+- **Accessibilité** : options de contraste, daltonisme (les secousses et la vitesse sont faites).
 - **Histoire** : une phrase d'histoire se révèle à chaque chapitre, comme si le cahier racontait quelque chose.
 - **Musique** : un thème par chapitre (fait à l'itération 3 pour le I et le II) ; reste une musique qui réagit aux mots choisis.
 - **Encre sympathique, la suite** : des lettres invisibles cachées dans la page, révélées seulement quand on est soi-même invisible.

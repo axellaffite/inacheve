@@ -12,7 +12,7 @@ try { G.best = parseInt(localStorage.getItem('inacheve.best') || '0', 10) || 0; 
 try { G.calm = !CAPTURE && localStorage.getItem('inacheve.calme') === '1'; } catch (e) { G.calm = false; }
 // chapitre le plus loin atteint : une fois la Grande Rature battue, on peut commencer directement au chapitre II
 try { G.unlocked = CAPTURE ? 1 : parseInt(localStorage.getItem('inacheve.chapitre') || '1', 10) || 1; } catch (e) { G.unlocked = 1; }
-function unlockChapter(n) { if (G.demo || n <= G.unlocked) return; G.unlocked = n; try { localStorage.setItem('inacheve.chapitre', String(n)); } catch (e) { /* rien */ } }
+function unlockChapter(n) { if (G.demo || G.devoir || n <= G.unlocked) return; G.unlocked = n; try { localStorage.setItem('inacheve.chapitre', String(n)); } catch (e) { /* rien */ } }
 let enemyId = 1;
 
 function xpFor(level) { return Math.floor(5 + level * 3 + level * level * 0.3); }
@@ -23,7 +23,7 @@ function computeStats() {
     dmg: 1 + 0.3 * lvl('ENCRE'), rate: 2.8 * (1 + 0.18 * lvl('VIRGULE')), extra: g ? g + 1 : 0,
     bounce: lvl('ECHO'), pierce: lvl('ITALIQUE'), pspeed: 560 * (1 + 0.1 * lvl('ITALIQUE')),
     moons: lvl('LUNE'), burn: lvl('FEU'), point: lvl('POINT'), knock: lvl('VENT'),
-    magnet: 135 * (1 + 0.45 * lvl('AIMANT')), speed: 235 * (1 + 0.1 * lvl('PLUME')), dashCd: 2.1 * (1 - 0.13 * lvl('PLUME'))
+    magnet: 135 * (1 + 0.45 * lvl('AIMANT')) * (devoirHas('aimant') ? 2 : 1), speed: 235 * (1 + 0.1 * lvl('PLUME')), dashCd: 2.1 * (1 - 0.13 * lvl('PLUME'))
   };
 }
 
@@ -38,12 +38,13 @@ const CHAPTERS = [null, {
 const CH = () => CHAPTERS[G.chapter || 1];
 const TURN_DUR = 1.7;
 
-function newGame(demo, start = 1) {
-  if (!CAPTURE) { seed = (seed * 16807 + 12345) % 2147483647; }
-  rand = mulberry32(seed);
+// devoir : le devoir du jour (devoir.js), dont la graine vient de la date
+function newGame(demo, start = 1, devoir = null) {
+  if (!CAPTURE && !devoir) { seed = (seed * 16807 + 12345) % 2147483647; }
+  rand = mulberry32(devoir ? devoir.seed : seed);
   G.chapter = start; G.startChapter = start;
   Object.assign(G, {
-    demo, state: 'play', stateT: 0, t: 0, kills: 0, letters: 0, dictees: 0, level: 1, xp: 0, xpNext: xpFor(1), pendingLv: 0,
+    demo, devoir, note: null, state: 'play', stateT: 0, t: 0, kills: 0, letters: 0, dictees: 0, level: 1, xp: 0, xpNext: xpFor(1), pendingLv: 0,
     mots: {}, motOrder: [], enemies: [], shots: [], ebul: [], items: [], parts: [], puddles: [], points: [], texts: [], fires: [], rings: [], waves: [], seen: {}, totalT: 0,
     spawnAcc: 0, nextWave: 45, boss: null, bossSpawned: false, bossDefeated: false, endless: false, nextBossAt: 180,
     pointCd: 6, dicteeIdx: 0, dicteeWord: CH().dictees[0], dicteeProg: 0, choices: [], sel: 0, score: 0, comboN: 0, comboT: 0,
@@ -60,8 +61,11 @@ function newGame(demo, start = 1) {
   G.cam.x = G.p.x; G.cam.y = G.p.y;
   computeStats(); clearStains();
   if (start > 1) draft([0, 0, 19, 28, 37, 46, 52][start]);
-  caption(CH().intro, 4);
-  if (start > 1) caption('Au brouillon : tes mots sont tirés au hasard', 4, 'green');
+  if (devoir) setupDevoir();
+  else {
+    caption(CH().intro, 4);
+    if (start > 1) caption('Au brouillon : tes mots sont tirés au hasard', 4, 'green');
+  }
   setUI();
 }
 // Brouillon : on commence plus loin dans le cahier, avec des mots choisis au hasard (comme une partie déjà jouée)
@@ -127,9 +131,10 @@ function spawnEnemy(type, x, y) {
   const T = ETYPES[type];
   const scale = T.boss ? 1 + (G.endless ? 0.6 * Math.floor((G.t - 180) / 180 + 1) : 0) : 1 + G.t / 190 + CH().scale + (G.endless ? (G.t - 180) / 100 : 0);
   const meet = CH().meet[type];
+  const frail = devoirHas('double') && !T.boss ? 0.55 : 1;   // interligne double : plus nombreuses, plus fragiles
   if (meet && !G.seen[type]) { G.seen[type] = true; caption(meet, 3.2, 'green'); }
   const e = {
-    id: enemyId++, type, isBoss: !!T.boss, x, y, vx: 0, vy: 0, r: T.r, hp: T.hp * scale, maxHp: T.hp * scale, speed: T.speed * (1 + Math.min(0.35, G.t / 600)),
+    id: enemyId++, type, isBoss: !!T.boss, x, y, vx: 0, vy: 0, r: T.r, hp: T.hp * scale * frail, maxHp: T.hp * scale * frail, speed: T.speed * (1 + Math.min(0.35, G.t / 600)),
     dmg: T.dmg, xp: T.xp, agil: T.agil, shape: Math.floor(rnd((SHAPES[type] || [0]).length)), rot: rnd(TAU), spin: rnd(-1.5, 1.5),
     flash: 0, burn: 0, burnDps: 0, slow: 0, orbCd: 0, punchCd: 0, phase: 'walk', pt: rnd(1.5, 3), cx: 0, cy: 0, boilOff: rnd(3), atk: 2.5, atkN: 0, enter: 0
   };
@@ -150,7 +155,7 @@ function spawnAround(type) {
 function director(dt) {
   const t = G.t, ch = CH();
   if (G.boss && !G.endless) { G.spawnAcc += dt * 0.7; }
-  else G.spawnAcc += dt * Math.min(G.endless ? ch.rateCap + 3.5 : ch.rateCap, 0.9 + (t + ch.rateOff) * 0.03 + (G.endless ? (t - 180) * 0.02 : 0));
+  else G.spawnAcc += dt * (devoirHas('double') ? 1.8 : 1) * Math.min(G.endless ? ch.rateCap + 3.5 : ch.rateCap, 0.9 + (t + ch.rateOff) * 0.03 + (G.endless ? (t - 180) * 0.02 : 0));
   while (G.spawnAcc >= 1) {
     G.spawnAcc -= 1;
     if (G.enemies.length > 240) break;
@@ -167,7 +172,7 @@ function director(dt) {
     }
     caption(ch.waveCap, 2.2, 'pink');
   }
-  if (!G.bossSpawned && t >= 180) {
+  if (!G.bossSpawned && t >= devoirBossT()) {
     G.bossSpawned = true;
     const b = spawnAround(ch.boss); b.enter = 1; G.boss = b;
     caption(ch.bossIntro, 3.5, 'pink'); G.cam.shake = 14; AU.play(ch.bossSound);
@@ -212,7 +217,7 @@ function dropLetter(x, y, value) {
   let ch = pick(LETTER_POOL), rare = false, need = false;
   const target = G.dicteeWord[G.dicteeProg];
   if (target && rand() < 0.1) { ch = target; need = true; }
-  if (rand() < 0.025) { rare = true; value += 5; }
+  if (rand() < (devoirHas('pluie') ? 0.25 : 0.025)) { rare = true; value += 5; }
   G.items.push({ x, y, vx: rnd(-90, 90), vy: rnd(-90, 90), ch, value, rare, need, t: rnd(TAU), pull: false, rot: rnd(-0.4, 0.4) });
 }
 
@@ -280,7 +285,7 @@ function botInput() {
 function stepPlayer(dt) {
   const p = G.p, S = G.S, inp = moveInput();
   G.input.dashQueued = false;
-  if (inp.dash && p.dashCd <= 0) {
+  if (inp.dash && p.dashCd <= 0 && !devoirHas('sansPate')) {
     let dx = inp.x, dy = inp.y; if (Math.hypot(dx, dy) < 0.2) { dx = Math.cos(p.face); dy = Math.sin(p.face); }
     const d = Math.hypot(dx, dy) || 1; p.vx = dx / d * 980; p.vy = dy / d * 980; p.dashT = 0.17; p.dashCd = S.dashCd; p.inv = Math.max(p.inv, 0.32); p.puddleT = 0;
     AU.play('dash'); G.cam.shake = Math.max(G.cam.shake, 3);
@@ -433,6 +438,7 @@ function stepPlay(dt) {
     if (!e.ghost && (p.x - e.x) ** 2 + (p.y - e.y) ** 2 < (e.r + p.r - 3) ** 2) hurtPlayer(e.dmg, e.x, e.y);
   }
   applyPull(dt);   // tourbillons et Pieuvre-Buvard
+  stepDevoir(dt);   // courant d'air, page propre
   // ---- gouttes du joueur
   for (const s of G.shots) {
     s.px = s.x; s.py = s.y; s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt;
@@ -663,7 +669,8 @@ function endRun(win) {
   G.score += Math.floor(G.t) * 5;
   G.endPhrase = phrase(win);
   saveBestiaire();
-  if (!G.demo && G.score > G.best) { G.best = G.score; G.newBest = true; try { localStorage.setItem('inacheve.best', String(G.best)); } catch (e) { /* rien */ } }
+  if (G.devoir) gradeDevoir(win);
+  else if (!G.demo && G.score > G.best) { G.best = G.score; G.newBest = true; try { localStorage.setItem('inacheve.best', String(G.best)); } catch (e) { /* rien */ } }
   if (!win) { AU.play('lose'); splat(G.p.x, G.p.y, 50, C.ink, 0.35, 20); }
   setUI();
 }

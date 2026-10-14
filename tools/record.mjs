@@ -43,52 +43,54 @@ async function load(seed) {
 }
 // Coups de pouce du montage, appliqués à l'identique en simulation et au tournage.
 // Chaque étape : `skip` secondes jouées sans filmer, une action éventuelle dans la page, un sous-titre, puis `play` secondes filmées.
-// Montage (itération 10, « la page de garde ») : un joueur qui a déjà tout traversé tourne les cinq premières pages d'un coup,
-// et arrive sur la page de garde en papier marbré. On le suit qui porte le sceau jusqu'à l'ex-libris, on croise les nouvelles
-// ratures (signet, peigne, tampon), puis on file jusqu'au Cartable, et on finit sur la sixième page du bestiaire.
-const CROQUE = ['gribouillis', 'gouttelette', 'biffure', 'tache', 'gomme', 'boss', 'croche', 'soupir', 'metronome', 'fausse', 'segment', 'equerre', 'compas', 'rapporteur', 'regle', 'mouette', 'crabe', 'tourbillon', 'bouteille', 'pieuvre', 'delie', 'plumeoie', 'arabesque', 'majuscule', 'paraphe'];
+// Montage (itération 11, « le devoir du jour ») : trois devoirs de trois jours différents. Le premier sur la carte, avec un courant
+// d'air qui pousse la goutte ; le deuxième sur la portée, dans le brouillard de gomme ; le troisième sur le papier millimétré,
+// copie à rendre plus tôt (avec un brouillon bien garni, pour que le combat tienne dans la vidéo) : on file jusqu'à la Règle de fer, puis la maîtresse rend la copie avec sa note entourée de rouge.
+const DEVOIR_A = { chapter: 4, consigne: 'courant', pouce: 'pluie', seed: 11 };
+const DEVOIR_B = { chapter: 2, consigne: 'brouillard', pouce: 'souffle', seed: 12 };
+const DEVOIR_C = { chapter: 3, consigne: 'presse', pouce: 'souffle' };
 const STEPS = [
-  { act: c => { window.__cap.croque(c); window.__cap.unir(['POINT_VIRGULE', 'ECHO_DE_LUNE', 'POINT_DE_FEU', 'CITATION', 'LUNE_ROUSSE']); }, arg: CROQUE, play: 3 },
-  { cap: ['… cinq pages plus loin : la page de garde'], act: () => {
-    for (const n of [22, 34, 46, 55]) { window.__cap.level(n); window.__cap.turn(); window.__cap.skip(1.8); }
-    window.__cap.grant({ ENCRE: 5, VIRGULE: 5, GUILLEMETS: 4, LUNE: 5, ECHO: 4, POINT: 5, FEU: 4, PLUME: 4, ITALIQUE: 3, SOUFFLE: 2, AIMANT: 2, POINT_VIRGULE: 1, ECHO_DE_LUNE: 1, POINT_DE_FEU: 1, CITATION: 1, LUNE_ROUSSE: 1 });
-    window.__cap.level(64); window.__cap.turn();
-  }, play: 7 },
-  { cap: ['Porte le sceau de cire jusqu’à l’ex-libris…'], play: 10 },
-  { skip: 12, cap: ['Le signet fait claquer son ruban'], play: 5 },
-  { skip: 22, cap: ['Le peigne à marbrer trace des sillons d’encre'], play: 5 },
-  { skip: 35, cap: ['Le tampon saute… et marque « VU »'], play: 6 },
-  { skip: 60, act: () => window.__cap.heal(), play: 0 }   // le pilote reprend son souffle avant le Cartable
+  { cap: ['Chaque jour, un devoir : la même page pour tout le monde'], act: o => window.__cap.devoir(o), arg: () => DEVOIR_A, play: 7 },
+  { skip: 18, cap: ['Courant d’air : le vent pousse la goutte et les lettres'], play: 6 },
+  { cap: ['Un autre jour, une autre consigne…'], act: o => window.__cap.devoir(o), arg: () => DEVOIR_B, play: 5 },
+  { skip: 25, cap: ['Brouillard de gomme : on n’y voit pas plus loin que sa plume'], play: 6 },
+  { cap: ['Copie à rendre plus tôt : la Règle de fer arrive dès 2:00'], act: o => { window.__cap.devoir(o); window.__cap.grant({ ENCRE: 5, VIRGULE: 5, GUILLEMETS: 4, POINT: 5, LUNE: 4, FEU: 3, POINT_VIRGULE: 1, POINT_DE_FEU: 1 }); }, arg: s => ({ ...DEVOIR_C, seed: s }), play: 5 }
 ];
-const BOSS_FILM = 34;   // secondes de combat filmées au plus contre le Cartable
-// Joue une partie entière en accéléré (sans filmer) pour savoir comment elle se termine
-async function simulate(seed) {
-  await load(seed);
-  await page.evaluate(() => window.__cap.start());
-  for (const st of STEPS) { await page.evaluate(n => window.__cap.skip(n), st.skip || 0); if (st.act) await page.evaluate(st.act, st.arg); await page.evaluate(n => window.__cap.skip(n), st.play); }
-  return page.evaluate(() => { for (let i = 0; i < 320; i++) { window.__cap.skip(1); const s = window.__cap.state(); if (s.state === 'victory' || s.state === 'gameover') return s; } return window.__cap.state(); });
+const BOSS_AT = 120, BOSS_FILM = 38;   // le patron du devoir C arrive à 2:00 ; secondes de combat filmées au plus
+const argOf = (st, s) => st.arg ? st.arg(s) : undefined;
+// Joue tout le montage en accéléré (sans filmer) pour savoir comment se termine le devoir C avec la graine s
+async function simulate(s) {
+  await load(42);
+  await page.evaluate(o => window.__cap.jour(o), DEVOIR_A);
+  for (const st of STEPS) { await page.evaluate(n => window.__cap.skip(n), st.skip || 0); if (st.act) await page.evaluate(st.act, argOf(st, s)); await page.evaluate(n => window.__cap.skip(n), st.play); }
+  return page.evaluate(() => { for (let i = 0; i < 320; i++) { window.__cap.skip(1); const r = window.__cap.state(); if (r.state === 'victory' || r.state === 'gameover') return r; } return window.__cap.state(); });
 }
-// une bonne graine : au moins deux sceaux posés, et le Cartable tombe pendant qu'on filme encore
-const good = r => r.sceaux >= 2 && r.state === 'victory' && r.chapter === 6 && r.t <= 176 + BOSS_FILM;
+// une bonne graine : la Règle de fer tombe pendant qu'on filme encore
+const good = r => r.state === 'victory' && r.chapter === 3 && r.t <= BOSS_AT - 4 + BOSS_FILM;
 let SEED = SEED_ARG ? parseInt(SEED_ARG, 10) : null;
 if (SEED === null && !SMOKE) {
-  // on cherche une partie qui va jusqu'à la victoire, pour montrer tout le chapitre
+  // on cherche une graine pour laquelle le devoir C va jusqu'à la victoire, pour montrer la note
   let best = null;
   for (const s of [42, 7, 5, 99, 3, 11, 23, 64, 1, 8, 13, 21]) {
     const r = await simulate(s);
-    console.log(`graine ${s} : ${r.state} au chapitre ${r.chapter}, à ${r.t.toFixed(0)} s (niveau ${r.level}, ${r.sceaux} sceau(x), ${r.hp} cœur(s))`);
-    const score = x => (good(x) ? 1e6 : 0) + Math.min(4, x.sceaux) * 1e5 + (x.state === 'victory' ? 5e4 - x.t : x.t);
+    console.log(`graine ${s} : ${r.state} à ${r.t.toFixed(0)} s (niveau ${r.level}, ${r.hp} cœur(s), note ${r.note})`);
+    const score = x => (good(x) ? 1e6 : 0) + (x.state === 'victory' ? 5e4 - x.t : x.t);
     if (!best || score(r) > score(best.r)) best = { s, r };
     if (good(r)) break;
   }
   SEED = best.s;
 }
-await load(SEED ?? 42);
+await load(42);
 const meta = await page.evaluate(() => window.__cap.meta);
 const fail = msg => { console.error('ÉCHEC : ' + msg); if (errors.length) console.error(errors.join('\n')); process.exitCode = 1; };
 
 if (SMOKE) {
-  await page.evaluate(() => { window.__cap.start(); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(2); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(3); window.__cap.skip(30); window.__cap.frames(3); window.__cap.start(4); window.__cap.skip(30); window.__cap.frames(3); window.__cap.start(5); window.__cap.skip(40); window.__cap.frames(3); window.__cap.grant({ PLUME: 2, ENCRE: 2, GUILLEMETS: 2, ITALIQUE: 2, LUNE: 2, FEU: 2, CALLIGRAPHIE: 1, CITATION: 1, LUNE_ROUSSE: 1 }); window.__cap.skip(15); window.__cap.frames(3); window.__cap.start(6); window.__cap.skip(100); window.__cap.frames(3); window.__cap.skip(90); window.__cap.frames(3); window.__cap.bestiaire(6); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(3); window.__cap.refermer(); });
+  await page.evaluate(() => { window.__cap.start(); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(2); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(3); window.__cap.skip(30); window.__cap.frames(3); window.__cap.start(4); window.__cap.skip(30); window.__cap.frames(3); window.__cap.start(5); window.__cap.skip(40); window.__cap.frames(3); window.__cap.grant({ PLUME: 2, ENCRE: 2, GUILLEMETS: 2, ITALIQUE: 2, LUNE: 2, FEU: 2, CALLIGRAPHIE: 1, CITATION: 1, LUNE_ROUSSE: 1 }); window.__cap.skip(15); window.__cap.frames(3); window.__cap.start(6); window.__cap.skip(100); window.__cap.frames(3); window.__cap.skip(90); window.__cap.frames(3); window.__cap.bestiaire(6); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(3); window.__cap.refermer();
+    for (const [chapter, consigne, pouce] of [[1, 'sansPate', 'propre'], [4, 'courant', 'pluie'], [2, 'brouillard', 'souffle'], [6, 'double', 'aimant'], [3, 'presse', 'souffle'], [5, 'fragile', 'propre']]) {
+      window.__cap.devoir({ chapter, consigne, pouce, seed: chapter }); window.__cap.skip(25); window.__cap.frames(2);
+    }
+    window.__cap.jour(null); window.__cap.devoir(); for (let i = 0; i < 300 && !['victory', 'gameover'].includes(window.__cap.state().state); i++) window.__cap.skip(1);
+    window.__cap.skip(3); window.__cap.frames(2); window.__cap.title(); window.__cap.frames(2); });
   const st = await page.evaluate(() => window.__cap.state());
   console.log('smoke :', JSON.stringify(st));
   if (errors.length) fail('erreurs JavaScript'); else console.log('OK, aucune erreur.');
@@ -115,35 +117,35 @@ const state = () => page.evaluate(() => window.__cap.state());
 const cap = (t, d) => page.evaluate(([t, d]) => window.__cap.caption(t, d), [t, d]);
 
 /* ---------- Le « montage » : à adapter à chaque itération pour montrer les nouveautés ---------- */
-console.log(`Tournage de l'itération ${meta.iteration} : « ${meta.title} »`);
+console.log(`Tournage de l'itération ${meta.iteration} : « ${meta.title} » (graine ${SEED})`);
+await page.evaluate(o => window.__cap.jour(o), DEVOIR_A);   // la fiche de l'écran titre annonce le premier devoir
 await page.evaluate(() => window.__cap.title());
-await grab(3);
-await page.evaluate(() => window.__cap.start());
-await cap(`Itération ${meta.iteration} : ${meta.title}`, 3.2);
+await cap(`Itération ${meta.iteration} : ${meta.title}`, 3.4);
+await grab(3.6);
 for (const step of STEPS) {
   if (step.skip) await page.evaluate(n => window.__cap.skip(n), step.skip);
-  if (step.act) await page.evaluate(step.act, step.arg);
+  if (step.act) await page.evaluate(step.act, argOf(step, SEED));
   for (const c of [].concat(step.cap || [])) await cap(c, 4);
   await grab(step.play);
 }
 let st = await state();
-// avance rapide jusqu'au boss (le pilote joue vraiment, on ne filme simplement pas)
-while (st.state !== 'gameover' && st.state !== 'victory' && st.t < 176) {
+// avance rapide jusqu'au patron (le pilote joue vraiment, on ne filme simplement pas)
+while (st.state !== 'gameover' && st.state !== 'victory' && st.t < BOSS_AT - 4) {
   await page.evaluate(() => { window.__cap.skip(1); const s = window.__cap.state(); if (s.state === 'levelup') window.__cap.skip(1.5); });
   st = await state();
 }
-if (st.state !== 'gameover') {
-  await cap('… trois minutes plus tard, le Cartable …', 2.6);
+if (st.state !== 'gameover' && st.state !== 'victory') {
+  await cap('… deux minutes plus tard, la Règle de fer …', 2.6);
   for (let i = 0; i < BOSS_FILM && st.state !== 'victory' && st.state !== 'gameover'; i++) { await grab(1); st = await state(); }
 }
-await grab(st.state === 'victory' || st.state === 'gameover' ? 4 : 1);
-// la sixième page du bestiaire, toute neuve, puis le carnet des unions
-await page.evaluate(() => window.__cap.bestiaire(6));
-await cap('Le bestiaire a une sixième page', 3);
-await grab(4.2);
-await page.evaluate(() => window.__cap.feuilleter(1)); await grab(1.8);
-await cap('La suite s’écrit dans douze heures…', 2.6);
-await grab(2.4);
+// la copie rendue : la note entourée au stylo rouge, puis l'appréciation
+if (st.state === 'victory' || st.state === 'gameover') { await grab(1.5); await cap('La maîtresse rend la copie…', 3); await grab(5.5); }
+else await grab(1);
+// retour à l'écran titre : la fiche du devoir garde la note du jour
+await page.evaluate(o => window.__cap.jour(o), { ...DEVOIR_C, seed: SEED });
+await page.evaluate(() => window.__cap.title());
+await cap('Demain, un autre devoir…', 3.6);
+await grab(3.8);
 /* ---------------------------------------------------------------------------------------------- */
 
 ff.stdin.end();

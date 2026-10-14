@@ -273,7 +273,7 @@ function drawHUD() {
   }
   txt('niveau ' + G.level, left, top + 54 * s, 24 * s, { align: 'left', color: C.graphite });
   // chapitre + chrono
-  txt('Chapitre ' + CH().num + (G.endless ? ' · page libre' : ''), W / 2, top + 12 * s, 22 * s, { color: C.graphite, weight: 400 });
+  txt((G.devoir ? 'Devoir du jour · chapitre ' : 'Chapitre ') + CH().num + (G.endless ? ' · page libre' : ''), W / 2, top + 12 * s, 22 * s, { color: G.devoir ? C.red : C.graphite, weight: 400 });
   txt(mmss(G.t), W / 2, top + 42 * s, 38 * s, { color: C.ink });
   // barre du boss
   if (G.boss) {
@@ -314,7 +314,8 @@ function drawHUD() {
   for (let i = 1; i <= steps; i++) ctx.lineTo(bx + bw * k * i / steps, by + Math.sin(i * 1.7) * 1.6 * s);
   ctx.stroke(); ctx.restore();
   // contrôles tactiles
-  if (G.input.touch && !G.demo) {
+  drawDevoirHUD();
+  if (G.input.touch && !G.demo && !devoirHas('sansPate')) {
     const bxp = W - SAFE.r - 70 * s, byp = H - SAFE.b - 110 * s;
     ctx.save(); ctx.globalAlpha = p.dashCd > 0 ? 0.35 : 0.85; ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(bxp, byp, 40 * s, 0, TAU); ctx.fill(); ctx.restore();
     txt('pâté', bxp, byp, 24 * s, { color: C.paper });
@@ -401,7 +402,7 @@ function drawTitle() {
   const s = U, t = G.stateT;
   dimPage(0.35);
   const reveal = ease(t / 1.7);
-  const ty = H * 0.38;
+  const ty = H * 0.38 + (slipShown() ? 26 * s : 0);
   ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W * 0.15 + W * 0.85 * reveal, H); ctx.clip();
   txt('Inachevé', W / 2, ty, Math.min(150 * s, W / 6.2), { font: FONT_CURSIVE, weight: 400, color: C.ink });
   ctx.restore();
@@ -415,7 +416,7 @@ function drawTitle() {
   const a = clamp((t - 1.2) * 2, 0, 1);
   txt('un jeu qui s’écrit tout seul, toutes les douze heures', W / 2, ty + 128 * s, Math.min(32 * s, W / 22), { color: C.graphite, weight: 400, alpha: a });
   txt(G.input.touch ? 'Touche l’écran pour commencer' : 'Appuie sur Entrée pour commencer', W / 2, ty + 196 * s, Math.min(38 * s, W / 18), { color: C.ink, alpha: a * (0.6 + 0.4 * Math.sin(G.time * 3)), hl: C.hl });
-  if (!G.input.touch) txt('ZQSD, WASD ou flèches : bouger    Espace : pâté d’encre    Échap : pause    B : bestiaire    M : son    C : secousses', W / 2, ty + 252 * s, Math.min(22 * s, W / 40), { color: C.pencil, weight: 400, alpha: a });
+  if (!G.input.touch) txt('ZQSD, WASD ou flèches : bouger    Espace : pâté d’encre    Échap : pause    J : devoir du jour    B : bestiaire    M : son    V : vitesse', W / 2, ty + 252 * s, Math.min(22 * s, W / 40), { color: C.pencil, weight: 400, alpha: a });
   else txt('Glisse pour bouger, bouton « pâté » pour foncer', W / 2, ty + 252 * s, 22 * s, { color: C.pencil, weight: 400, alpha: a });
   const news = G.unlocked >= 6 ? (G.input.touch ? 'Le chapitre VI t’attend (bouton en bas) : la page de garde, en papier marbré.' : 'Touche 6 : chapitre VI, la page de garde. Le cahier se souvient de tout…')
     : G.unlocked >= 5 ? (G.input.touch ? 'Nouveau : derrière le Grand Paraphe, la page de garde du cahier…' : 'Touche 5 : chapitre V. Et derrière le Grand Paraphe, la page de garde…')
@@ -430,6 +431,7 @@ function drawTitle() {
     : 'Bestiaire : ' + bn + ' / ' + BEST_TYPES.size + ' ratures croquées · carnet des unions : ' + un + ' / ' + UNIONS.length + keyB;
   txt(bnews, W / 2, ty + (G.best ? 354 : 322) * s, Math.min(22 * s, W / 30), { color: C.margin, weight: 400, alpha: a * 0.9 });
   if (G.best) txt('meilleur score : ' + G.best, W / 2, ty + 290 * s, 22 * s, { color: C.margin, weight: 400, alpha: a });
+  drawDevoirSlip(a);
   drawStamp(W - SAFE.r - 110 * s, SAFE.t + 48 * s, s * 1.1);
 }
 
@@ -449,7 +451,11 @@ function drawEnd() {
   const a = clamp(t * 2 - 0.3, 0, 1);
   const y0 = H * 0.2;
   const last = G.chapter >= CHAPTERS.length - 1;
-  txt(win ? CH().done : 'La page a été effacée.', W / 2, y0, Math.min(66 * s, W / 11), { font: FONT_CURSIVE, weight: 400, color: win ? C.ink : C.red, alpha: a });
+  if (G.devoir) {   // la copie rendue : la note au stylo rouge, à droite (en haut à droite sur écran étroit)
+    if (W >= 900) drawNote(W / 2 + Math.min(360 * s, W * 0.3), y0 + 250 * s, 1, t);
+    else drawNote(W - SAFE.r - 122 * s, SAFE.t + 70 * s, 0.6, t);
+  }
+  txt(G.devoir ? (win ? 'Devoir rendu !' : 'Devoir rendu… un peu raturé.') : win ? CH().done : 'La page a été effacée.', W / 2, y0, Math.min(66 * s, W / 11), { font: FONT_CURSIVE, weight: 400, color: win ? C.ink : C.red, alpha: a });
   txt('« ' + G.endPhrase + ' »', W / 2, y0 + 82 * s, Math.min(32 * s, W / 26), { color: C.graphite, weight: 400, alpha: a });
   const rows = [['temps', mmss((G.totalT || 0) + G.t)], ['ratures biffées', G.kills], ['lettres ramassées', G.letters], endTally(), ['niveau', G.level], ['score', G.score]];
   if (G.newCroquis) rows.splice(4, 0, ['nouveaux croquis', G.newCroquis]);
@@ -461,10 +467,10 @@ function drawEnd() {
   });
   const by = y0 + 150 * s + rows.length * 38 * s + 26 * s, ab = clamp(t * 2 - 2.2, 0, 1);
   if (G.newBest) txt('nouveau record !', W / 2, by, 26 * s, { color: C.margin, alpha: ab });
-  const hint = win && !last ? (G.input.touch ? 'Touche pour tourner la page' : 'Entrée : tourner la page    R : recommencer')
+  const hint = G.devoir ? (G.input.touch ? 'Touche pour refaire le devoir' : 'Entrée : refaire le devoir    T : retour au titre') : win && !last ? (G.input.touch ? 'Touche pour tourner la page' : 'Entrée : tourner la page    R : recommencer')
     : win ? (G.input.touch ? 'Touche pour continuer en page libre' : 'Entrée : continuer en page libre    R : recommencer') : (G.input.touch ? 'Touche pour recommencer' : 'Entrée : recommencer');
   txt(hint, W / 2, by + 44 * s, 30 * s, { color: C.ink, alpha: ab, hl: C.hl });
-  const foot = win && !last ? 'Une autre page t’attend derrière celle-ci.' : win ? 'Le cahier s’arrête ici, pour l’instant. La suite s’écrit dans douze heures.' : 'La suite s’écrit dans douze heures. Itération n° ' + GAME_META.iteration + '.';
+  const foot = G.devoir ? 'Demain, un autre devoir. Le même pour tout le monde.' : win && !last ? 'Une autre page t’attend derrière celle-ci.' : win ? 'Le cahier s’arrête ici, pour l’instant. La suite s’écrit dans douze heures.' : 'La suite s’écrit dans douze heures. Itération n° ' + GAME_META.iteration + '.';
   txt(foot, W / 2, by + 92 * s, 22 * s, { color: C.pencil, weight: 400, alpha: ab });
 }
 
@@ -472,6 +478,7 @@ function render() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.fillStyle = C.unwritten; ctx.fillRect(0, 0, W, H);
   drawWorld();
+  drawDevoirFx();   // courant d'air, brouillard de gomme
   if (G.state === 'bestiaire') { if (G.bestFrom !== 'title') drawHUD(); drawBestiaire(); }
   else if (G.state === 'title') drawTitle();
   else {

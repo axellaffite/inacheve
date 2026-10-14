@@ -4,7 +4,7 @@
 
 /* ===================== Boucle ===================== */
 function initTitle() {
-  G.state = 'title'; G.stateT = 0; G.deco = [];
+  G.state = 'title'; G.stateT = 0; G.deco = []; clearStains();   // une page propre pour le titre, même au retour d'une partie
   for (let i = 0; i < 16; i++) {
     const type = pick(['gribouillis', 'gribouillis', 'biffure', 'tache', 'gouttelette']);
     const T = ETYPES[type];
@@ -49,7 +49,7 @@ function update(dt) {
 let lastT = 0;
 function frame(now) {
   const dt = Math.min(0.05, (now - lastT) / 1000 || 0.016); lastT = now;
-  update(dt); render();
+  update(dt * G.speed); render();
   if (G.chapter >= 5 && G.state !== 'title' && !marbleCv) marbleWork(6);   // le papier marbré du chapitre VI se prépare en douce
   AU.tick(G.state === 'play' ? Math.min(1, G.t / 180) : 0.1, !!G.boss && G.state === 'play', G.state === 'title' ? 1 : G.chapter);
   requestAnimationFrame(frame);
@@ -63,6 +63,9 @@ function setUI() {
   document.getElementById('btnPause').classList.toggle('show', G.input.touch && G.state === 'play');
   document.getElementById('btnSound').textContent = 'Son : ' + (AU.muted ? 'coupé' : 'activé');
   document.getElementById('btnCalm').textContent = 'Secousses : ' + (G.calm ? 'non' : 'oui');
+  document.getElementById('btnSpeed').textContent = 'Vitesse : ' + speedLabel();
+  document.getElementById('btnDevoir').classList.toggle('hidden', G.state !== 'title');
+  document.getElementById('btnTitre').classList.toggle('hidden', !(G.state === 'pause' || G.state === 'gameover' || G.state === 'victory'));
   document.getElementById('btnCh2').classList.toggle('hidden', !(G.state === 'title' && G.unlocked >= 2));
   document.getElementById('btnCh3').classList.toggle('hidden', !(G.state === 'title' && G.unlocked >= 3));
   document.getElementById('btnCh4').classList.toggle('hidden', !(G.state === 'title' && G.unlocked >= 4));
@@ -73,6 +76,7 @@ function primaryAction() {
   AU.init();
   if (G.state === 'title') newGame(false);
   else if (G.state === 'pause') { G.state = 'play'; setUI(); }
+  else if ((G.state === 'gameover' || G.state === 'victory') && G.stateT > 0.8 && G.devoir) startDevoir(false);   // on refait le devoir
   else if (G.state === 'gameover' && G.stateT > 0.8) newGame(false, G.startChapter);
   else if (G.state === 'victory' && G.stateT > 0.8 && G.chapter < CHAPTERS.length - 1) turnPage();
   else if (G.state === 'victory' && G.stateT > 0.8) { G.state = 'play'; G.endless = true; G.nextWave = G.t + 20; G.nextBossAt = G.t + 180; caption('Page libre : jusqu’où iras-tu ?', 3); setUI(); }
@@ -80,6 +84,17 @@ function primaryAction() {
 function togglePause() {
   if (G.state === 'play') { G.state = 'pause'; G.stateT = 0; } else if (G.state === 'pause') G.state = 'play';
   setUI();
+}
+function restartRun() { if (G.devoir) startDevoir(false); else newGame(false, G.startChapter); }
+function goTitle() { saveBestiaire(); G.devoir = null; G.p = null; G.chapter = 1; initTitle(); }
+// vitesse du jeu (accessibilité) : 100 %, 80 % ou 60 %
+const SPEEDS = [1, 0.8, 0.6];
+try { G.speed = CAPTURE ? 1 : SPEEDS.includes(parseFloat(localStorage.getItem('inacheve.vitesse'))) ? parseFloat(localStorage.getItem('inacheve.vitesse')) : 1; } catch (e) { G.speed = 1; }
+const speedLabel = () => Math.round(G.speed * 100) + '\u202f%';
+function toggleSpeed() {
+  G.speed = SPEEDS[(SPEEDS.indexOf(G.speed) + 1) % SPEEDS.length];
+  try { localStorage.setItem('inacheve.vitesse', String(G.speed)); } catch (e) { /* rien */ }
+  caption(G.speed === 1 ? 'Vitesse normale.' : 'Le jeu tourne à ' + speedLabel() + ' : tout le monde ralentit.', 2); setUI();
 }
 function toggleCalm() { G.calm = !G.calm; try { localStorage.setItem('inacheve.calme', G.calm ? '1' : '0'); } catch (e) { /* rien */ } caption(G.calm ? 'Secousses coupées : la page reste immobile.' : 'Secousses rétablies.', 1.8); setUI(); }
 function toggleMute() { AU.init(); AU.setMuted(!AU.muted); try { localStorage.setItem('inacheve.muted', AU.muted ? '1' : '0'); } catch (e) { /* rien */ } setUI(); }
@@ -100,6 +115,9 @@ if (!CAPTURE) {
     if (e.code === 'KeyB' && ['title', 'play', 'pause', 'gameover', 'victory'].includes(G.state)) { openBestiaire(); return; }
     if (e.code === 'KeyM') toggleMute();
     if (e.code === 'KeyC') toggleCalm();
+    if (e.code === 'KeyV') toggleSpeed();
+    if (e.code === 'KeyJ' && G.state === 'title') { startDevoir(false); return; }
+    if (e.code === 'KeyT' && ['pause', 'gameover', 'victory'].includes(G.state)) { goTitle(); return; }
     if (G.state === 'levelup') {
       if (G.stateT < 0.3) return;
       if (e.code === 'Digit1' || e.code === 'Numpad1') chooseMot(0);
@@ -118,7 +136,7 @@ if (!CAPTURE) {
     if (e.code === 'Enter' || (e.code === 'Space' && G.state !== 'play')) primaryAction();
     if ((e.code === 'Space' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') && G.state === 'play') G.input.dashQueued = true;
     if (e.code === 'Escape' || e.code === 'KeyP') togglePause();
-    if (e.code === 'KeyR' && (G.state === 'victory' || G.state === 'gameover')) newGame(false, G.startChapter);
+    if (e.code === 'KeyR' && (G.state === 'victory' || G.state === 'gameover')) restartRun();
   });
   addEventListener('keyup', e => { keys[e.code] = false; });
   addEventListener('pagehide', saveBestiaire);
@@ -162,6 +180,9 @@ if (!CAPTURE) {
   document.getElementById('btnBest').addEventListener('click', () => { AU.init(); openBestiaire(); cv.focus(); });
   document.getElementById('btnSound').addEventListener('click', toggleMute);
   document.getElementById('btnCalm').addEventListener('click', toggleCalm);
+  document.getElementById('btnSpeed').addEventListener('click', toggleSpeed);
+  document.getElementById('btnDevoir').addEventListener('click', () => { AU.init(); if (G.state === 'title') startDevoir(false); });
+  document.getElementById('btnTitre').addEventListener('click', () => { AU.init(); if (['pause', 'gameover', 'victory'].includes(G.state)) goTitle(); cv.focus(); });
   document.getElementById('btnCh2').addEventListener('click', () => { AU.init(); if (G.state === 'title') newGame(false, 2); });
   document.getElementById('btnCh3').addEventListener('click', () => { AU.init(); if (G.state === 'title') newGame(false, 3); });
   document.getElementById('btnCh4').addEventListener('click', () => { AU.init(); if (G.state === 'title') newGame(false, 4); });
@@ -223,9 +244,11 @@ window.__cap = {
   audio(duration) { return AU.renderCapture(duration); },
   skip(seconds, dt = 1 / 30) { const n = Math.round(seconds / dt); for (let i = 0; i < n; i++) update(dt); },
   title() { initTitle(); },
+  jour(over) { devoirOver = over || null; },
+  devoir(over) { if (over) devoirOver = over; startDevoir(true); },
   start(chapter) { newGame(true, chapter || 1); },
   caption(t, d) { caption(t, d); },
-  state() { return { state: G.state, chapter: G.chapter || 1, t: G.t, boss: !!G.boss, bossDefeated: !!G.bossDefeated, level: G.level, hp: G.p ? G.p.hp : 0, enemies: G.enemies ? G.enemies.length : 0, kills: G.kills, mots: G.mots, refrains: G.refrains || 0, refrain: G.refrain ? G.refrain.prog : -1, figures: G.figures || 0, tresors: G.tresors || 0, tresor: G.tresor ? G.tresor.shown : -1, enlus: G.enlus || 0, enlu: G.enlu ? Math.round(100 * G.enlu.painted / G.enlu.cells.length) : -1, croquis: bestCount(), page: G.bestPage, unions: unionCount(), quotes: G.quotes ? G.quotes.length : 0, sceaux: G.sceaux || 0, sceau: G.sceau ? (G.sceau.carried ? 1 : 0) : -1 }; },
+  state() { return { state: G.state, chapter: G.chapter || 1, t: G.t, boss: !!G.boss, bossDefeated: !!G.bossDefeated, level: G.level, hp: G.p ? G.p.hp : 0, enemies: G.enemies ? G.enemies.length : 0, kills: G.kills, mots: G.mots, refrains: G.refrains || 0, refrain: G.refrain ? G.refrain.prog : -1, figures: G.figures || 0, tresors: G.tresors || 0, tresor: G.tresor ? G.tresor.shown : -1, enlus: G.enlus || 0, enlu: G.enlu ? Math.round(100 * G.enlu.painted / G.enlu.cells.length) : -1, croquis: bestCount(), page: G.bestPage, unions: unionCount(), quotes: G.quotes ? G.quotes.length : 0, sceaux: G.sceaux || 0, sceau: G.sceau ? (G.sceau.carried ? 1 : 0) : -1, devoir: !!G.devoir, note: G.note ? G.note.n : -1 }; },
   bestiaire(page) { openBestiaire(page); },
   croque(types) { types.forEach((k, i) => { if (BEST_TYPES.has(k)) G.bestiary[k] = (G.bestiary[k] || 0) + 4 + (i * 37) % 90; }); },
   unir(keys) { keys.forEach(k => { if (UNIONS.includes(k)) G.unions[k] = 1; }); },

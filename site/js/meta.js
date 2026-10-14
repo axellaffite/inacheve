@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 10, date: '2026-10-14', title: 'La page de garde', chapter: 'VI', chapterName: 'La page de garde' };
+const GAME_META = { iteration: 11, date: '2026-10-14', title: 'Le devoir du jour', chapter: 'VI', chapterName: 'La page de garde' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -90,6 +90,15 @@ const JOURNAL = [
       "Quatre ratures de reliure : la marbrure qui tourne, le signet qui fait claquer son ruban, le peigne qui trace des sillons d’encre et le tampon qui saute pour marquer « VU ».",
       "Au bout du cahier t’attend le Cartable : il lance sa trousse, balaie la page de ses bretelles et saute pour retomber sur toi. La musique ? « Au clair de la lune », à la boîte à musique.",
       "Les citations parlent maintenant la langue de chaque page : « do, ré, mi » sur la portée, « X marque l’endroit » sur la carte…"
+    ] },
+  { iteration: 11, date: '2026-10-14', title: 'Le devoir du jour',
+    notes: [
+      "Chaque jour, un nouveau devoir : une page du cahier tirée de la date, la même pour tout le monde, avec les mêmes mots au départ.",
+      "Le devoir a sa consigne (pas de pâtés, courant d’air, brouillard de gomme, interligne double…) et son coup de pouce (pluie de lettrines, page propre, grand aimant…).",
+      "À la fin, la maîtresse rend la copie : une note sur 20 entourée au stylo rouge, et une appréciation. Ta meilleure note du jour reste épinglée sur l’écran titre.",
+      "Lance le devoir avec la touche J, ou le bouton « Devoir du jour ». On peut le refaire autant de fois qu’on veut.",
+      "Nouveau réglage « Vitesse » (bouton ou touche V) : le jeu peut tourner à 80 % ou 60 %, pour respirer un peu.",
+      "Un bouton « Retour au titre » (ou la touche T) apparaît en pause et en fin de partie."
     ] }
 ];
 window.GAME_META = GAME_META;
