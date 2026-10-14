@@ -50,6 +50,7 @@ let lastT = 0;
 function frame(now) {
   const dt = Math.min(0.05, (now - lastT) / 1000 || 0.016); lastT = now;
   update(dt); render();
+  if (G.chapter >= 5 && G.state !== 'title' && !marbleCv) marbleWork(6);   // le papier marbré du chapitre VI se prépare en douce
   AU.tick(G.state === 'play' ? Math.min(1, G.t / 180) : 0.1, !!G.boss && G.state === 'play', G.state === 'title' ? 1 : G.chapter);
   requestAnimationFrame(frame);
 }
@@ -66,6 +67,7 @@ function setUI() {
   document.getElementById('btnCh3').classList.toggle('hidden', !(G.state === 'title' && G.unlocked >= 3));
   document.getElementById('btnCh4').classList.toggle('hidden', !(G.state === 'title' && G.unlocked >= 4));
   document.getElementById('btnCh5').classList.toggle('hidden', !(G.state === 'title' && G.unlocked >= 5));
+  document.getElementById('btnCh6').classList.toggle('hidden', !(G.state === 'title' && G.unlocked >= 6));
 }
 function primaryAction() {
   AU.init();
@@ -112,6 +114,7 @@ if (!CAPTURE) {
     if ((e.code === 'Digit3' || e.code === 'Numpad3') && G.state === 'title' && G.unlocked >= 3) { newGame(false, 3); return; }
     if ((e.code === 'Digit4' || e.code === 'Numpad4') && G.state === 'title' && G.unlocked >= 4) { newGame(false, 4); return; }
     if ((e.code === 'Digit5' || e.code === 'Numpad5') && G.state === 'title' && G.unlocked >= 5) { newGame(false, 5); return; }
+    if ((e.code === 'Digit6' || e.code === 'Numpad6') && G.state === 'title' && G.unlocked >= 6) { newGame(false, 6); return; }
     if (e.code === 'Enter' || (e.code === 'Space' && G.state !== 'play')) primaryAction();
     if ((e.code === 'Space' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') && G.state === 'play') G.input.dashQueued = true;
     if (e.code === 'Escape' || e.code === 'KeyP') togglePause();
@@ -163,6 +166,7 @@ if (!CAPTURE) {
   document.getElementById('btnCh3').addEventListener('click', () => { AU.init(); if (G.state === 'title') newGame(false, 3); });
   document.getElementById('btnCh4').addEventListener('click', () => { AU.init(); if (G.state === 'title') newGame(false, 4); });
   document.getElementById('btnCh5').addEventListener('click', () => { AU.init(); if (G.state === 'title') newGame(false, 5); });
+  document.getElementById('btnCh6').addEventListener('click', () => { AU.init(); if (G.state === 'title') newGame(false, 6); });
   document.getElementById('btnPause').addEventListener('click', () => togglePause());
 }
 function videoFor(n) {
@@ -221,7 +225,7 @@ window.__cap = {
   title() { initTitle(); },
   start(chapter) { newGame(true, chapter || 1); },
   caption(t, d) { caption(t, d); },
-  state() { return { state: G.state, chapter: G.chapter || 1, t: G.t, boss: !!G.boss, bossDefeated: !!G.bossDefeated, level: G.level, hp: G.p ? G.p.hp : 0, enemies: G.enemies ? G.enemies.length : 0, kills: G.kills, mots: G.mots, refrains: G.refrains || 0, refrain: G.refrain ? G.refrain.prog : -1, figures: G.figures || 0, tresors: G.tresors || 0, tresor: G.tresor ? G.tresor.shown : -1, enlus: G.enlus || 0, enlu: G.enlu ? Math.round(100 * G.enlu.painted / G.enlu.cells.length) : -1, croquis: bestCount(), page: G.bestPage, unions: unionCount(), quotes: G.quotes ? G.quotes.length : 0 }; },
+  state() { return { state: G.state, chapter: G.chapter || 1, t: G.t, boss: !!G.boss, bossDefeated: !!G.bossDefeated, level: G.level, hp: G.p ? G.p.hp : 0, enemies: G.enemies ? G.enemies.length : 0, kills: G.kills, mots: G.mots, refrains: G.refrains || 0, refrain: G.refrain ? G.refrain.prog : -1, figures: G.figures || 0, tresors: G.tresors || 0, tresor: G.tresor ? G.tresor.shown : -1, enlus: G.enlus || 0, enlu: G.enlu ? Math.round(100 * G.enlu.painted / G.enlu.cells.length) : -1, croquis: bestCount(), page: G.bestPage, unions: unionCount(), quotes: G.quotes ? G.quotes.length : 0, sceaux: G.sceaux || 0, sceau: G.sceau ? (G.sceau.carried ? 1 : 0) : -1 }; },
   bestiaire(page) { openBestiaire(page); },
   croque(types) { types.forEach((k, i) => { if (BEST_TYPES.has(k)) G.bestiary[k] = (G.bestiary[k] || 0) + 4 + (i * 37) % 90; }); },
   unir(keys) { keys.forEach(k => { if (UNIONS.includes(k)) G.unions[k] = 1; }); },

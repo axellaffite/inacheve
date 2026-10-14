@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 9, date: '2026-10-13', title: 'Entre guillemets', chapter: 'V', chapterName: 'La page de calligraphie' };
+const GAME_META = { iteration: 10, date: '2026-10-14', title: 'La page de garde', chapter: 'VI', chapterName: 'La page de garde' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -81,6 +81,15 @@ const JOURNAL = [
       "LUNE + FEU = LUNE ROUSSE : tes lunes s’embrasent et mettent le feu à tout ce qu’elles cognent.",
       "Le bestiaire a une dernière page : le carnet des unions. Chaque mot composé que tu choisis y est rangé pour de bon ; les autres attendent, avec un indice.",
       "L’écran titre et la fin de partie comptent tes unions."
+    ] },
+  { iteration: 10, date: '2026-10-14', title: 'La page de garde',
+    notes: [
+      "Le chapitre VI est écrit : derrière le Grand Paraphe, la page de garde du cahier, en papier marbré, avec son étiquette « Nom : Inachevé ».",
+      "Un sceau de cire t’attend sur la page : ramasse-le et porte-le jusqu’à l’ex-libris. Si une rature te touche en chemin, tu le lâches !",
+      "Chaque sceau porte l’emblème d’une page déjà écrite : la plume, la croche, le compas, l’ancre, la lettrine… et la goutte d’encre, c’est toi.",
+      "Quatre ratures de reliure : la marbrure qui tourne, le signet qui fait claquer son ruban, le peigne qui trace des sillons d’encre et le tampon qui saute pour marquer « VU ».",
+      "Au bout du cahier t’attend le Cartable : il lance sa trousse, balaie la page de ses bretelles et saute pour retomber sur toi. La musique ? « Au clair de la lune », à la boîte à musique.",
+      "Les citations parlent maintenant la langue de chaque page : « do, ré, mi » sur la portée, « X marque l’endroit » sur la carte…"
     ] }
 ];
 window.GAME_META = GAME_META;

@@ -305,6 +305,26 @@ const AU = {
         [392, 493.88, 587.33, 783.99].forEach(f => this.tone(f * 2, 1.4, { vol: 0.07, when: 0.5 }));
         this.noise(0.8, { f: 6000, q: 0.7, vol: 0.05, sweep: 1.5, when: 0.45 }); break;
       }
+      // chapitre VI : la page de garde
+      case 'gardeKill': if (this.throttle('kill', 45)) { this.tone([523.25, 587.33, 659.25, 783.99, 880][Math.floor(Math.random() * 5)] * 2, 0.3, { vol: 0.07 }); this.noise(0.08, { f: 1600, q: 1, vol: 0.07, sweep: 0.5 }); } break;
+      case 'ribbonWarn': if (this.throttle('ribbonWarn', 120)) this.noise(0.6, { f: 2400, q: 3, vol: 0.04, sweep: 1.6 }); break;
+      case 'ribbonSnap': if (this.throttle('ribbonSnap', 80)) { this.noise(0.09, { f: 1800, q: 1.2, vol: 0.2, sweep: 0.4 }); this.tone(330, 0.08, { type: 'square', vol: 0.03, slide: 0.5 }); } break;
+      case 'combWarn': if (this.throttle('combWarn', 120)) [0, 1, 2, 3].forEach(i => this.noise(0.04, { f: 3000 + i * 300, q: 6, vol: 0.05, when: i * 0.05 })); break;
+      case 'comb': if (this.throttle('comb', 120)) this.noise(0.9, { f: 1400, q: 1.4, vol: 0.09, sweep: 1.8 }); break;
+      case 'stampJump': if (this.throttle('stampJump', 120)) this.tone(260, 0.3, { vol: 0.06, slide: 1.8 }); break;
+      case 'stampLand': if (this.throttle('stampLand', 90)) { this.tone(90, 0.22, { vol: 0.3, slide: 0.5 }); this.noise(0.12, { f: 700, q: 0.8, vol: 0.18 }); } break;
+      case 'boss6': this.tone(41.2, 2.6, { type: 'sawtooth', vol: 0.1, attack: 0.6 }); this.tone(61.74, 2.6, { type: 'sawtooth', vol: 0.07, attack: 0.8 }); this.tone(70, 0.6, { vol: 0.4, slide: 0.5, when: 0.2 }); this.noise(0.5, { f: 400, q: 0.5, vol: 0.2, type: 'lowpass', when: 0.2 }); break;
+      case 'flap': this.noise(0.25, { f: 900, q: 0.7, vol: 0.14, sweep: 2 }); this.tone(120, 0.15, { type: 'square', vol: 0.03 }); break;
+      case 'trousse': if (this.throttle('trousse', 120)) [0, 1, 2].forEach(i => this.noise(0.05, { f: 4200 - i * 600, q: 3, vol: 0.07, when: i * 0.04 })); break;
+      case 'sceauNew': [392, 523.25, 659.25].forEach((f, i) => this.tone(f, 0.45, { type: 'triangle', vol: 0.1, when: i * 0.1 })); break;
+      case 'sceauGrab': this.tone(659.25, 0.3, { type: 'triangle', vol: 0.15 }); this.tone(987.77, 0.4, { vol: 0.06, when: 0.08 }); break;
+      case 'sceauDrop': this.tone(392, 0.4, { type: 'triangle', vol: 0.12, slide: 0.7 }); this.tone(150, 0.12, { vol: 0.2, slide: 0.5, when: 0.15 }); break;
+      case 'sceau': {   // le cachet tombe, puis « au clair de la lune » en carillon
+        this.tone(70, 0.5, { vol: 0.4, slide: 0.5 }); this.noise(0.3, { f: 600, q: 0.6, vol: 0.2, type: 'lowpass' });
+        [523.25, 523.25, 523.25, 587.33, 659.25, 587.33].forEach((f, i) => { this.tone(f * 2, 0.5, { type: 'triangle', vol: 0.11, when: 0.15 + i * 0.12 }); this.tone(f * 4, 0.3, { vol: 0.03, when: 0.15 + i * 0.12 }); });
+        [261.63, 329.63, 392].forEach(f => this.tone(f * 2, 1.4, { vol: 0.07, when: 0.9 }));
+        this.noise(0.8, { f: 5000, q: 0.7, vol: 0.05, sweep: 1.5, when: 0.85 }); break;
+      }
       case 'lose': [6, 4, 2, 0].forEach((n, i) => this.tone(PENTA[n], 0.8, { type: 'triangle', vol: 0.15, when: i * 0.18 })); break;
     }
   },
@@ -317,6 +337,9 @@ const AU = {
     }
   },
   BEAT: 0.36,
+  // la mélodie d'« au clair de la lune » (traditionnelle), un temps par case ; 0 = la note précédente continue
+  LUNE: [[523.25, 523.25, 523.25, 587.33, 659.25, 0, 587.33, 0, 523.25, 659.25, 587.33, 587.33, 523.25, 0, 0, 0],
+         [587.33, 587.33, 587.33, 587.33, 440, 0, 440, 0, 587.33, 523.25, 493.88, 440, 392, 0, 0, 0]],
   // Chapitre I : ré dorien au kalimba. Chapitre II : boîte à musique en do lydien, avec le tic-tac d'un métronome.
   // Chapitre III : arpèges réguliers en la mineur, comme des figures qu'on répète, et le cliquetis d'une règle.
   beatAt(when, s, intensity, bossOn, chap = 1) {
@@ -348,6 +371,19 @@ const AU = {
       else maj.forEach(m => this.tone(root * 2 * m, beat * 0.45, { type: 'square', vol: 0.016, when, dest: this.mus, attack: 0.002 }));
       const sc = [392, 440, 493.88, 523.25, 587.33, 659.25, 739.99, 783.99];
       if (Math.random() < (bar === 0 ? 0.75 : 0.35) + intensity * 0.3) this.tone(sc[(bar * 2 + Math.floor(s / 3) * 3) % sc.length], beat * (bar === 0 ? 1.8 : 0.9), { type: 'triangle', vol: 0.085, when, dest: this.mus, attack: 0.004 });
+      if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
+      return;
+    }
+    if (chap === 6) {   // « au clair de la lune », à la boîte à musique, sur des accords tenus
+      const song = this.LUNE[Math.floor(s / 16) % 4 === 2 ? 1 : 0], i = s % 16, n = song[i], bar = Math.floor(i / 4);
+      const roots = Math.floor(s / 16) % 4 === 2 ? [98, 146.83, 98, 98] : [130.81, 130.81, 98, 130.81], root = roots[bar];
+      if (i % 4 === 0) { this.tone(root / 2, beat * 3.8, { type: 'sine', vol: 0.2, when, dest: this.mus, attack: 0.05 }); [1, 1.26, 1.5].forEach(m => this.tone(root * 2 * m, beat * 3.6, { type: 'sine', vol: 0.025, when, dest: this.mus, attack: 0.2 })); }
+      if (n) {
+        let len = 1; while (i + len < 16 && !song[i + len]) len++;
+        this.tone(n * 2, beat * (len + 0.6), { type: 'sine', vol: 0.11, when, dest: this.mus, attack: 0.003 });
+        this.tone(n * 8, beat * 0.5, { vol: 0.012, when, dest: this.mus, attack: 0.002 });
+        if (Math.random() < intensity * 0.35) this.tone(n * 3, beat * 0.6, { type: 'triangle', vol: 0.03, when: when + beat / 2, dest: this.mus, attack: 0.003 });
+      }
       if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
       return;
     }

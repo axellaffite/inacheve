@@ -415,8 +415,9 @@ function drawCarteFx() {
       ctx.globalAlpha = 1; ctx.rotate(tn.a); ctx.lineCap = 'round';
       ctx.beginPath(); ctx.moveTo(40, 0);
       for (let i = 1; i <= 12; i++) { const x = 40 + i / 12 * (R - 40), y = Math.sin(i * 0.9 - G.time * 14) * 10 * (i / 12); ctx.lineTo(x, y); }
-      ctx.strokeStyle = '#c85a78'; ctx.lineWidth = 26; ctx.stroke(); ctx.strokeStyle = BUVARD; ctx.lineWidth = 18; ctx.stroke();
-      ctx.fillStyle = '#fff3f6'; for (let i = 2; i < 12; i += 2) { const x = 40 + i / 12 * (R - 40), y = Math.sin(i * 0.9 - G.time * 14) * 10 * (i / 12); ctx.beginPath(); ctx.arc(x, y + 4, 3.5, 0, TAU); ctx.fill(); }
+      ctx.strokeStyle = tn.strap ? LEATHER_D : '#c85a78'; ctx.lineWidth = 26; ctx.stroke(); ctx.strokeStyle = tn.strap ? LEATHER : BUVARD; ctx.lineWidth = 18; ctx.stroke();
+      if (tn.strap) { ctx.strokeStyle = 'rgba(255,230,200,0.6)'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 5]); ctx.stroke(); ctx.setLineDash([]); }   // une bretelle de cartable, avec ses coutures
+      else { ctx.fillStyle = '#fff3f6'; for (let i = 2; i < 12; i += 2) { const x = 40 + i / 12 * (R - 40), y = Math.sin(i * 0.9 - G.time * 14) * 10 * (i / 12); ctx.beginPath(); ctx.arc(x, y + 4, 3.5, 0, TAU); ctx.fill(); } }
     }
     ctx.restore();
   }

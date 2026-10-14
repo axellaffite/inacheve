@@ -52,13 +52,14 @@ function newGame(demo, start = 1) {
     lines: [], figure: null, figures: 0, nextFigure: FIGURE.first, fills: [], figureSeen: false,
     tents: [], drops: [], tresor: null, tresors: 0, nextTresor: TRESOR.first, chests: [], coins: [], tresorSeen: false, pullX: 0, pullY: 0,
     strokes: [], strokeN: 0, sigs: [], sigSeen: false, enlu: null, enlus: 0, nextEnlu: ENLU.first, glows: [], enluSeen: false,
-    newCroquis: 0, bestToasts: [], trail: [], quotes: [], quoteCd: 1.5, newUnions: 0
+    newCroquis: 0, bestToasts: [], trail: [], quotes: [], quoteCd: 1.5, newUnions: 0,
+    ribbons: [], sceau: null, sceaux: 0, nextSceau: SCEAU.first, stamps: [], sceauSeen: false, jumpSeen: false
   });
   const hp = demo ? 7 : 6;
   G.p = { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, r: 13, hp, maxHp: hp, inv: 1.2, dashCd: 0, dashT: 0, dx: 1, dy: 0, face: 0, fireCd: 0.5, look: 0, puddleT: 0, squash: 0, hidden: 0, gx: 0, gy: 0 };
   G.cam.x = G.p.x; G.cam.y = G.p.y;
   computeStats(); clearStains();
-  if (start > 1) draft([0, 0, 19, 28, 37, 46][start]);
+  if (start > 1) draft([0, 0, 19, 28, 37, 46, 52][start]);
   caption(CH().intro, 4);
   if (start > 1) caption('Au brouillon : tes mots sont tirés au hasard', 4, 'green');
   setUI();
@@ -87,7 +88,8 @@ function turnPage() {
     dicteeIdx: 0, dicteeProg: 0, comboN: 0, newBest: false, captions: [], refrain: null, nextRefrain: REFRAIN.first, songs: [],
     lines: [], figure: null, nextFigure: FIGURE.first, fills: [],
     tents: [], drops: [], tresor: null, nextTresor: TRESOR.first, chests: [], coins: [],
-    strokes: [], strokeN: 0, sigs: [], enlu: null, nextEnlu: ENLU.first, glows: [], trail: [], quotes: []
+    strokes: [], strokeN: 0, sigs: [], enlu: null, nextEnlu: ENLU.first, glows: [], trail: [], quotes: [],
+    ribbons: [], sceau: null, nextSceau: SCEAU.first, stamps: []
   });
   G.dicteeWord = CH().dictees[0];
   const p = G.p; Object.assign(p, { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, hp: p.maxHp, inv: 2.5, dashT: 0, hidden: 0 });
@@ -199,7 +201,7 @@ function killEnemy(e) {
     return;
   }
   const paper = CH().paper;
-  if (paper === 'portee') AU.play('noteKill', staffPitch(e.y)); else if (paper === 'milli') AU.play('mmKill'); else if (paper === 'carte') AU.play('carteKill'); else if (paper === 'calli') AU.play('calliKill'); else AU.play('kill');
+  if (paper === 'portee') AU.play('noteKill', staffPitch(e.y)); else if (paper === 'milli') AU.play('mmKill'); else if (paper === 'carte') AU.play('carteKill'); else if (paper === 'calli') AU.play('calliKill'); else if (paper === 'garde') AU.play('gardeKill'); else AU.play('kill');
   if (e.type === 'tache') { for (let i = 0; i < 2; i++) { const g = spawnEnemy('gouttelette', e.x + rnd(-10, 10), e.y + rnd(-10, 10)); g.vx = rnd(-150, 150); g.vy = rnd(-150, 150); } }
   let v = e.xp;
   const n = v <= 2 ? v : 2 + (v > 4 ? 1 : 0);
@@ -234,7 +236,7 @@ function botInput() {
   let goal = null, gd = 1e9;
   const need = G.dicteeWord[G.dicteeProg];
   for (const it of G.items) { const d = Math.hypot(it.x - p.x, it.y - p.y) - (it.ch === need ? 160 : 0) - (it.rare ? 80 : 0); if (d < gd && d < 520) { gd = d; goal = it; } }
-  const rn = (G.refrain && G.refrain.notes[G.refrain.prog]) || figureTarget() || tresorTarget() || enluTarget();   // refrain, figure, trésor et lettrine passent avant les lettres
+  const rn = (G.refrain && G.refrain.notes[G.refrain.prog]) || figureTarget() || tresorTarget() || enluTarget() || sceauTarget();   // refrain, figure, trésor, lettrine et sceau passent avant les lettres
   const toSong = rn && Math.hypot(rn.x - p.x, rn.y - p.y) < 1600;
   if (toSong) goal = rn;
   if (!goal) goal = { x: WORLD.w / 2 + Math.cos(G.t * 0.21) * 700, y: WORLD.h / 2 + Math.sin(G.t * 0.17) * 420 };
@@ -243,6 +245,7 @@ function botInput() {
   let best = prev, bestS = -1e9, close = false;
   for (const e of near) if (Math.hypot(e.x - p.x, e.y - p.y) - e.r < 30) close = true;
   const ink = G.strokes.length || G.sigs.length ? calliNear(p.x, p.y) : null;   // encre fraîche et signature annoncée
+  const garde = CH().paper === 'garde';   // rubans tendus, ombres des tampons et du Cartable
   for (let i = 0; i < 16; i++) {
     const a = i / 16 * TAU, dx = Math.cos(a), dy = Math.sin(a);
     let sc = 0;
@@ -262,6 +265,7 @@ function botInput() {
       for (const wv of G.waves) { const rr = wv.r * ease(wv.t / wv.dur); if (wv.t < wv.dur && !wv.hit) sc -= w * 900 / Math.pow(Math.max(6, Math.abs(Math.hypot(wv.x - x, wv.y - y) - rr)), 1.4); }
       if (G.tents.length || G.drops.length) sc -= w * carteDanger(x, y);
       if (ink) sc -= w * calliDanger(x, y, ink);
+      if (garde) sc -= w * gardeDanger(x, y);
       const wm = Math.min(x, y, WORLD.w - x, WORLD.h - y);
       if (wm < 220) sc -= (220 - wm) * 0.03 * w;
     }
@@ -396,6 +400,8 @@ function stepPlay(dt) {
       stepPieuvre(e, dt, dx, dy, d, slow); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else if (e.type === 'paraphe') {
       stepParaphe(e, dt, dx, dy, d, slow); tx = MV.x; ty = MV.y; agil = MV.agil;
+    } else if (e.type === 'cartable') {
+      stepCartable(e, dt, dx, dy, d, slow); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else if (e.isBoss) {
       if (e.type === 'boss') stepBoss(e, dt, dx, dy, d); else stepFausse(e, dt, dx, dy, d);
       tx = e.phase === 'charge' ? e.cx * 520 : (e.phase === 'aim' ? 0 : dx / d * e.speed * slow);
@@ -410,6 +416,8 @@ function stepPlay(dt) {
       stepCarte(e, dt, dx, dy, d, slow, hid); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else if (CALLI_TYPES.has(e.type)) {
       stepCalli(e, dt, dx, dy, d, slow, hid); tx = MV.x; ty = MV.y; agil = MV.agil;
+    } else if (GARDE_TYPES.has(e.type)) {
+      stepGarde(e, dt, dx, dy, d, slow, hid); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else e.rot += e.spin * dt;
     const k = 1 - Math.exp(-dt * agil);
     e.vx = lerp(e.vx, tx, k); e.vy = lerp(e.vy, ty, k);
@@ -462,7 +470,8 @@ function stepPlay(dt) {
   G.waves = G.waves.filter(wv => wv.t < wv.dur + 0.25);
   stepLines(dt);   // angles droits des équerres
   stepCarteFx(dt);   // tentacules et pluie de pâtés
-  stepCalliFx(dt);   // l'encre fraîche des plumes
+  stepCalliFx(dt);   // l'encre fraîche des plumes (et des peignes)
+  stepGardeFx(dt);   // les rubans des signets
   stepUnions(dt);   // CALLIGRAPHIE, CITATION, LUNE ROUSSE
   // ---- lunes en orbite
   if (S.moons) {
@@ -527,6 +536,7 @@ function stepPlay(dt) {
   stepFigure(dt);
   stepTresor(dt);
   stepEnlu(dt);
+  stepSceau(dt);
   for (const c of G.coins) c.t += dt;
   G.coins = G.coins.filter(c => c.t < c.dur);
   for (const sg of G.songs) sg.t += dt;
@@ -640,6 +650,7 @@ function phrase(win) {
   const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
   if (!ws.length) return 'Une page presque blanche.';
   if (ws.length === 1) return win ? cap(ws[0]) + ' tint bon, jusqu’au point final.' : 'Il ne restait que ' + ws[0] + '.';
+  if (win && G.chapter === 6) return pick(['Grâce à ' + ws[0] + ', le Cartable rendit toutes ses affaires.', cap(ws[0]) + ' et ' + ws[1] + ' scellèrent la dernière page du cahier.']);
   if (win && G.chapter === 5) return pick(['Grâce à ' + ws[0] + ', le Grand Paraphe posa enfin sa plume.', cap(ws[0]) + ' et ' + ws[1] + ' signèrent la page, en pleins et en déliés.']);
   if (win && G.chapter === 4) return pick(['Grâce à ' + ws[0] + ', la Pieuvre-Buvard rendit toute son encre.', cap(ws[0]) + ' et ' + ws[1] + ' trouvèrent le trésor, juste sous le X.']);
   if (win && G.chapter === 3) return pick(['Grâce à ' + ws[0] + ', la Règle de fer plia enfin.', cap(ws[0]) + ' et ' + ws[1] + ' tracèrent le dernier trait, bien droit.']);

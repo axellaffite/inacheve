@@ -31,7 +31,7 @@ function drawPage(v) {
   ctx.restore();
   ctx.fillStyle = paperPattern; ctx.fillRect(Math.max(0, v.x0), Math.max(0, v.y0), Math.min(WORLD.w, v.x1) - Math.max(0, v.x0), Math.min(WORLD.h, v.y1) - Math.max(0, v.y0));
   const paper = CH().paper;
-  if (paper === 'portee') drawPortee(v); else if (paper === 'milli') drawMilli(v); else if (paper === 'carte') drawCarte(v); else if (paper === 'calli') drawCalli(v); else drawSeyes(v);
+  if (paper === 'portee') drawPortee(v); else if (paper === 'milli') drawMilli(v); else if (paper === 'carte') drawCarte(v); else if (paper === 'calli') drawCalli(v); else if (paper === 'garde') drawGarde(v); else drawSeyes(v);
   // bord crayonné
   ctx.save(); ctx.strokeStyle = C.pencil; ctx.globalAlpha = 0.55; ctx.lineWidth = 1.6; ctx.setLineDash([14, 9]);
   ctx.strokeRect(-6, -6, WORLD.w + 12, WORLD.h + 12); ctx.restore();
@@ -98,6 +98,10 @@ function drawEnemy(e) {
     drawCalliEnemy(e, fr, fl);
   } else if (e.type === 'paraphe') {
     drawParaphe(e, fr, fl);
+  } else if (GARDE_TYPES.has(e.type)) {
+    drawGardeEnemy(e, fr, fl);
+  } else if (e.type === 'cartable') {
+    drawCartable(e, fr, fl);
   } else if (e.type === 'boss') {
     if (e.phase === 'aim') { ctx.save(); ctx.strokeStyle = C.red; ctx.globalAlpha = 0.4; ctx.setLineDash([16, 10]); ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(e.cx * 420, e.cy * 420); ctx.stroke(); ctx.restore(); }
     const pulse = 1 + Math.sin(G.time * 5) * 0.03;
@@ -190,6 +194,7 @@ function drawWorld() {
   if (G.fills) drawFigure();
   if (G.chests) drawTresor(v);
   if (G.glows) drawEnlu(v);
+  if (G.stamps) drawSceau(v);
   if (G.trail) drawTrail();
   // ennemis
   for (const e of G.enemies) if (inView(e.x, e.y, e.r + 300)) drawEnemy(e);
@@ -213,13 +218,14 @@ function drawWorld() {
   if (G.quotes) drawCitations();
   // traits rouges du boss
   ctx.strokeStyle = C.red; ctx.lineWidth = 4;
-  for (const b of G.ebul) { if (b.note || b.deg || b.cork || b.blot || b.ink || b.fleur) continue; const n = Math.hypot(b.vx, b.vy) || 1; ctx.beginPath(); ctx.moveTo(b.x - b.vx / n * 9, b.y - b.vy / n * 9); ctx.lineTo(b.x + b.vx / n * 9, b.y + b.vy / n * 9); ctx.stroke(); }
+  for (const b of G.ebul) { if (b.note || b.deg || b.cork || b.blot || b.ink || b.fleur || b.crayon) continue; const n = Math.hypot(b.vx, b.vy) || 1; ctx.beginPath(); ctx.moveTo(b.x - b.vx / n * 9, b.y - b.vy / n * 9); ctx.lineTo(b.x + b.vx / n * 9, b.y + b.vy / n * 9); ctx.stroke(); }
   drawNoteBullets();
   drawDegBullets();
   if (G.waves) drawWaves();
   if (G.lines) drawLines();
   if (G.tents) drawCarteFx();
   if (G.strokes) drawCalliFx(v);
+  if (G.ribbons) drawGardeFx();
   for (const e of G.enemies) if (e.type === 'soupir' && e.phase === 'fade') {   // là où le soupir va se poser
     ctx.save(); ctx.strokeStyle = C.pencil; ctx.globalAlpha = 0.7; ctx.setLineDash([5, 6]); ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(e.bx, e.by, 14 + 8 * (e.pt / 0.65), 0, TAU); ctx.stroke(); ctx.restore();
@@ -411,11 +417,12 @@ function drawTitle() {
   txt(G.input.touch ? 'Touche l’écran pour commencer' : 'Appuie sur Entrée pour commencer', W / 2, ty + 196 * s, Math.min(38 * s, W / 18), { color: C.ink, alpha: a * (0.6 + 0.4 * Math.sin(G.time * 3)), hl: C.hl });
   if (!G.input.touch) txt('ZQSD, WASD ou flèches : bouger    Espace : pâté d’encre    Échap : pause    B : bestiaire    M : son    C : secousses', W / 2, ty + 252 * s, Math.min(22 * s, W / 40), { color: C.pencil, weight: 400, alpha: a });
   else txt('Glisse pour bouger, bouton « pâté » pour foncer', W / 2, ty + 252 * s, 22 * s, { color: C.pencil, weight: 400, alpha: a });
-  const news = G.unlocked >= 5 ? (G.input.touch ? 'Le chapitre V t’attend (bouton en bas). Et trois mots de plus savent s’unir…' : 'Touche 5 : chapitre V. Nouveau : trois mots de plus savent s’unir…')
-    : G.unlocked >= 4 ? (G.input.touch ? 'Nouveau : derrière la Pieuvre-Buvard, une page de calligraphie…' : 'Touche 4 : chapitre IV. Et derrière la Pieuvre-Buvard, une page de calligraphie…')
-    : G.unlocked >= 3 ? (G.input.touch ? 'Plus loin dans le cahier : une carte, puis une page de calligraphie…' : 'Touche 3 : chapitre III. Plus loin dans le cahier, une page de calligraphie…')
-    : G.unlocked >= 2 ? (G.input.touch ? 'Plus loin dans le cahier : une page de calligraphie, à la plume…' : 'Touche 2 : chapitre II. Plus loin dans le cahier, une page de calligraphie…')
-    : 'Nouveau : trois mots de plus savent s’unir. Au bout du cahier, une page de calligraphie…';
+  const news = G.unlocked >= 6 ? (G.input.touch ? 'Le chapitre VI t’attend (bouton en bas) : la page de garde, en papier marbré.' : 'Touche 6 : chapitre VI, la page de garde. Le cahier se souvient de tout…')
+    : G.unlocked >= 5 ? (G.input.touch ? 'Nouveau : derrière le Grand Paraphe, la page de garde du cahier…' : 'Touche 5 : chapitre V. Et derrière le Grand Paraphe, la page de garde…')
+    : G.unlocked >= 4 ? (G.input.touch ? 'Plus loin dans le cahier : une page de calligraphie, puis la page de garde…' : 'Touche 4 : chapitre IV. Tout au bout du cahier, la page de garde…')
+    : G.unlocked >= 3 ? (G.input.touch ? 'Plus loin dans le cahier : une carte… et, tout au bout, la page de garde.' : 'Touche 3 : chapitre III. Tout au bout du cahier, la page de garde…')
+    : G.unlocked >= 2 ? (G.input.touch ? 'Tout au bout du cahier : une page de garde en papier marbré…' : 'Touche 2 : chapitre II. Tout au bout du cahier, la page de garde…')
+    : 'Nouveau : six pages à écrire, jusqu’à la page de garde, en papier marbré…';
   txt(news, W / 2, ty + (G.best ? 322 : 290) * s, Math.min(22 * s, W / 30), { color: C.ink, weight: 400, alpha: a * 0.85 });
   const bn = bestCount(), un = unionCount(), keyB = G.input.touch ? '' : ' (touche B)';
   const bnews = !(bn || un) ? 'Nouveau : le carnet des unions, au bout du bestiaire' + keyB
@@ -433,6 +440,7 @@ function endTally() {
   if (G.figures) parts.push(['figures', G.figures]);
   if (G.tresors) parts.push(['trésors', G.tresors]);
   if (G.enlus) parts.push(['lettrines', G.enlus]);
+  if (G.sceaux) parts.push(['ex-libris', G.sceaux]);
   return parts.length > 1 ? [parts.map(q => q[0]).join(' · '), parts.map(q => q[1]).join(' · ')] : ['dictées réussies', G.dictees];
 }
 function drawEnd() {
@@ -472,6 +480,7 @@ function render() {
     drawFigureArrow();
     drawTresorArrow();
     drawEnluArrow();
+    drawSceauArrow();
     if (G.state === 'play') drawBestToast();
     if (G.state === 'levelup') drawLevelUp();
     else if (G.state === 'pause') { dimPage(0.7); txt('Pause', W / 2, H / 2 - 40 * U, 80 * U, { font: FONT_CURSIVE, weight: 400 }); txt(G.input.touch ? 'Touche pour reprendre' : 'Échap ou Entrée pour reprendre', W / 2, H / 2 + 40 * U, 30 * U, { hl: C.hl }); if (!G.input.touch) txt('B : ouvrir le bestiaire', W / 2, H / 2 + 92 * U, 22 * U, { color: C.pencil, weight: 400 }); }

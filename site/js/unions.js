@@ -50,6 +50,13 @@ function drawTrail() {
 /* ----- CITATION : une phrase entre guillemets qui transperce tout ----- */
 const CITATIONS = ['il était une fois', 'à suivre…', 'point à la ligne', 'la plume est légère', 'fin du chapitre', 'encore une page',
   'l’encre ne ment pas', 'on recommence', 'ceci n’est pas une rature', 'et la page fut blanche', 'tout s’efface, sauf ceci', 'lu et approuvé'];
+// et quelques-unes propres à chaque page du cahier
+const CITATIONS_CH = [null, null,
+  ['do, ré, mi', 'da capo', 'un soupir, deux temps', 'la note juste', 'en mesure !'],
+  ['CQFD', 'à main levée', 'au millimètre près', 'mesure deux fois, trace une fois', 'la ligne droite'],
+  ['X marque l’endroit', 'terre en vue !', 'cap au nord', 'ohé, du bateau !', 'à l’abordage'],
+  ['pleins et déliés', 'une belle main', 'à la plume', 'lu et signé', 'sans un pâté'],
+  ['ex-libris', 'prête-moi ta plume', 'pour écrire un mot', 'fin… ou presque', 'à suivre, page suivante']];
 const QUOTE = { cd: 4, speed: 480, life: 1.9, size: 34, thick: 18, write: 0.3 };
 function stepCitations(dt) {
   if (lvl('CITATION')) {
@@ -59,7 +66,7 @@ function stepCitations(dt) {
       for (let i = 0; i < 7; i++) { const e = pick(G.enemies); if (e.dead || e.ghost || Math.hypot(e.x - p.x, e.y - p.y) > 620) continue; const n = query(e.x, e.y, 120, tmpA).length + (e.isBoss ? 6 : 0); if (n > bn) { bn = n; best = e; } }
       if (best) {
         G.quoteCd = QUOTE.cd;
-        const a = Math.atan2(best.y - p.y, best.x - p.x), text = '« ' + pick(CITATIONS) + ' »';
+        const a = Math.atan2(best.y - p.y, best.x - p.x), text = '« ' + pick((CITATIONS_CH[G.chapter] || []).concat(CITATIONS)) + ' »';
         G.quotes.push({ x: p.x + Math.cos(a) * 30, y: p.y + Math.sin(a) * 30, a, vx: Math.cos(a) * QUOTE.speed, vy: Math.sin(a) * QUOTE.speed, text, half: text.length * QUOTE.size * 0.21, t: 0, hit: new Set() });
         AU.play('citation');
       } else G.quoteCd = 0.3;

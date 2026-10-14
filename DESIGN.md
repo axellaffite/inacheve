@@ -177,12 +177,44 @@ Tout est dans `unions.js` (chargé après `bestiaire.js`), qui ajoute trois mots
 - **Brouillon** : un mot composé n'y compte plus que pour un demi-mot (`draft`), sinon les huit unions mangeaient les niveaux des mots simples.
 - Capture : `__cap.unir(keys)` remplit le carnet d'avance (le carnet part vide et n'est jamais enregistré en capture) ; `__cap.state()` donne `unions` et `quotes`.
 
+## Chapitre VI : la page de garde (itération 10)
+
+Tenu depuis la note de marge « la page de garde ? » du chapitre V. C'est la dernière page du cahier : le chapitre se souvient des cinq autres. Tout est dans `garde.js` (page, ratures de reliure, Cartable) et `exlibris.js` (le sceau), chargés après `enluminure.js` et avant `bestiaire.js`. Les ratures de reliure sont listées dans `GARDE_TYPES` et animées par `stepGarde` (qui écrit dans `MV`).
+
+- **Papier marbré** (`paper: 'garde'`, `drawGarde`) : calculé une seule fois, à un quart de la taille de la page, avec le vrai procédé du marbrage (des gouttes d'encre posées sur un bain qui repoussent les précédentes, deux peignes, quatre tourbillons), pixel par pixel et à rebours (`marbleWork`), puis adouci (`blurPass`) et posé à 25 % sur le papier. Son hasard est à part (`mulberry32(1010)`) : il ne touche pas au déterminisme. Pour éviter un à-coup quand la page tourne, il se calcule six lignes par image dès le chapitre V (boucle de `main.js`) ; sinon, d'un coup au premier dessin.
+- **Décor** : le pli de la reliure à gauche, et l'étiquette du cahier collée de travers (`LABEL`) : « Nom : Inachevé · Classe : la page d'après · Année : toujours ».
+- **Marbrure** (base) : une goutte de couleur à spirale qui tourne en s'approchant.
+- **Signet** (dès 25 s) : garde ses distances, vise, tend son ruban à travers la page (`G.ribbons`, 540 px, 0,85 s en pointillés rouges) puis le fait claquer 0,35 s.
+- **Peigne à marbrer** (dès 50 s, trois au plus) : se met en ligne (quatre pistes en pointillés), puis file droit 1,05 s ; ses quatre dents laissent de l'encre fraîche (`inkStroke` de la calligraphie, 2,1 s) qui brûle comme celle des arabesques.
+- **Tampon** (dès 90 s, trois au plus) : saute (intouchable, `e.ghost`) vers là où tu vas, son point de chute entouré de pointillés rouges, et retombe (`stampLand`) : 1 dégât dessous, une couronne de huit éclats, et la page garde un « VU » rouge.
+- **Le Cartable** (boss à 3:00, 1 300 PV) : un cartable de cuir, deux boucles dorées pour les yeux, une étiquette « CM2 ». Cycle : la trousse (il ouvre son rabat et lance trois volées de sept crayons de couleur, `b.crayon`), les bretelles (deux secteurs balayés, ce sont des `G.tents` avec `strap: true`, dessinés en cuir cousu), le grand saut (1,5 s en l'air, son ombre suit le joueur puis s'arrête ; il retombe : 2 dégâts dessous, « À REFAIRE » sur la page et une onde `G.waves` de 440 px). Sous 50 % : quatre volées, deux bretelles, deux sauts d'affilée, et il se vide sur la page (tampons et marbrures).
+- Dictées : FIN, NOM, GARDE, SIGNET, TAMPON, RELIURE, CARTABLE, MARBRURE, COUVERTURE, BIBLIOTHÈQUE.
+- Musique (`beatAt`, `chap === 6`) : « Au clair de la lune » (air traditionnel, `AU.LUNE`) à la boîte à musique, sur des accords tenus ; le sceau posé rejoue le début de l'air en carillon. Le clin d'œil est voulu : « prête-moi ta plume, pour écrire un mot ».
+- Le pilote évite rubans et ombres (`gardeDanger`).
+
+### L'ex-libris (itération 10)
+
+- 8 s après le début du chapitre VI, un sceau de cire est posé à 320–560 px du joueur, et un cartouche « ex-libris » plus loin (700 px, puis 70 de plus à chaque sceau, 1 300 au plus) : `writeSceau`.
+- On **porte** le sceau : il suit la goutte au bout d'un ruban (`SCEAU.follow`). Être touché le fait **lâcher** : il roule 110–170 px plus loin (`S.lost`). C'est la première mécanique où l'on transporte quelque chose.
+- Sur le cartouche (72 px) : `stampSceau`, une onde de cire (rayon 540) frappe tout ((24 + 4 × sceaux) × ENCRE, 95 sur un boss), efface projectiles, rubans, pâtés qui tombent et encre fraîche ; un cœur, de l'expérience, cinq lettrines ; la page garde le cachet. Le suivant vient 22 s plus tard.
+- Chaque sceau porte l'emblème d'une page (`EMBLEMS`, `drawEmblem`) : plume (I), croche (II), compas (III), ancre (IV), lettrine (V), goutte (VI, « c'est toi »). Au sixième, un sous-titre salue le cahier complet.
+- `sceauTarget()` pour le pilote et la flèche dorée ; l'écran de fin compte les ex-libris ; `__cap.state()` donne `sceaux` et `sceau` (-1 rien, 0 posé au sol, 1 porté).
+
+### Commencer au chapitre VI (itération 10)
+
+- Battre le Grand Paraphe enregistre `inacheve.chapitre` = 6 : touche 6 ou bouton « Commencer au chapitre VI ». Brouillon de 52 mots (presque tous les mots au maximum), niveau 53. `__cap.start(6)` le lance en démo (test de fumée).
+- Le bestiaire a une sixième page (marbrure, signet, peigne à marbrer, tampon, Cartable) ; le carnet des unions devient la page 7.
+
+### Citations de chaque page (itération 10)
+
+- CITATION pioche aussi dans des phrases propres à la page (`CITATIONS_CH`) : « do, ré, mi » sur la portée, « CQFD » sur le papier millimétré, « X marque l'endroit » sur la carte, « pleins et déliés » en calligraphie, « prête-moi ta plume » sur la page de garde.
+
 ## Réglages et mémoire
 
 - `inacheve.best` : meilleur score.
 - `inacheve.muted` : son coupé.
 - `inacheve.calme` : secousses d'écran désactivées (bouton « Secousses » ou touche C).
-- `inacheve.chapitre` : chapitre le plus loin débloqué (2 après la Grande Rature, 3 après la Fausse Note, 4 après la Règle de fer, 5 après la Pieuvre-Buvard).
+- `inacheve.chapitre` : chapitre le plus loin débloqué (2 après la Grande Rature, 3 après la Fausse Note, 4 après la Règle de fer, 5 après la Pieuvre-Buvard, 6 après le Grand Paraphe).
 - `inacheve.bestiaire` : le bestiaire, `{ type: nombre de ratures biffées }` (validé au chargement, enregistré à chaque nouveau croquis, en fin de partie et quand on quitte la page).
 - `inacheve.unions` : le carnet des unions, la liste des mots composés déjà choisis (validée au chargement, enregistrée à chaque nouvelle union).
 
@@ -206,6 +238,8 @@ Itération 8 (chapitre V) : premiers réglages trop généreux en majuscules (7 
 
 Itération 9 (les unions) : au brouillon du chapitre V, avec les huit unions comptées comme des mots entiers, 4 graines sur 12 seulement gagnaient ; comptées pour rien, 12 sur 12 sans jamais descendre sous 2 cœurs. Retenu : un demi-mot chacune, 10 graines sur 12 gagnent, le plus souvent à 1 ou 2 cœurs. Au brouillon du chapitre II, 5 sur 12. Chapitre I en partie normale : 4 graines sur 6 battent la Grande Rature. Montage vidéo (graine 42) : le Grand Paraphe tombe vers 3:24.
 
+Itération 10 (chapitre VI) : au brouillon (52 mots, presque tout au maximum), premiers réglages (`scale` 12, `rateCap` 13,5) : 8 graines sur 8 gagnent sans peine ; à 15 : 7 sur 8. Retenu : `scale` 19, `rateCap` 16 : 8 graines sur 10 gagnent (vers 3:35–4:00, souvent à 2 ou 3 cœurs), 2 meurent vers 1:50–2:10. Le Cartable, d'abord à 1 500 PV, tombait en 35 à 55 s (31 à 48 s dans le montage, trop long pour la vidéo) : ramené à 1 300 PV. Le papier marbré coûte environ 0,5 s de calcul en tout, étalé sur le chapitre V.
+
 Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois pages tournées), le pilote ouvre 6 à 7 trésors et bat la Pieuvre-Buvard sans grande peine. Au brouillon (37 mots au hasard), 4 graines sur 6 gagnent, en descendant à 2 cœurs ; les 2 autres meurent vers 2:50 et 3:10. Premiers réglages beaucoup trop faciles (`scale` 3,6, pieuvre à 2 100 PV, pas de bouteilles avant 100 s) : aucun pilote ne perdait plus de deux cœurs et le combat durait plus d'une minute.
 
 ## Outils
@@ -219,7 +253,7 @@ Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois page
 
 ## Carnet d'idées (libre à toi de piocher, de modifier ou d'ignorer)
 
-- ~~**Portées musicales**~~ : fait à l'itération 3 (chapitre II). ~~**Papier millimétré**~~ : fait à l'itération 5 (chapitre III). ~~**Carte au trésor**~~ : faite à l'itération 6 (chapitre IV), avec le buvard qui boit tout en patron. ~~**Calligraphie**~~ : faite à l'itération 8 (chapitre V). **Chapitre VI** : la page de garde (promesse dans la marge du V : papier marbré, ex-libris, le nom du propriétaire du cahier à écrire ?), ou un cahier de brouillon tout raturé, ou le dos de la couverture avec ses tables de multiplication.
+- ~~**Portées musicales**~~ : fait à l'itération 3 (chapitre II). ~~**Papier millimétré**~~ : fait à l'itération 5 (chapitre III). ~~**Carte au trésor**~~ : faite à l'itération 6 (chapitre IV), avec le buvard qui boit tout en patron. ~~**Calligraphie**~~ : faite à l'itération 8 (chapitre V). ~~**Page de garde**~~ : faite à l'itération 10 (chapitre VI, papier marbré, ex-libris, le Cartable). **La suite : un deuxième cahier** (promesse dans la marge du VI) : le cahier de brouillon tout raturé, le cahier de vacances (jeux, mots croisés, labyrinthes), ou le dos de la couverture avec ses tables de multiplication. Il faudra sans doute une façon de choisir son cahier sur l'écran titre (des cahiers posés sur un bureau ?).
 - **La carte, la suite** : des îles qui comptent vraiment (sable qui ralentit, mer où l'on glisse), un perroquet qui répète la dernière attaque, une boussole à soi (mot BOUSSOLE ?) qui montre le trésor, des trésors piégés (un coffre-mimique), une carte qui se déchire.
 - **La figure, la suite** : des figures imposées (« trace un carré »), des points qui bougent, un compas à soi (mot COMPAS ?) qui trace un cercle protecteur ; des mots de géométrie comme pouvoirs (ANGLE, RAYON).
 - ~~**Commencer au chapitre II**~~ : fait à l'itération 4 (brouillon de 19 mots au hasard), et au chapitre III à l'itération 5. Pour plus tard : un écran titre qui montre les pages débloquées comme les onglets d'un classeur.
@@ -240,4 +274,7 @@ Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois page
 - **La calligraphie, la suite** : une lettrine à dorer avec un motif imposé (rouge puis or), un mot à recopier lettre par lettre en suivant des pointillés (la « copie »), un encrier à soi qui recharge la plume, un mot composé PLUME + ENCRE = « CALLIGRAPHIE » qui laisserait derrière toi un trait qui brûle les ratures.
 - **Lisibilité, chapitre V** : en fin de chapitre, la page est très chargée (lettres au sol, taches, encre) ; on pourrait ramasser automatiquement les lettres très anciennes, ou alléger les taches.
 - ~~**Carnet des unions**~~ : fait à l'itération 9 (dernière page du bestiaire). Pour plus tard : la phrase de fin écrite au bas du carnet, une fiche qui montre l'effet en petit quand on la touche.
-- **Citations, la suite** : des citations qui dépendent du chapitre (« do, ré, mi » sur la portée, « X marque l'endroit » sur la carte), une citation qu'on pourrait lire en entier en pause.
+- ~~**Citations, la suite**~~ : des citations propres à chaque page, faites à l'itération 10. Reste : une citation qu'on pourrait lire en entier en pause.
+- **L'ex-libris, la suite** : écrire soi-même son nom sur l'étiquette du cahier (gardé en local, jamais envoyé) ; un sceau piégé qui fond si on traîne ; une page « collection » des six emblèmes ; des sceaux sur d'autres chapitres (porter une note jusqu'à la portée ?).
+- **Le Cartable, la suite** : qu'il recrache des ratures de tous les chapitres (le bestiaire en entier), une fermeture éclair qui coupe la page en deux.
+- **Musique** : d'autres comptines libres de droits pour d'autres pages (« J'ai du bon tabac » ? non : « Frère Jacques » en canon pour un refrain à deux voix).

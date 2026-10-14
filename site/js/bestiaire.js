@@ -38,11 +38,18 @@ const BESTIAIRE = [null,
     ['arabesque', 'l’arabesque', 'Fait des boucles autour de toi. Son encre fraîche brûle encore.'],
     ['majuscule', 'la majuscule', 'Toujours en tête de phrase. Sa couronne de fleurons s’envole.'],
     ['paraphe', 'le Grand Paraphe', 'Signe la page d’un seul trait. Lis la ligne avant qu’il la trace.']
+  ],
+  [
+    ['marbrure', 'la marbrure', 'Une goutte de couleur qui tourne en rond. Elle finit toujours par arriver.'],
+    ['signet', 'le signet', 'Il garde ta page… et la fait claquer. Ne reste pas dans l’axe du ruban.'],
+    ['peigne', 'le peigne à marbrer', 'Il file tout droit et laisse quatre sillons d’encre fraîche.'],
+    ['tampon', 'le tampon', 'Saute, retombe, et marque « VU » sur tout ce qu’il trouve dessous.'],
+    ['cartable', 'le Cartable', 'Lourd de tout le cahier. Quand son ombre te suit, cours !']
   ]
 ];
 const BEST_TYPES = new Set(BESTIAIRE.slice(1).flat().map(b => b[0]));
 // rayon apparent de chaque croquis, pour qu'il tienne dans sa case
-const BEST_VIS = { paraphe: 175, majuscule: 40, plumeoie: 30, arabesque: 36, delie: 30, boss: 92, fausse: 128, regle: 282, pieuvre: 150, metronome: 54, compas: 42, tourbillon: 34, equerre: 32, rapporteur: 32, bouteille: 34, crabe: 34, mouette: 24, tache: 30, gomme: 32 };
+const BEST_VIS = { cartable: 130, tampon: 38, peigne: 36, signet: 26, marbrure: 22, paraphe: 175, majuscule: 40, plumeoie: 30, arabesque: 36, delie: 30, boss: 92, fausse: 128, regle: 282, pieuvre: 150, metronome: 54, compas: 42, tourbillon: 34, equerre: 32, rapporteur: 32, bouteille: 34, crabe: 34, mouette: 24, tache: 30, gomme: 32 };
 const BEST_TOAST = 3.4;
 
 G.bestiary = {};
@@ -143,6 +150,9 @@ function bestFake(type, i) {
   else if (type === 'delie') e.rot = -0.35 + Math.sin(t * 1.4) * 0.2;
   else if (type === 'arabesque') e.rot = t * 3;
   else if (type === 'plumeoie') e.rot = Math.sin(t * 1.3) * 0.25;
+  else if (type === 'marbrure') e.rot = t * 2.5;
+  else if (type === 'peigne') e.rot = -Math.PI / 2 + Math.sin(t) * 0.2;
+  else if (type === 'cartable') e.open = Math.max(0, Math.sin(t * 0.9));
   return e;
 }
 function drawCroquis(type, i, cx, cy, R) {
