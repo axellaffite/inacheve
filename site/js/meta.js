@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 11, date: '2026-10-14', title: 'Le devoir du jour', chapter: 'VI', chapterName: 'La page de garde' };
+const GAME_META = { iteration: 12, date: '2026-10-16', title: 'Cent lignes', chapter: 'VI', chapterName: 'La page de garde' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -99,6 +99,14 @@ const JOURNAL = [
       "Lance le devoir avec la touche J, ou le bouton « Devoir du jour ». On peut le refaire autant de fois qu’on veut.",
       "Nouveau réglage « Vitesse » (bouton ou touche V) : le jeu peut tourner à 80 % ou 60 %, pour respirer un peu.",
       "Un bouton « Retour au titre » (ou la touche T) apparaît en pause et en fin de partie."
+    ] },
+  { iteration: 12, date: '2026-10-16', title: 'Cent lignes',
+    notes: [
+      "Le premier chapitre a enfin son exploit : des lignes à copier. Une phrase de punition s’écrit en pointillés sur la page.",
+      "Recopie-la de gauche à droite en passant dessus. La plume a son rythme : si tu cours trop vite, elle ne suit plus.",
+      "Attention aux gommes : elles effacent ce que tu as déjà écrit, et il faut le recopier.",
+      "Ligne finie : la réglure balaie la page au-dessus et au-dessous de la phrase, des lettrines dorées tombent, et la phrase reste écrite sur le cahier.",
+      "Nouvelle consigne pour le devoir du jour : « écrire en miroir », où la gauche et la droite sont inversées. Au chapitre I, ce sont les lignes copiées qui font la note."
     ] }
 ];
 window.GAME_META = GAME_META;

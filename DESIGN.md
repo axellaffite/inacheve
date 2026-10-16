@@ -221,6 +221,21 @@ Tout est dans `devoir.js` (chargé après `unions.js`). Un mode de jeu à part, 
 - Un devoir ne débloque pas de chapitre et ne compte pas pour le meilleur score. Entrée ou R le refont ; T ou le bouton « Retour au titre » ramènent au titre (aussi en pause et en fin de partie normale).
 - Capture : `__cap.jour(over)` impose le devoir du jour (pour la fiche du titre), `__cap.devoir(over)` le lance en démo ; `over` peut fixer `chapter`, `consigne`, `pouce` et `seed`. `__cap.state()` donne `devoir` et `note`.
 
+## Les lignes (itération 12)
+
+Le chapitre I avait des dictées, mais pas d'exploit à lui comme les autres pages. Tout est dans `lignes.js` (chargé après `exlibris.js`).
+
+- 8 s après le début du chapitre I, puis 20 s après chaque ligne copiée, une phrase de punition (`PUNITIONS`, de la plus courte à la plus longue, la dernière étant « Je finirai ce que j’ai commencé. ») s'écrit en pointillés au crayon sur une grande ligne Seyès, deux ou trois lignes au-dessus ou au-dessous de la goutte, en commençant un peu à sa gauche (`writeLignes`). Sa longueur : 19 px par signe ; le texte (Playwrite, 40 px) est étiré à cette longueur.
+- On la **recopie** en passant dessus de gauche à droite : il faut être dans une bande de 34 px autour de la ligne d'écriture (`cy`, 16 px au-dessus de la ligne de base) et près de la plume (50 px derrière, 90 devant). La plume ne va pas plus vite que 160 px/s (`LIGNES.pen`, la goutte en fait 235) : qui court trop vite la perd et doit revenir. Chaque mot recopié sonne une note (`ligneMot`).
+- Les **gommes** qui passent sur la partie écrite l'effacent jusqu'à leur bord gauche (« gommé ! »).
+- Ligne finie (`finishLignes`) : la phrase reste imprimée à l'encre sur la couche des taches, avec une coche rouge (`printLigne`) ; elle sèche et se fait gommer comme le reste. La réglure balaie la page : deux lignes bleues s'éloignent de la phrase (`G.sweeps`, 260 px de part et d'autre, 100 px au-delà des bouts) et frappent ((12 + 2 × mots) × ENCRE, 60 sur un patron), effacent les traits rouges ; cinq lettrines dorées tombent. **Pas de cœur** : une punition ne soigne pas.
+- `lignesTarget()` (juste devant la plume) pour le pilote et la flèche dorée ; l'écran de fin compte les lignes (`endTally`) ; `__cap.state()` donne `lignes` et `ligne` (pourcentage recopié, -1 sinon).
+- Le devoir du jour note maintenant le chapitre I avec les lignes (au lieu d'une étoile par 120 ratures).
+
+### Écrire en miroir (itération 12)
+
+- Nouvelle consigne du devoir (`miroir`, bonus 2) : la gauche et la droite sont inversées (clavier, flèches et joystick tactile, dans `moveInput`). Le pilote n'y est pas soumis. Ajouter une consigne a changé la correspondance entre les dates et les devoirs à partir du 16 octobre 2026.
+
 ## Vitesse du jeu (itération 11)
 
 - Bouton « Vitesse » ou touche V : 100 %, 80 % ou 60 % (`G.speed`, appliqué au pas de temps dans `frame`, jamais en capture). Gardé dans `inacheve.vitesse`.
@@ -260,6 +275,8 @@ Itération 10 (chapitre VI) : au brouillon (52 mots, presque tout au maximum), p
 
 Itération 11 (devoir du jour, pilote) : sur 6 devoirs variés, les premiers réglages donnaient 19 à 20 sur 20 à chaque victoire (trop généreux) et « sans trembler » à trois cœurs faisait mourir le pilote en une minute au chapitre VI. Retenu : la note actuelle (victoires entre 15,5 et 19, défaites plafonnées à 9,5) et quatre cœurs. Comme pour les brouillons de chapitre, le pilote perd environ un devoir sur deux. Montage vidéo (devoir C, chapitre III, mots donnés) : la Règle de fer tombe entre 147 et 185 s ; il a fallu un brouillon bien garni pour que le combat tienne dans la vidéo.
 
+Itération 12 (les lignes, chapitre I en partie normale, pilote) : sans les lignes, 5 graines sur 8 battent la Grande Rature (morts vers 2:05–2:40) ; avec, 16 sur 16, même sans cœur et avec une réglure affaiblie (440 → 260 px, 22 + 3 × mots → 12 + 2 × mots). C'est surtout le pilote qui change : la ligne le fait circuler au lieu de foncer sur les lettres au milieu des attroupements. Pour un humain, la ligne est plutôt un risque de plus (une course en ligne droite, prévisible). À surveiller : si le chapitre I paraît trop facile, monter `rateCap` plutôt que d'affaiblir la ligne.
+
 Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois pages tournées), le pilote ouvre 6 à 7 trésors et bat la Pieuvre-Buvard sans grande peine. Au brouillon (37 mots au hasard), 4 graines sur 6 gagnent, en descendant à 2 cœurs ; les 2 autres meurent vers 2:50 et 3:10. Premiers réglages beaucoup trop faciles (`scale` 3,6, pieuvre à 2 100 PV, pas de bouteilles avant 100 s) : aucun pilote ne perdait plus de deux cœurs et le combat durait plus d'une minute.
 
 ## Outils
@@ -277,11 +294,12 @@ Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois page
 - **La carte, la suite** : des îles qui comptent vraiment (sable qui ralentit, mer où l'on glisse), un perroquet qui répète la dernière attaque, une boussole à soi (mot BOUSSOLE ?) qui montre le trésor, des trésors piégés (un coffre-mimique), une carte qui se déchire.
 - **La figure, la suite** : des figures imposées (« trace un carré »), des points qui bougent, un compas à soi (mot COMPAS ?) qui trace un cercle protecteur ; des mots de géométrie comme pouvoirs (ANGLE, RAYON).
 - ~~**Commencer au chapitre II**~~ : fait à l'itération 4 (brouillon de 19 mots au hasard), et au chapitre III à l'itération 5. Pour plus tard : un écran titre qui montre les pages débloquées comme les onglets d'un classeur.
-- ~~**Refrain**~~ : fait à l'itération 4 (notes à toucher dans l'ordre). Pour plus tard : un refrain « en canon » que deux mélodies se partagent ; un refrain caché que seul l'écho d'une ligne traversée révèle ; une version du chapitre I (une phrase à recopier mot à mot, la « copie »).
+- ~~**Refrain**~~ : fait à l'itération 4 (notes à toucher dans l'ordre). Pour plus tard : un refrain « en canon » que deux mélodies se partagent ; un refrain caché que seul l'écho d'une ligne traversée révèle ; ~~une version du chapitre I (une phrase à recopier mot à mot, la « copie »)~~ : faite à l'itération 12 (les lignes).
 - **Les paroles** (TODO dans la marge, et nouvelle promesse « les paroles ? » à côté du refrain) : des syllabes sous les notes du refrain, qui forment un mot ; les dictées du chapitre II écrites sous la portée, comme des paroles de chanson.
+- **Les lignes, la suite** : des lignes en deux couleurs (un mot au stylo rouge à repasser), une ligne qui se recopie en miroir, une rature « pâté » qui fait des taches sur la ligne en cours, la phrase de fin écrite comme une ligne au bas de la page, des lignes à copier aussi sur les autres pages (une portée à recopier note à note ?).
 - **Bons points** : de petites cartes illustrées à collectionner, gagnées par des exploits ; une page « collection » dans le carnet de bord. (Le bestiaire donne déjà un bon point doré par page complète : on pourrait les compter sur l'écran titre.)
 - ~~**Bestiaire**~~ : fait à l'itération 7. Pour plus tard : un croquis qui montre l'attaque de la rature quand on le touche ; des ratures « rares » (une gomme dorée, un gribouillis à l'envers) qui n'ont qu'une case en pointillés ; une page de patrons à part, avec leurs phrases de fin.
-- ~~**Page du jour**~~ : faite à l'itération 11 (le devoir du jour). Pour plus tard : d'autres consignes (« écris en miroir », « dictée à l'envers », « une seule lettre compte »), un devoir du week-end plus long (deux pages d'affilée), un carnet de notes qui garde les sept derniers jours, un code du jour à recopier pour comparer sa note avec un ami (sans aucun serveur).
+- ~~**Page du jour**~~ : faite à l'itération 11 (le devoir du jour), avec la consigne « écrire en miroir » à l'itération 12. Pour plus tard : d'autres consignes (« dictée à l'envers », « une seule lettre compte »), un devoir du week-end plus long (deux pages d'affilée), un carnet de notes qui garde les sept derniers jours, un code du jour à recopier pour comparer sa note avec un ami (sans aucun serveur).
 - ~~**Combinaisons de mots**~~ : fait à l'itération 2 (cinq mots composés), puis trois de plus à l'itération 9 (CITATION, CALLIGRAPHIE, LUNE ROUSSE). Pour plus tard : CLAIR DE LUNE (SOUFFLE + LUNE, les lunes soignent ?), VENT + VIRGULE, un mot composé à trois mots très rare (une « phrase » ?), des unions propres à un chapitre (une union qui n'existe que sur la portée).
 - ~~**Accessibilité : secousses**~~ : fait à l'itération 2 (réglage « Secousses »). ~~Vitesse du jeu~~ : faite à l'itération 11. Restent : contraste renforcé, daltonisme.
 - **Nouvelles ratures** : le tipp-ex qui recouvre la page de blanc, la tache de café, le trombone, le taille-crayon qui aspire les lettres, la règle qui balaie la page.

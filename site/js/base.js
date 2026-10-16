@@ -43,7 +43,9 @@ const UNWRITTEN_NOTES = [
   { x: WORLD.w * 0.72, y: WORLD.h + 150, t: 'zone non écrite', r: -0.03 },
   { x: WORLD.w + 160, y: WORLD.h * 0.8, t: '(TODO)', r: 0.1 },
   { x: -170, y: WORLD.h * 0.18, t: '???', r: 0.05 },
-  { x: WORLD.w * 0.62, y: -96, t: 'ajouté : les mots se tiennent la main (c’est fait)', r: 0.025 }
+  { x: WORLD.w * 0.62, y: -96, t: 'ajouté : les mots se tiennent la main (c’est fait)', r: 0.025 },
+  { x: -185, y: WORLD.h * 0.86, t: 'cent lignes ?', r: -0.06 },
+  { x: -175, y: WORLD.h * 0.86 + 44, t: '(une suffira)', r: -0.04 }
 ];
 
 /* ===================== Mots (améliorations) ===================== */
@@ -258,6 +260,14 @@ const AU = {
       case 'lift': this.tone(160, 0.9, { vol: 0.08, slide: 2.2 }); break;
       case 'slam': this.tone(58, 0.55, { vol: 0.4, slide: 0.5 }); this.noise(0.35, { f: 2500, q: 0.6, vol: 0.24, sweep: 0.3 }); this.tone(1567.98, 0.9, { vol: 0.035 }); this.tone(2349.3, 0.7, { vol: 0.02 }); break;
       case 'boss3': this.tone(49, 2.4, { type: 'sawtooth', vol: 0.1, attack: 0.6 }); this.tone(73.42, 2.4, { type: 'sawtooth', vol: 0.07, attack: 0.8 }); this.tone(1046.5, 1.8, { vol: 0.03, attack: 0.3 }); break;
+      case 'lignesNew': [392, 493.88, 587.33].forEach((f, i) => this.tone(f * 2, 0.3, { type: 'triangle', vol: 0.07, when: i * 0.09 })); this.noise(0.4, { f: 3600, q: 3, vol: 0.05, sweep: 0.7, when: 0.25 }); break;
+      case 'ligneMot': { const F = [587.33, 659.25, 739.99, 783.99, 880, 987.77, 1108.73, 1174.66]; this.tone(F[k % 8], 0.35, { type: 'triangle', vol: 0.12 }); break; }
+      case 'lignes': {   // la phrase rejouée mot à mot, puis la cloche de la récré
+        const F = [587.33, 659.25, 739.99, 783.99, 880, 987.77, 1108.73, 1174.66];
+        for (let i = 0; i < k; i++) this.tone(F[i % 8], 0.3, { type: 'triangle', vol: 0.12, when: i * 0.06 });
+        [1174.66, 1479.98, 1760].forEach((f, i) => this.tone(f, 1.3, { vol: 0.07, when: k * 0.06 + i * 0.02 }));
+        this.noise(0.6, { f: 2400, q: 0.6, vol: 0.07, sweep: 3, when: k * 0.06 }); break;
+      }
       case 'figureNew': [523.25, 659.25, 783.99].forEach((f, i) => this.tone(f * 2, 0.3, { vol: 0.07, when: i * 0.08 })); break;
       case 'figurePt': { const F = [523.25, 659.25, 783.99, 1046.5, 1318.5, 1567.98]; this.tone(F[k % 6], 0.55, { type: 'triangle', vol: 0.17 }); this.tone(F[k % 6] * 2, 0.35, { vol: 0.05 }); break; }
       case 'figureLost': this.noise(0.4, { f: 1400, q: 0.8, vol: 0.12, sweep: 0.5 }); this.tone(311.13, 0.5, { type: 'triangle', vol: 0.08, slide: 0.85 }); break;

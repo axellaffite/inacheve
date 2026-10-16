@@ -179,6 +179,7 @@ function drawWorld() {
   }
   // points en chute (ombre)
   for (const pt of G.points) if (!pt.done && pt.t > 0) { const k = pt.t / pt.fall; ctx.fillStyle = 'rgba(18,39,95,' + (0.1 + 0.25 * k) + ')'; ctx.beginPath(); ctx.ellipse(pt.x, pt.y, pt.r * (0.3 + 0.7 * k), pt.r * (0.3 + 0.7 * k) * 0.8, 0, 0, TAU); ctx.fill(); }
+  if (G.sweeps) drawLignes();
   // lettres
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for (const it of G.items) {
@@ -438,6 +439,7 @@ function drawTitle() {
 // « dictées · refrains · figures », selon ce que la partie a connu
 function endTally() {
   const parts = [['dictées', G.dictees]];
+  if (G.lignes) parts.push(['lignes', G.lignes]);
   if (G.refrains) parts.push(['refrains', G.refrains]);
   if (G.figures) parts.push(['figures', G.figures]);
   if (G.tresors) parts.push(['trésors', G.tresors]);
@@ -488,6 +490,7 @@ function render() {
     drawTresorArrow();
     drawEnluArrow();
     drawSceauArrow();
+    drawLignesArrow();
     if (G.state === 'play') drawBestToast();
     if (G.state === 'levelup') drawLevelUp();
     else if (G.state === 'pause') { dimPage(0.7); txt('Pause', W / 2, H / 2 - 40 * U, 80 * U, { font: FONT_CURSIVE, weight: 400 }); txt(G.input.touch ? 'Touche pour reprendre' : 'Échap ou Entrée pour reprendre', W / 2, H / 2 + 40 * U, 30 * U, { hl: C.hl }); if (!G.input.touch) txt('B : ouvrir le bestiaire', W / 2, H / 2 + 92 * U, 22 * U, { color: C.pencil, weight: 400 }); }

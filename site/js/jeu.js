@@ -54,7 +54,8 @@ function newGame(demo, start = 1, devoir = null) {
     tents: [], drops: [], tresor: null, tresors: 0, nextTresor: TRESOR.first, chests: [], coins: [], tresorSeen: false, pullX: 0, pullY: 0,
     strokes: [], strokeN: 0, sigs: [], sigSeen: false, enlu: null, enlus: 0, nextEnlu: ENLU.first, glows: [], enluSeen: false,
     newCroquis: 0, bestToasts: [], trail: [], quotes: [], quoteCd: 1.5, newUnions: 0,
-    ribbons: [], sceau: null, sceaux: 0, nextSceau: SCEAU.first, stamps: [], sceauSeen: false, jumpSeen: false
+    ribbons: [], sceau: null, sceaux: 0, nextSceau: SCEAU.first, stamps: [], sceauSeen: false, jumpSeen: false,
+    ligne: null, lignes: 0, nextLigne: LIGNES.first, sweeps: [], ligneSeen: false
   });
   const hp = demo ? 7 : 6;
   G.p = { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, r: 13, hp, maxHp: hp, inv: 1.2, dashCd: 0, dashT: 0, dx: 1, dy: 0, face: 0, fireCd: 0.5, look: 0, puddleT: 0, squash: 0, hidden: 0, gx: 0, gy: 0 };
@@ -93,7 +94,7 @@ function turnPage() {
     lines: [], figure: null, nextFigure: FIGURE.first, fills: [],
     tents: [], drops: [], tresor: null, nextTresor: TRESOR.first, chests: [], coins: [],
     strokes: [], strokeN: 0, sigs: [], enlu: null, nextEnlu: ENLU.first, glows: [], trail: [], quotes: [],
-    ribbons: [], sceau: null, nextSceau: SCEAU.first, stamps: []
+    ribbons: [], sceau: null, nextSceau: SCEAU.first, stamps: [], ligne: null, nextLigne: LIGNES.first, sweeps: []
   });
   G.dicteeWord = CH().dictees[0];
   const p = G.p; Object.assign(p, { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, hp: p.maxHp, inv: 2.5, dashT: 0, hidden: 0 });
@@ -230,6 +231,7 @@ function moveInput() {
   if (keys.KeyW || keys.ArrowUp) y -= 1; if (keys.KeyS || keys.ArrowDown) y += 1;
   const j = G.input.joy;
   if (j && j.active) { const dx = j.x - j.ox, dy = j.y - j.oy, d = Math.hypot(dx, dy); if (d > 6) { const m = Math.min(1, d / (55 * U)); x = dx / d * m; y = dy / d * m; } }
+  if (devoirHas('miroir')) x = -x;   // consigne du devoir : écrire en miroir
   const d = Math.hypot(x, y); if (d > 1) { x /= d; y /= d; }
   return { x, y, dash: !!G.input.dashQueued };
 }
@@ -241,7 +243,7 @@ function botInput() {
   let goal = null, gd = 1e9;
   const need = G.dicteeWord[G.dicteeProg];
   for (const it of G.items) { const d = Math.hypot(it.x - p.x, it.y - p.y) - (it.ch === need ? 160 : 0) - (it.rare ? 80 : 0); if (d < gd && d < 520) { gd = d; goal = it; } }
-  const rn = (G.refrain && G.refrain.notes[G.refrain.prog]) || figureTarget() || tresorTarget() || enluTarget() || sceauTarget();   // refrain, figure, trésor, lettrine et sceau passent avant les lettres
+  const rn = (G.refrain && G.refrain.notes[G.refrain.prog]) || figureTarget() || tresorTarget() || enluTarget() || sceauTarget() || lignesTarget();   // refrain, figure, trésor, lettrine, sceau et lignes passent avant les lettres
   const toSong = rn && Math.hypot(rn.x - p.x, rn.y - p.y) < 1600;
   if (toSong) goal = rn;
   if (!goal) goal = { x: WORLD.w / 2 + Math.cos(G.t * 0.21) * 700, y: WORLD.h / 2 + Math.sin(G.t * 0.17) * 420 };
@@ -543,6 +545,7 @@ function stepPlay(dt) {
   stepTresor(dt);
   stepEnlu(dt);
   stepSceau(dt);
+  stepLignes(dt);
   for (const c of G.coins) c.t += dt;
   G.coins = G.coins.filter(c => c.t < c.dur);
   for (const sg of G.songs) sg.t += dt;

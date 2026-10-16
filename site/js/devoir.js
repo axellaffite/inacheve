@@ -10,7 +10,8 @@ const CONSIGNES = {
   double:     { label: 'Interligne double', desc: 'deux fois plus de ratures, mais plus fragiles', bonus: 1 },
   fragile:    { label: 'Écrire sans trembler', desc: 'tu commences avec quatre cœurs seulement', bonus: 2 },
   courant:    { label: 'Courant d’air', desc: 'le vent pousse la goutte et les lettres', bonus: 1 },
-  brouillard: { label: 'Brouillard de gomme', desc: 'on n’y voit pas plus loin que le bout de sa plume', bonus: 1.5 }
+  brouillard: { label: 'Brouillard de gomme', desc: 'on n’y voit pas plus loin que le bout de sa plume', bonus: 1.5 },
+  miroir:     { label: 'Écrire en miroir', desc: 'la gauche et la droite sont inversées', bonus: 2 }
 };
 const COUPS_DE_POUCE = {
   pluie:   { label: 'Pluie de lettrines', desc: 'les lettres dorées tombent dix fois plus souvent' },
@@ -92,8 +93,8 @@ function stepDevoir(dt) {
 }
 
 /* ---------- la note ---------- */
-// les petits exploits de la page : refrains, figures, trésors, lettrines, ex-libris (au chapitre I, une étoile par 120 ratures)
-function devoirExploits() { return G.chapter === 1 ? Math.floor(G.kills / 120) : (G.refrains || 0) + (G.figures || 0) + (G.tresors || 0) + (G.enlus || 0) + (G.sceaux || 0); }
+// les petits exploits de la page : lignes, refrains, figures, trésors, lettrines, ex-libris
+function devoirExploits() { return (G.lignes || 0) + (G.refrains || 0) + (G.figures || 0) + (G.tresors || 0) + (G.enlus || 0) + (G.sceaux || 0); }
 function gradeDevoir(win) {
   const d = G.devoir, ex = devoirExploits();
   // gagné : au moins la moyenne (11), puis dictées, exploits, cœurs restants et difficulté de la consigne ; perdu : jamais la moyenne
