@@ -43,33 +43,38 @@ async function load(seed) {
 }
 // Coups de pouce du montage, appliqués à l'identique en simulation et au tournage.
 // Chaque étape : `skip` secondes jouées sans filmer, une action éventuelle dans la page, un sous-titre, puis `play` secondes filmées.
-// Montage (itération 12, « cent lignes ») : le chapitre I a enfin son exploit. Une phrase de punition s'écrit en pointillés ;
-// la goutte la recopie de gauche à droite, au rythme de la plume, puis la réglure balaie la page. On file ensuite jusqu'à la
-// Grande Rature (avec quelques mots donnés), on la bat entre deux lignes, et l'écran de fin compte les lignes copiées.
-const DEVOIR_M = { chapter: 1, consigne: 'miroir', pouce: 'pluie' };
+// Montage (itération 13, « le cahier de brouillon ») : on finit la page de garde, on tourne la page… et un deuxième cahier
+// s'ouvre. Une partie de morpion s'y dessine ; la goutte pose ses O pendant que les X répondent au stylo rouge. Puis les
+// ratures de brouillon (café, taille-crayon, blanco) et le Stylo Rouge, qui entoure les fautes et referme son zéro.
 const STEPS = [
-  { cap: ['Chapitre I : une punition s’écrit en pointillés…'], act: () => window.__cap.start(1), play: 9 },
-  { play: 8 },
-  { skip: 12, cap: ['Ligne copiée : la réglure balaie la page'], act: () => { window.__cap.grant({ ENCRE: 3, VIRGULE: 3, GUILLEMETS: 2, LUNE: 2, POINT: 2 }); window.__cap.level(12); }, play: 19 }
+  { cap: ['Chapitre VI : la page de garde… et après ?'], act: () => window.__cap.start(6), play: 3 },
+  { cap: ['On tourne la page : un deuxième cahier, tout raturé'], act: () => window.__cap.turn(), play: 6 },
+  { cap: ['Une partie de morpion : reste dans une case pour poser ton O'], play: 13, need: r => r.morpions >= 1 },
+  { skip: 50, cap: ['Café renversé, taille-crayon, blanco qui déroule son ruban…'], play: 8 }
 ];
-const BOSS_AT = 180, BOSS_FILM = 30;   // la Grande Rature arrive à 3:00 ; secondes de combat filmées au plus
+const BOSS_AT = 180, BOSS_FILM = 42;   // le Stylo Rouge arrive à 3:00 ; secondes de combat filmées au plus
 const argOf = (st, s) => st.arg ? st.arg(s) : undefined;
 // Joue tout le montage en accéléré (sans filmer) pour savoir comment se termine la partie avec la graine s
 async function simulate(s) {
   await load(s);
-  for (const st of STEPS) { await page.evaluate(n => window.__cap.skip(n), st.skip || 0); if (st.act) await page.evaluate(st.act, argOf(st, s)); await page.evaluate(n => window.__cap.skip(n), st.play); }
-  return page.evaluate(() => { for (let i = 0; i < 320; i++) { window.__cap.skip(1); const r = window.__cap.state(); if (r.state === 'victory' || r.state === 'gameover') return r; } return window.__cap.state(); });
+  let ok = true;
+  for (const st of STEPS) {
+    await page.evaluate(n => window.__cap.skip(n), st.skip || 0); if (st.act) await page.evaluate(st.act, argOf(st, s)); await page.evaluate(n => window.__cap.skip(n), st.play);
+    if (st.need && !st.need(await page.evaluate(() => window.__cap.state()))) ok = false;
+  }
+  const r = await page.evaluate(() => { for (let i = 0; i < 320; i++) { window.__cap.skip(1); const r = window.__cap.state(); if (r.state === 'victory' || r.state === 'gameover') return r; } return window.__cap.state(); });
+  return { ...r, ok };
 }
-// une bonne graine : la Grande Rature tombe pendant qu'on filme encore, après quelques lignes
-const good = r => r.state === 'victory' && r.chapter === 1 && r.t <= BOSS_AT - 4 + BOSS_FILM && r.lignes >= 4;
+// une bonne graine : un morpion gagné pendant qu'on filme, puis le Stylo Rouge tombe avant la fin du tournage
+const good = r => r.ok && r.state === 'victory' && r.chapter === 7 && r.t <= BOSS_AT - 4 + BOSS_FILM;
 let SEED = SEED_ARG ? parseInt(SEED_ARG, 10) : null;
 if (SEED === null && !SMOKE) {
-  // on cherche une graine pour laquelle le devoir C va jusqu'à la victoire, pour montrer la note
+  // on cherche une graine où le morpion se gagne à l'écran et où le Stylo Rouge tombe pendant le tournage
   let best = null;
   for (const s of [42, 7, 5, 99, 3, 11, 23, 64, 1, 8, 13, 21]) {
     const r = await simulate(s);
-    console.log(`graine ${s} : ${r.state} à ${r.t.toFixed(0)} s (niveau ${r.level}, ${r.hp} cœur(s), ${r.lignes} ligne(s))`);
-    const score = x => (good(x) ? 1e6 : 0) + (x.state === 'victory' ? 5e4 - x.t : x.t);
+    console.log(`graine ${s} : ${r.state} à ${r.t.toFixed(0)} s (niveau ${r.level}, ${r.hp} cœur(s), ${r.morpions} morpion(s)${r.ok ? '' : ', pas de morpion filmé'})`);
+    const score = x => (good(x) ? 1e6 : 0) + (x.ok ? 1e5 : 0) + (x.state === 'victory' ? 5e4 - x.t : x.t);
     if (!best || score(r) > score(best.r)) best = { s, r };
     if (good(r)) break;
   }
@@ -80,8 +85,8 @@ const meta = await page.evaluate(() => window.__cap.meta);
 const fail = msg => { console.error('ÉCHEC : ' + msg); if (errors.length) console.error(errors.join('\n')); process.exitCode = 1; };
 
 if (SMOKE) {
-  await page.evaluate(() => { window.__cap.start(); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(2); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(3); window.__cap.skip(30); window.__cap.frames(3); window.__cap.start(4); window.__cap.skip(30); window.__cap.frames(3); window.__cap.start(5); window.__cap.skip(40); window.__cap.frames(3); window.__cap.grant({ PLUME: 2, ENCRE: 2, GUILLEMETS: 2, ITALIQUE: 2, LUNE: 2, FEU: 2, CALLIGRAPHIE: 1, CITATION: 1, LUNE_ROUSSE: 1 }); window.__cap.skip(15); window.__cap.frames(3); window.__cap.start(6); window.__cap.skip(100); window.__cap.frames(3); window.__cap.skip(90); window.__cap.frames(3); window.__cap.bestiaire(6); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(3); window.__cap.refermer();
-    for (const [chapter, consigne, pouce] of [[1, 'miroir', 'pluie'], [1, 'sansPate', 'propre'], [4, 'courant', 'pluie'], [2, 'brouillard', 'souffle'], [6, 'double', 'aimant'], [3, 'presse', 'souffle'], [5, 'fragile', 'propre']]) {
+  await page.evaluate(() => { window.__cap.start(); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(2); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(3); window.__cap.skip(30); window.__cap.frames(3); window.__cap.start(4); window.__cap.skip(30); window.__cap.frames(3); window.__cap.start(5); window.__cap.skip(40); window.__cap.frames(3); window.__cap.grant({ PLUME: 2, ENCRE: 2, GUILLEMETS: 2, ITALIQUE: 2, LUNE: 2, FEU: 2, CALLIGRAPHIE: 1, CITATION: 1, LUNE_ROUSSE: 1 }); window.__cap.skip(15); window.__cap.frames(3); window.__cap.start(6); window.__cap.skip(100); window.__cap.frames(3); window.__cap.skip(90); window.__cap.frames(3); window.__cap.start(7); window.__cap.skip(100); window.__cap.frames(3); window.__cap.skip(100); window.__cap.frames(3); window.__cap.bestiaire(7); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(3); window.__cap.refermer();
+    for (const [chapter, consigne, pouce] of [[1, 'miroir', 'pluie'], [1, 'sansPate', 'propre'], [4, 'courant', 'pluie'], [2, 'brouillard', 'souffle'], [6, 'double', 'aimant'], [3, 'presse', 'souffle'], [5, 'fragile', 'propre'], [7, 'courant', 'aimant']]) {
       window.__cap.devoir({ chapter, consigne, pouce, seed: chapter }); window.__cap.skip(25); window.__cap.frames(2);
     }
     window.__cap.jour(null); window.__cap.devoir(); for (let i = 0; i < 300 && !['victory', 'gameover'].includes(window.__cap.state().state); i++) window.__cap.skip(1);
@@ -129,17 +134,16 @@ while (st.state !== 'gameover' && st.state !== 'victory' && st.t < BOSS_AT - 4) 
   st = await state();
 }
 if (st.state !== 'gameover' && st.state !== 'victory') {
-  await cap('… trois minutes plus tard, la Grande Rature …', 2.6);
+  await cap('… trois minutes plus tard, le Stylo Rouge débouche son capuchon …', 2.6);
   for (let i = 0; i < BOSS_FILM && st.state !== 'victory' && st.state !== 'gameover'; i++) { await grab(1); st = await state(); }
 }
-// l'écran de fin compte les lignes copiées
+// l'écran de fin compte les morpions gagnés
 if (st.state === 'victory' || st.state === 'gameover') await grab(6.5);
 else await grab(1);
-// retour à l'écran titre : une nouvelle consigne pour le devoir du jour
-await page.evaluate(o => window.__cap.jour(o), { ...DEVOIR_M, seed: SEED });
+// retour à l'écran titre
 await page.evaluate(() => window.__cap.title());
-await cap('Nouvelle consigne du devoir : écrire en miroir', 3.6);
-await grab(3.8);
+await cap('Le cahier continue : la suite s’écrit dans douze heures', 3.4);
+await grab(3.6);
 /* ---------------------------------------------------------------------------------------------- */
 
 ff.stdin.end();

@@ -8,6 +8,7 @@ const NOTES_GARDE = [
   { x: WORLD.w * 0.7, y: -96, t: 'ajouté : la page de garde (c’est fait, en papier marbré)', r: 0.025 },
   { x: WORLD.w + 175, y: WORLD.h * 0.3, t: 'ici, plus tard :', r: 0.06 },
   { x: WORLD.w + 190, y: WORLD.h * 0.3 + 46, t: 'un deuxième cahier ?', r: 0.04 },
+  { x: WORLD.w + 200, y: WORLD.h * 0.3 + 96, t: '→ oui : un brouillon !', r: 0.07 },
   { x: -185, y: WORLD.h * 0.45, t: 'au clair', r: -0.07 },
   { x: -175, y: WORLD.h * 0.45 + 44, t: 'de la lune', r: -0.05 },
   { x: WORLD.w * 0.28, y: WORLD.h + 140, t: 'prête-moi ta plume…', r: 0.03 },

@@ -335,6 +335,27 @@ const AU = {
         [261.63, 329.63, 392].forEach(f => this.tone(f * 2, 1.4, { vol: 0.07, when: 0.9 }));
         this.noise(0.8, { f: 5000, q: 0.7, vol: 0.05, sweep: 1.5, when: 0.85 }); break;
       }
+      // chapitre VII : le cahier de brouillon
+      case 'brouKill': if (this.throttle('kill', 45)) { this.noise(0.1, { f: 2200, q: 1.2, vol: 0.1, sweep: 0.5 }); this.tone([523.25, 587.33, 659.25, 698.46, 783.99][Math.floor(Math.random() * 5)] * 2, 0.14, { type: 'triangle', vol: 0.08 }); } break;
+      case 'cafe': if (this.throttle('cafe', 140)) { this.tone(180, 0.35, { vol: 0.14, slide: 0.45 }); this.noise(0.35, { f: 500, q: 0.6, vol: 0.12, type: 'lowpass', sweep: 0.5 }); } break;
+      case 'sharpen': if (this.throttle('sharpen', 150)) this.noise(0.6, { f: 2600, q: 5, vol: 0.06, sweep: 1.5 }); break;
+      case 'crunch': if (this.throttle('crunch', 90)) { this.noise(0.06, { f: 3200, q: 2, vol: 0.12 }); this.noise(0.05, { f: 2400, q: 2, vol: 0.1, when: 0.05 }); } break;
+      case 'tape': if (this.throttle('tape', 120)) this.noise(1, { f: 5200, q: 1.5, vol: 0.05, sweep: 0.6 }); break;
+      case 'fauteWarn': if (this.throttle('fauteWarn', 150)) this.noise(0.9, { f: 3400, q: 6, vol: 0.05, sweep: 1.3 }); break;
+      case 'faute': if (this.throttle('faute', 80)) { this.tone(233.08, 0.25, { type: 'square', vol: 0.035, slide: 0.8 }); this.noise(0.08, { f: 2000, q: 2, vol: 0.1 }); } break;
+      case 'barSnap': if (this.throttle('barSnap', 90)) this.noise(0.18, { f: 2800, q: 1.4, vol: 0.16, sweep: 0.35 }); break;
+      case 'zeroWarn': this.tone(523.25, 0.5, { type: 'triangle', vol: 0.06 }); this.tone(261.63, 1.6, { type: 'sawtooth', vol: 0.03, slide: 0.6, when: 0.4 }); break;
+      case 'boss7': this.tone(46.25, 2.6, { type: 'sawtooth', vol: 0.1, attack: 0.6 }); this.tone(69.3, 2.6, { type: 'sawtooth', vol: 0.07, attack: 0.8 }); this.noise(0.4, { f: 1800, q: 1, vol: 0.1, sweep: 3, when: 0.1 }); this.tone(1200, 0.12, { type: 'square', vol: 0.03, when: 0.05 }); break;
+      case 'morpionNew': [523.25, 659.25, 783.99, 659.25].forEach((f, i) => this.tone(f * 2, 0.25, { type: 'triangle', vol: 0.08, when: i * 0.08 })); break;
+      case 'morpionO': this.noise(0.25, { f: 3000, q: 3, vol: 0.07, sweep: 1.4 }); this.tone(783.99, 0.4, { type: 'triangle', vol: 0.14, when: 0.05 }); break;
+      case 'morpionX': this.noise(0.08, { f: 2600, q: 3, vol: 0.08 }); this.noise(0.08, { f: 2200, q: 3, vol: 0.08, when: 0.12 }); this.tone(311.13, 0.3, { type: 'square', vol: 0.03, when: 0.12 }); break;
+      case 'morpionWin': {   // « frère Jacques », le début, en carillon, puis l'accord
+        [523.25, 587.33, 659.25, 523.25].forEach((f, i) => { this.tone(f * 2, 0.4, { type: 'triangle', vol: 0.13, when: i * 0.11 }); this.tone(f, 0.45, { vol: 0.05, when: i * 0.11 + 0.22 }); });
+        [261.63, 329.63, 392].forEach(f => this.tone(f * 2, 1.3, { vol: 0.07, when: 0.5 }));
+        this.noise(0.8, { f: 4000, q: 0.7, vol: 0.06, sweep: 1.8, when: 0.45 }); break;
+      }
+      case 'morpionLose': [392, 349.23, 311.13].forEach((f, i) => this.tone(f, 0.35, { type: 'square', vol: 0.03, when: i * 0.14 })); break;
+      case 'morpionNul': [523.25, 523.25].forEach((f, i) => this.tone(f, 0.3, { type: 'triangle', vol: 0.09, when: i * 0.16 })); break;
       case 'lose': [6, 4, 2, 0].forEach((n, i) => this.tone(PENTA[n], 0.8, { type: 'triangle', vol: 0.15, when: i * 0.18 })); break;
     }
   },
@@ -347,6 +368,11 @@ const AU = {
     }
   },
   BEAT: 0.36,
+  // « frère Jacques » (traditionnel), en canon : huit mesures de quatre temps ; un temps peut porter deux croches
+  JACQUES: [[523.25], [587.33], [659.25], [523.25], [523.25], [587.33], [659.25], [523.25],
+            [659.25], [698.46], [783.99], 0, [659.25], [698.46], [783.99], 0,
+            [783.99, 880], [783.99, 698.46], [659.25], [523.25], [783.99, 880], [783.99, 698.46], [659.25], [523.25],
+            [523.25], [392], [523.25], 0, [523.25], [392], [523.25], 0],
   // la mélodie d'« au clair de la lune » (traditionnelle), un temps par case ; 0 = la note précédente continue
   LUNE: [[523.25, 523.25, 523.25, 587.33, 659.25, 0, 587.33, 0, 523.25, 659.25, 587.33, 587.33, 523.25, 0, 0, 0],
          [587.33, 587.33, 587.33, 587.33, 440, 0, 440, 0, 587.33, 523.25, 493.88, 440, 392, 0, 0, 0]],
@@ -394,6 +420,19 @@ const AU = {
         this.tone(n * 8, beat * 0.5, { vol: 0.012, when, dest: this.mus, attack: 0.002 });
         if (Math.random() < intensity * 0.35) this.tone(n * 3, beat * 0.6, { type: 'triangle', vol: 0.03, when: when + beat / 2, dest: this.mus, attack: 0.003 });
       }
+      if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
+      return;
+    }
+    if (chap === 7) {   // « frère Jacques » en canon : la seconde voix entre deux mesures plus tard, une octave plus bas
+      if (s % 4 === 0) { const r = s % 8 < 4 ? 130.81 : 98; this.tone(r / 2, beat * 3.8, { type: 'sine', vol: 0.18, when, dest: this.mus, attack: 0.05 }); }
+      const voice = (k, oct, vol, type) => {
+        const n = this.JACQUES[((s - k) % 32 + 32) % 32]; if (!n) return;
+        n.forEach((f, j) => this.tone(f * oct, beat * (n.length > 1 ? 0.55 : 0.95), { type, vol, when: when + j * beat / 2, dest: this.mus, attack: 0.003 }));
+      };
+      voice(0, 1, 0.1, 'triangle');
+      if (s >= 8 || intensity > 0.2) voice(8, 0.5, 0.09, 'sine');
+      if (intensity > 0.5) voice(16, 2, 0.03, 'triangle');   // quand ça chauffe, une troisième voix, tout en haut
+      if (s % 2 === 1) this.noise(0.02, { f: 4200, q: 5, vol: 0.02, when });   // un crayon qui tapote
       if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
       return;
     }

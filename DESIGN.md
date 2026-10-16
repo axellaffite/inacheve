@@ -236,6 +236,34 @@ Le chapitre I avait des dictées, mais pas d'exploit à lui comme les autres pag
 
 - Nouvelle consigne du devoir (`miroir`, bonus 2) : la gauche et la droite sont inversées (clavier, flèches et joystick tactile, dans `moveInput`). Le pilote n'y est pas soumis. Ajouter une consigne a changé la correspondance entre les dates et les devoirs à partir du 16 octobre 2026.
 
+## Chapitre VII : le cahier de brouillon (itération 13)
+
+Tenu depuis la note de marge « un deuxième cahier ? » du chapitre VI (qui répond maintenant « → oui : un brouillon ! »). C'est la première page du **deuxième cahier**. Tout est dans `brouillon.js` (page, ratures de brouillon, Stylo Rouge) et `morpion.js` (la partie de morpion), chargés après `lignes.js` et avant `bestiaire.js`. Les ratures de brouillon sont listées dans `BROU_TYPES` et animées par `stepBrouillon` (qui écrit dans `MV`).
+
+- **Papier** (`paper: 'brouillon'`, `drawBrouillon`) : papier recyclé un peu gris, petits carreaux de 32 px, marge rouge, et 46 griffonnages laissés par quelqu'un d'autre (`DOODLES` : soleils, maisons, bonshommes, spirales, vieilles parties de morpion, calculs faux et barrés comme « 3 + 4 = 8 »). Leur hasard est à part (`mulberry32(1212)`).
+- **Trombone** (base) : avance par bonds, comme un ressort.
+- **Tache de café** (dès 25 s) : s'arrête et renverse une flaque (`G.cafes`, 66–82 px, 7 s, 16 au plus) qui ralentit la goutte de 45 % (`cafeSlow`, dans `stepPlayer`). Biffée, elle se renverse encore. La flaque séchée laisse une marque de tasse.
+- **Taille-crayon** (dès 50 s, trois au plus) : garde ses distances, **aspire les lettres** dans un rayon de 230 px et les mange (son compteur doré au-dessus de lui), puis tourne sur lui-même et crache une couronne de huit copeaux (`b.copeau`). Biffé, il rend les lettres mangées (14 au plus).
+- **Blanco** (dès 90 s, trois au plus) : vise 0,7 s (bande en pointillés rouges), puis roule tout droit 1 s en déroulant un ruban blanc (`G.tapes`, 420 points au plus) qui recouvre l'encre et les lettres. Le ruban brûle tant qu'il est humide (1,5 s, bordé de rouge), puis sèche et s'efface.
+- **Le Stylo Rouge** (boss à 3:00, 1 400 PV) : un stylo à bille rouge avec des lunettes de correctrice ; sa pointe écrit en rouge partout où il passe. Cycle : fautes (quatre cercles rouges autour de toi, annoncés 1 s pendant que le stylo les entoure, `G.fautes`), barré (trois traits parallèles de 1 300 px, 125 px d'écart, `G.bars` : il faut se glisser entre eux), zéro pointé (un grand 0 de 300 px se referme sur toi en 2,1 s, sauf par une ouverture marquée de deux traits dorés : `G.zeros`, `inGap`). Sous 50 % : le capuchon saute, six fautes, deux barrés décalés, et il vide sa trousse (trombones et taille-crayon).
+- Dictées : OUPS, ESSAI, CALCUL, CROQUIS, MORPION, TROMBONE, BROUILLON, CORRECTION, GRIBOUILLIS, RECOMMENCER.
+- Musique (`beatAt`, `chap === 7`) : « Frère Jacques » (traditionnel, `AU.JACQUES`) en canon, la seconde voix deux mesures plus tard et une octave plus bas, une troisième tout en haut quand ça chauffe, et un crayon qui tapote.
+- Le pilote évite flaques, ruban humide, fautes, traits et zéro, et se laisse attirer par l'ouverture du zéro (`brouillonDanger`).
+
+### Le morpion (itération 13)
+
+- 8 s après le début du chapitre VII, une grille de trois sur trois (cases de 124 px) se dessine au crayon à 420–720 px du joueur (`writeMorpion`).
+- Les O commencent. **Rester 0,55 s dans une case libre** y dessine ton O (un O pâle se trace pendant l'attente). Les X répondent 0,9 s plus tard au stylo rouge (`chooseX` : ils gagnent quand ils peuvent, ne bloquent qu'une fois sur deux, aiment le centre).
+- Trois O alignés (`winMorpion`) : une onde de O dorés (rayon 560) frappe tout ((22 + 4 × parties, 6 au plus) × ENCRE, 90 sur un patron), efface projectiles, fautes, traits annoncés et ruban blanc ; un cœur, de l'expérience, cinq lettrines ; la grille reste imprimée au crayon. La suivante vient 20 s plus tard.
+- Trois X alignés (`loseMorpion`) : leur trait barre la page sur 1 400 px (annoncé 0,8 s). Match nul : un peu d'expérience, deux lettrines. Dans les deux cas, on rejoue 12 s plus tard.
+- Le pilote joue comme un enfant appliqué (`botCell` : gagner, bloquer, le centre, les coins) et reste dans sa case (`morpionHolding`). `morpionTarget()` pour la flèche dorée ; l'écran de fin compte les morpions ; `__cap.state()` donne `morpions` et `morpion` (cases jouées, -1 sinon).
+
+### Commencer au chapitre VII (itération 13)
+
+- Battre le Cartable enregistre `inacheve.chapitre` = 7 : touche 7 ou bouton « Commencer au chapitre VII ». Brouillon de 52 mots (le maximum, comme au VI), niveau 53. `__cap.start(7)` le lance en démo (test de fumée).
+- Le bestiaire a une septième page (trombone, tache de café, taille-crayon, blanco, Stylo Rouge) ; le carnet des unions devient la page 8.
+- Le devoir du jour peut tomber sur les sept chapitres (`CHAPTERS.length - 1`), et les morpions gagnés comptent comme exploits. Cela a de nouveau changé la correspondance entre les dates et les devoirs à partir du 16 octobre 2026.
+
 ## Vitesse du jeu (itération 11)
 
 - Bouton « Vitesse » ou touche V : 100 %, 80 % ou 60 % (`G.speed`, appliqué au pas de temps dans `frame`, jamais en capture). Gardé dans `inacheve.vitesse`.
@@ -245,7 +273,7 @@ Le chapitre I avait des dictées, mais pas d'exploit à lui comme les autres pag
 - `inacheve.best` : meilleur score.
 - `inacheve.muted` : son coupé.
 - `inacheve.calme` : secousses d'écran désactivées (bouton « Secousses » ou touche C).
-- `inacheve.chapitre` : chapitre le plus loin débloqué (2 après la Grande Rature, 3 après la Fausse Note, 4 après la Règle de fer, 5 après la Pieuvre-Buvard, 6 après le Grand Paraphe).
+- `inacheve.chapitre` : chapitre le plus loin débloqué (2 après la Grande Rature, 3 après la Fausse Note, 4 après la Règle de fer, 5 après la Pieuvre-Buvard, 6 après le Grand Paraphe, 7 après le Cartable).
 - `inacheve.bestiaire` : le bestiaire, `{ type: nombre de ratures biffées }` (validé au chargement, enregistré à chaque nouveau croquis, en fin de partie et quand on quitte la page).
 - `inacheve.devoir` : la meilleure note du devoir du jour, `{ date, best }` (validée au chargement).
 - `inacheve.vitesse` : vitesse du jeu (1, 0,8 ou 0,6).
@@ -277,6 +305,8 @@ Itération 11 (devoir du jour, pilote) : sur 6 devoirs variés, les premiers ré
 
 Itération 12 (les lignes, chapitre I en partie normale, pilote) : sans les lignes, 5 graines sur 8 battent la Grande Rature (morts vers 2:05–2:40) ; avec, 16 sur 16, même sans cœur et avec une réglure affaiblie (440 → 260 px, 22 + 3 × mots → 12 + 2 × mots). C'est surtout le pilote qui change : la ligne le fait circuler au lieu de foncer sur les lettres au milieu des attroupements. Pour un humain, la ligne est plutôt un risque de plus (une course en ligne droite, prévisible). À surveiller : si le chapitre I paraît trop facile, monter `rateCap` plutôt que d'affaiblir la ligne.
 
+Itération 13 (chapitre VII, brouillon de 52 mots, pilote) : le brouillon d'origine (`scale` 21, `rateCap` 16,5) était une promenade, 6 graines sur 6 sans descendre sous 6 cœurs. À 40 et 20, les combats du Stylo Rouge duraient jusqu'à 90 s. Retenu : `scale` 32, `rateCap` 19, trombones un peu plus vifs (128 px/s) : 8 graines sur 8 gagnent entre 3:33 et 3:53, en descendant à 2 à 5 cœurs, comme au chapitre VI (qui donne 4 à 6 aujourd'hui). En vidéo, la fin de chapitre était couverte de taches de café (lentes et solides, elles s'entassent) : leur part est passée de 26 % à 21 % des apparitions ; le Stylo Rouge tombe alors entre 3:46 et 4:15. Le pilote gagne 2 à 5 morpions par partie. Pour un humain, le chapitre reste à surveiller : si le brouillon paraît trop facile, monter `rateCap` (20) ou les PV du Stylo Rouge.
+
 Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois pages tournées), le pilote ouvre 6 à 7 trésors et bat la Pieuvre-Buvard sans grande peine. Au brouillon (37 mots au hasard), 4 graines sur 6 gagnent, en descendant à 2 cœurs ; les 2 autres meurent vers 2:50 et 3:10. Premiers réglages beaucoup trop faciles (`scale` 3,6, pieuvre à 2 100 PV, pas de bouteilles avant 100 s) : aucun pilote ne perdait plus de deux cœurs et le combat durait plus d'une minute.
 
 ## Outils
@@ -290,7 +320,7 @@ Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois page
 
 ## Carnet d'idées (libre à toi de piocher, de modifier ou d'ignorer)
 
-- ~~**Portées musicales**~~ : fait à l'itération 3 (chapitre II). ~~**Papier millimétré**~~ : fait à l'itération 5 (chapitre III). ~~**Carte au trésor**~~ : faite à l'itération 6 (chapitre IV), avec le buvard qui boit tout en patron. ~~**Calligraphie**~~ : faite à l'itération 8 (chapitre V). ~~**Page de garde**~~ : faite à l'itération 10 (chapitre VI, papier marbré, ex-libris, le Cartable). **La suite : un deuxième cahier** (promesse dans la marge du VI) : le cahier de brouillon tout raturé, le cahier de vacances (jeux, mots croisés, labyrinthes), ou le dos de la couverture avec ses tables de multiplication. Il faudra sans doute une façon de choisir son cahier sur l'écran titre (des cahiers posés sur un bureau ?).
+- ~~**Portées musicales**~~ : fait à l'itération 3 (chapitre II). ~~**Papier millimétré**~~ : fait à l'itération 5 (chapitre III). ~~**Carte au trésor**~~ : faite à l'itération 6 (chapitre IV), avec le buvard qui boit tout en patron. ~~**Calligraphie**~~ : faite à l'itération 8 (chapitre V). ~~**Page de garde**~~ : faite à l'itération 10 (chapitre VI, papier marbré, ex-libris, le Cartable). ~~**Un deuxième cahier**~~ : le cahier de brouillon, fait à l'itération 13 (chapitre VII, morpion, Stylo Rouge). **La suite** (promesse dans la marge du VII) : le cahier de vacances (mots croisés, labyrinthes, relier les points), ou le dos de la couverture avec ses tables de multiplication. Il faudra sans doute une façon de choisir son cahier sur l'écran titre (des cahiers posés sur un bureau ?), maintenant que les boutons de chapitre sont sept.
 - **La carte, la suite** : des îles qui comptent vraiment (sable qui ralentit, mer où l'on glisse), un perroquet qui répète la dernière attaque, une boussole à soi (mot BOUSSOLE ?) qui montre le trésor, des trésors piégés (un coffre-mimique), une carte qui se déchire.
 - **La figure, la suite** : des figures imposées (« trace un carré »), des points qui bougent, un compas à soi (mot COMPAS ?) qui trace un cercle protecteur ; des mots de géométrie comme pouvoirs (ANGLE, RAYON).
 - ~~**Commencer au chapitre II**~~ : fait à l'itération 4 (brouillon de 19 mots au hasard), et au chapitre III à l'itération 5. Pour plus tard : un écran titre qui montre les pages débloquées comme les onglets d'un classeur.
@@ -302,8 +332,9 @@ Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois page
 - ~~**Page du jour**~~ : faite à l'itération 11 (le devoir du jour), avec la consigne « écrire en miroir » à l'itération 12. Pour plus tard : d'autres consignes (« dictée à l'envers », « une seule lettre compte »), un devoir du week-end plus long (deux pages d'affilée), un carnet de notes qui garde les sept derniers jours, un code du jour à recopier pour comparer sa note avec un ami (sans aucun serveur).
 - ~~**Combinaisons de mots**~~ : fait à l'itération 2 (cinq mots composés), puis trois de plus à l'itération 9 (CITATION, CALLIGRAPHIE, LUNE ROUSSE). Pour plus tard : CLAIR DE LUNE (SOUFFLE + LUNE, les lunes soignent ?), VENT + VIRGULE, un mot composé à trois mots très rare (une « phrase » ?), des unions propres à un chapitre (une union qui n'existe que sur la portée).
 - ~~**Accessibilité : secousses**~~ : fait à l'itération 2 (réglage « Secousses »). ~~Vitesse du jeu~~ : faite à l'itération 11. Restent : contraste renforcé, daltonisme.
-- **Nouvelles ratures** : le tipp-ex qui recouvre la page de blanc, la tache de café, le trombone, le taille-crayon qui aspire les lettres, la règle qui balaie la page.
-- **Patrons de chapitres** : le Correcteur au stylo rouge, la Photocopieuse qui duplique tout, le Cartable (la Règle de fer est faite).
+- **Nouvelles ratures** : ~~le tipp-ex, la tache de café, le trombone, le taille-crayon~~ (faits à l'itération 13, au brouillon). Restent : la règle qui balaie la page, l'agrafeuse, le compas à pointe sèche qui épingle la goutte.
+- **Patrons de chapitres** : ~~le Correcteur au stylo rouge~~ (le Stylo Rouge, itération 13), ~~le Cartable~~ (itération 10). Reste : la Photocopieuse qui duplique tout (les ratures, et toi ?).
+- **Le morpion, la suite** : une grille de 4 × 4 (« puissance 4 » au brouillon ?), des X qui trichent quand le Stylo Rouge est là, un morpion à jouer contre un ami sur le même clavier, un « morpion ultime » (neuf grilles) pour le cahier de vacances.
 - **Lisibilité** : quand la page est très tachée en fin de chapitre, les taches pourraient sécher plus vite (ou une option « page propre »).
 - **Accessibilité** : options de contraste, daltonisme (les secousses et la vitesse sont faites).
 - **Histoire** : une phrase d'histoire se révèle à chaque chapitre, comme si le cahier racontait quelque chose.
@@ -315,4 +346,4 @@ Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois page
 - ~~**Citations, la suite**~~ : des citations propres à chaque page, faites à l'itération 10. Reste : une citation qu'on pourrait lire en entier en pause.
 - **L'ex-libris, la suite** : écrire soi-même son nom sur l'étiquette du cahier (gardé en local, jamais envoyé) ; un sceau piégé qui fond si on traîne ; une page « collection » des six emblèmes ; des sceaux sur d'autres chapitres (porter une note jusqu'à la portée ?).
 - **Le Cartable, la suite** : qu'il recrache des ratures de tous les chapitres (le bestiaire en entier), une fermeture éclair qui coupe la page en deux.
-- **Musique** : d'autres comptines libres de droits pour d'autres pages (« J'ai du bon tabac » ? non : « Frère Jacques » en canon pour un refrain à deux voix).
+- **Musique** : ~~« Frère Jacques » en canon~~ (fait à l'itération 13, au brouillon). Pour plus tard : d'autres comptines traditionnelles pour d'autres pages (« À la claire fontaine », « Une souris verte »), et un refrain du chapitre II à deux voix sur le même principe.

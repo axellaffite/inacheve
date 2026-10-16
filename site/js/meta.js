@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 12, date: '2026-10-16', title: 'Cent lignes', chapter: 'VI', chapterName: 'La page de garde' };
+const GAME_META = { iteration: 13, date: '2026-10-16', title: 'Le cahier de brouillon', chapter: 'VII', chapterName: 'Le cahier de brouillon' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -107,6 +107,14 @@ const JOURNAL = [
       "Attention aux gommes : elles effacent ce que tu as déjà écrit, et il faut le recopier.",
       "Ligne finie : la réglure balaie la page au-dessus et au-dessous de la phrase, des lettrines dorées tombent, et la phrase reste écrite sur le cahier.",
       "Nouvelle consigne pour le devoir du jour : « écrire en miroir », où la gauche et la droite sont inversées. Au chapitre I, ce sont les lignes copiées qui font la note."
+    ] },
+  { iteration: 13, date: '2026-10-16', title: 'Le cahier de brouillon',
+    notes: [
+      "Le premier cahier est plein : derrière la page de garde s’ouvre un deuxième cahier, le cahier de brouillon, couvert de calculs barrés et de petits dessins.",
+      "Une partie de morpion se dessine sur la page. Reste un instant dans une case pour y poser ton O ; les X répondent au stylo rouge. Trois O alignés, et toute la page tremble !",
+      "Quatre ratures de brouillon : le trombone qui bondit, la tache de café qui renverse des flaques collantes, le taille-crayon qui mange tes lettres et le blanco qui déroule son ruban brûlant.",
+      "Au bout du brouillon t’attend le Stylo Rouge : il entoure les fautes, barre la page de trois traits et referme sur toi un grand zéro… dont il faut trouver l’ouverture.",
+      "La musique ? « Frère Jacques », en canon. Le bestiaire gagne une septième page, et le devoir du jour peut maintenant tomber sur le brouillon."
     ] }
 ];
 window.GAME_META = GAME_META;

@@ -37,7 +37,7 @@ function devoirDuJour(date = todayISO()) {
   const consigne = cons[Math.floor(r() * cons.length)];
   let pouce = pouces[Math.floor(r() * pouces.length)];
   if (consigne === 'fragile' && pouce === 'souffle') pouce = 'aimant';   // l'un défait l'autre
-  const d = { date, chapter: 1 + Math.floor(r() * 6), consigne, pouce, seed: (h % 2147483646) + 1 };
+  const d = { date, chapter: 1 + Math.floor(r() * (CHAPTERS.length - 1)), consigne, pouce, seed: (h % 2147483646) + 1 };
   return devoirOver ? Object.assign(d, devoirOver) : d;
 }
 function devoirHas(k) { return !!G.devoir && (G.devoir.consigne === k || G.devoir.pouce === k); }
@@ -93,8 +93,8 @@ function stepDevoir(dt) {
 }
 
 /* ---------- la note ---------- */
-// les petits exploits de la page : lignes, refrains, figures, trésors, lettrines, ex-libris
-function devoirExploits() { return (G.lignes || 0) + (G.refrains || 0) + (G.figures || 0) + (G.tresors || 0) + (G.enlus || 0) + (G.sceaux || 0); }
+// les petits exploits de la page : lignes, refrains, figures, trésors, lettrines, ex-libris, morpions gagnés
+function devoirExploits() { return (G.lignes || 0) + (G.refrains || 0) + (G.figures || 0) + (G.tresors || 0) + (G.enlus || 0) + (G.sceaux || 0) + (G.morpions || 0); }
 function gradeDevoir(win) {
   const d = G.devoir, ex = devoirExploits();
   // gagné : au moins la moyenne (11), puis dictées, exploits, cœurs restants et difficulté de la consigne ; perdu : jamais la moyenne

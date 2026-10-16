@@ -31,7 +31,7 @@ function drawPage(v) {
   ctx.restore();
   ctx.fillStyle = paperPattern; ctx.fillRect(Math.max(0, v.x0), Math.max(0, v.y0), Math.min(WORLD.w, v.x1) - Math.max(0, v.x0), Math.min(WORLD.h, v.y1) - Math.max(0, v.y0));
   const paper = CH().paper;
-  if (paper === 'portee') drawPortee(v); else if (paper === 'milli') drawMilli(v); else if (paper === 'carte') drawCarte(v); else if (paper === 'calli') drawCalli(v); else if (paper === 'garde') drawGarde(v); else drawSeyes(v);
+  if (paper === 'portee') drawPortee(v); else if (paper === 'milli') drawMilli(v); else if (paper === 'carte') drawCarte(v); else if (paper === 'calli') drawCalli(v); else if (paper === 'garde') drawGarde(v); else if (paper === 'brouillon') drawBrouillon(v); else drawSeyes(v);
   // bord crayonné
   ctx.save(); ctx.strokeStyle = C.pencil; ctx.globalAlpha = 0.55; ctx.lineWidth = 1.6; ctx.setLineDash([14, 9]);
   ctx.strokeRect(-6, -6, WORLD.w + 12, WORLD.h + 12); ctx.restore();
@@ -102,6 +102,10 @@ function drawEnemy(e) {
     drawGardeEnemy(e, fr, fl);
   } else if (e.type === 'cartable') {
     drawCartable(e, fr, fl);
+  } else if (BROU_TYPES.has(e.type)) {
+    drawBrouillonEnemy(e, fr, fl);
+  } else if (e.type === 'stylo') {
+    drawStylo(e, fr, fl);
   } else if (e.type === 'boss') {
     if (e.phase === 'aim') { ctx.save(); ctx.strokeStyle = C.red; ctx.globalAlpha = 0.4; ctx.setLineDash([16, 10]); ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(e.cx * 420, e.cy * 420); ctx.stroke(); ctx.restore(); }
     const pulse = 1 + Math.sin(G.time * 5) * 0.03;
@@ -164,6 +168,7 @@ function drawWorld() {
   // flaques
   for (const pd of G.puddles) { ctx.globalAlpha = 0.28 * Math.min(1, pd.life / pd.max * 2); ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(pd.x, pd.y, pd.r * (0.85 + 0.15 * Math.sin(pd.life * 6)), 0, TAU); ctx.fill(); }
   ctx.globalAlpha = 1;
+  if (G.cafes) drawBrouillonGround(v);   // flaques de café
   // cercles de flammes (POINT DE FEU)
   if (G.fires) for (const f of G.fires) {
     if (!inView(f.x, f.y, f.r + 40)) continue;
@@ -180,6 +185,7 @@ function drawWorld() {
   // points en chute (ombre)
   for (const pt of G.points) if (!pt.done && pt.t > 0) { const k = pt.t / pt.fall; ctx.fillStyle = 'rgba(18,39,95,' + (0.1 + 0.25 * k) + ')'; ctx.beginPath(); ctx.ellipse(pt.x, pt.y, pt.r * (0.3 + 0.7 * k), pt.r * (0.3 + 0.7 * k) * 0.8, 0, 0, TAU); ctx.fill(); }
   if (G.sweeps) drawLignes();
+  if (G.morpionFx) drawMorpion(v);
   // lettres
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for (const it of G.items) {
@@ -219,7 +225,7 @@ function drawWorld() {
   if (G.quotes) drawCitations();
   // traits rouges du boss
   ctx.strokeStyle = C.red; ctx.lineWidth = 4;
-  for (const b of G.ebul) { if (b.note || b.deg || b.cork || b.blot || b.ink || b.fleur || b.crayon) continue; const n = Math.hypot(b.vx, b.vy) || 1; ctx.beginPath(); ctx.moveTo(b.x - b.vx / n * 9, b.y - b.vy / n * 9); ctx.lineTo(b.x + b.vx / n * 9, b.y + b.vy / n * 9); ctx.stroke(); }
+  for (const b of G.ebul) { if (b.note || b.deg || b.cork || b.blot || b.ink || b.fleur || b.crayon || b.copeau) continue; const n = Math.hypot(b.vx, b.vy) || 1; ctx.beginPath(); ctx.moveTo(b.x - b.vx / n * 9, b.y - b.vy / n * 9); ctx.lineTo(b.x + b.vx / n * 9, b.y + b.vy / n * 9); ctx.stroke(); }
   drawNoteBullets();
   drawDegBullets();
   if (G.waves) drawWaves();
@@ -227,6 +233,7 @@ function drawWorld() {
   if (G.tents) drawCarteFx();
   if (G.strokes) drawCalliFx(v);
   if (G.ribbons) drawGardeFx();
+  if (G.tapes) drawBrouillonFx();
   for (const e of G.enemies) if (e.type === 'soupir' && e.phase === 'fade') {   // là où le soupir va se poser
     ctx.save(); ctx.strokeStyle = C.pencil; ctx.globalAlpha = 0.7; ctx.setLineDash([5, 6]); ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(e.bx, e.by, 14 + 8 * (e.pt / 0.65), 0, TAU); ctx.stroke(); ctx.restore();
@@ -419,12 +426,13 @@ function drawTitle() {
   txt(G.input.touch ? 'Touche l’écran pour commencer' : 'Appuie sur Entrée pour commencer', W / 2, ty + 196 * s, Math.min(38 * s, W / 18), { color: C.ink, alpha: a * (0.6 + 0.4 * Math.sin(G.time * 3)), hl: C.hl });
   if (!G.input.touch) txt('ZQSD, WASD ou flèches : bouger    Espace : pâté d’encre    Échap : pause    J : devoir du jour    B : bestiaire    M : son    V : vitesse', W / 2, ty + 252 * s, Math.min(22 * s, W / 40), { color: C.pencil, weight: 400, alpha: a });
   else txt('Glisse pour bouger, bouton « pâté » pour foncer', W / 2, ty + 252 * s, 22 * s, { color: C.pencil, weight: 400, alpha: a });
-  const news = G.unlocked >= 6 ? (G.input.touch ? 'Le chapitre VI t’attend (bouton en bas) : la page de garde, en papier marbré.' : 'Touche 6 : chapitre VI, la page de garde. Le cahier se souvient de tout…')
-    : G.unlocked >= 5 ? (G.input.touch ? 'Nouveau : derrière le Grand Paraphe, la page de garde du cahier…' : 'Touche 5 : chapitre V. Et derrière le Grand Paraphe, la page de garde…')
-    : G.unlocked >= 4 ? (G.input.touch ? 'Plus loin dans le cahier : une page de calligraphie, puis la page de garde…' : 'Touche 4 : chapitre IV. Tout au bout du cahier, la page de garde…')
-    : G.unlocked >= 3 ? (G.input.touch ? 'Plus loin dans le cahier : une carte… et, tout au bout, la page de garde.' : 'Touche 3 : chapitre III. Tout au bout du cahier, la page de garde…')
-    : G.unlocked >= 2 ? (G.input.touch ? 'Tout au bout du cahier : une page de garde en papier marbré…' : 'Touche 2 : chapitre II. Tout au bout du cahier, la page de garde…')
-    : 'Nouveau : six pages à écrire, jusqu’à la page de garde, en papier marbré…';
+  const news = G.unlocked >= 7 ? (G.input.touch ? 'Le chapitre VII t’attend (bouton en bas) : le cahier de brouillon, et sa partie de morpion.' : 'Touche 7 : chapitre VII, le cahier de brouillon. On y joue au morpion…')
+    : G.unlocked >= 6 ? (G.input.touch ? 'Le chapitre VI t’attend (bouton en bas). Derrière la page de garde : un deuxième cahier !' : 'Touche 6 : chapitre VI. Derrière la page de garde, un deuxième cahier…')
+    : G.unlocked >= 5 ? (G.input.touch ? 'Nouveau : derrière le Grand Paraphe, la page de garde… puis un deuxième cahier.' : 'Touche 5 : chapitre V. Tout au bout, un deuxième cahier : le brouillon…')
+    : G.unlocked >= 4 ? (G.input.touch ? 'Plus loin : la calligraphie, la page de garde, puis un cahier de brouillon…' : 'Touche 4 : chapitre IV. Tout au bout, un cahier de brouillon…')
+    : G.unlocked >= 3 ? (G.input.touch ? 'Plus loin dans le cahier : une carte… et, tout au bout, un deuxième cahier.' : 'Touche 3 : chapitre III. Tout au bout, un deuxième cahier…')
+    : G.unlocked >= 2 ? (G.input.touch ? 'Tout au bout du premier cahier : un deuxième, tout raturé…' : 'Touche 2 : chapitre II. Tout au bout, un cahier de brouillon…')
+    : 'Nouveau : sept pages à écrire, et un deuxième cahier : le brouillon…';
   txt(news, W / 2, ty + (G.best ? 322 : 290) * s, Math.min(22 * s, W / 30), { color: C.ink, weight: 400, alpha: a * 0.85 });
   const bn = bestCount(), un = unionCount(), keyB = G.input.touch ? '' : ' (touche B)';
   const bnews = !(bn || un) ? 'Nouveau : le carnet des unions, au bout du bestiaire' + keyB
@@ -445,6 +453,7 @@ function endTally() {
   if (G.tresors) parts.push(['trésors', G.tresors]);
   if (G.enlus) parts.push(['lettrines', G.enlus]);
   if (G.sceaux) parts.push(['ex-libris', G.sceaux]);
+  if (G.morpions) parts.push(['morpions', G.morpions]);
   return parts.length > 1 ? [parts.map(q => q[0]).join(' · '), parts.map(q => q[1]).join(' · ')] : ['dictées réussies', G.dictees];
 }
 function drawEnd() {
@@ -491,6 +500,7 @@ function render() {
     drawEnluArrow();
     drawSceauArrow();
     drawLignesArrow();
+    drawMorpionArrow();
     if (G.state === 'play') drawBestToast();
     if (G.state === 'levelup') drawLevelUp();
     else if (G.state === 'pause') { dimPage(0.7); txt('Pause', W / 2, H / 2 - 40 * U, 80 * U, { font: FONT_CURSIVE, weight: 400 }); txt(G.input.touch ? 'Touche pour reprendre' : 'Échap ou Entrée pour reprendre', W / 2, H / 2 + 40 * U, 30 * U, { hl: C.hl }); if (!G.input.touch) txt('B : ouvrir le bestiaire', W / 2, H / 2 + 92 * U, 22 * U, { color: C.pencil, weight: 400 }); }
