@@ -251,12 +251,14 @@ window.__cap = {
   devoir(over) { if (over) devoirOver = over; startDevoir(true); },
   start(chapter) { newGame(true, chapter || 1); },
   caption(t, d) { caption(t, d); },
-  state() { return { state: G.state, chapter: G.chapter || 1, t: G.t, boss: !!G.boss, bossDefeated: !!G.bossDefeated, level: G.level, hp: G.p ? G.p.hp : 0, enemies: G.enemies ? G.enemies.length : 0, kills: G.kills, mots: G.mots, refrains: G.refrains || 0, refrain: G.refrain ? G.refrain.prog : -1, figures: G.figures || 0, tresors: G.tresors || 0, tresor: G.tresor ? G.tresor.shown : -1, enlus: G.enlus || 0, enlu: G.enlu ? Math.round(100 * G.enlu.painted / G.enlu.cells.length) : -1, croquis: bestCount(), page: G.bestPage, unions: unionCount(), quotes: G.quotes ? G.quotes.length : 0, sceaux: G.sceaux || 0, sceau: G.sceau ? (G.sceau.carried ? 1 : 0) : -1, devoir: !!G.devoir, note: G.note ? G.note.n : -1, lignes: G.lignes || 0, ligne: G.ligne ? Math.round(100 * G.ligne.prog / G.ligne.len) : -1, morpions: G.morpions || 0, morpion: G.morpion ? G.morpion.cells.filter(c => c).length : -1 }; },
+  state() { return { state: G.state, chapter: G.chapter || 1, t: G.t, boss: !!G.boss, bossDefeated: !!G.bossDefeated, level: G.level, hp: G.p ? G.p.hp : 0, enemies: G.enemies ? G.enemies.length : 0, kills: G.kills, mots: G.mots, refrains: G.refrains || 0, refrain: G.refrain ? G.refrain.prog : -1, figures: G.figures || 0, tresors: G.tresors || 0, tresor: G.tresor ? G.tresor.shown : -1, enlus: G.enlus || 0, enlu: G.enlu ? Math.round(100 * G.enlu.painted / G.enlu.cells.length) : -1, croquis: bestCount(), page: G.bestPage, unions: unionCount(), quotes: G.quotes ? G.quotes.length : 0, sceaux: G.sceaux || 0, sceau: G.sceau ? (G.sceau.carried ? 1 : 0) : -1, devoir: !!G.devoir, note: G.note ? G.note.n : -1, lignes: G.lignes || 0, ligne: G.ligne ? Math.round(100 * G.ligne.prog / G.ligne.len) : -1, morpions: G.morpions || 0, morpion: G.morpion ? G.morpion.cells.filter(c => c).length : -1, photos: G.photos || 0, copies: G.copies || 0, photoKills: G.photoKills || 0, double: G.double ? 1 : 0 }; },
   bestiaire(page) { openBestiaire(page); },
   croque(types) { types.forEach((k, i) => { if (BEST_TYPES.has(k)) G.bestiary[k] = (G.bestiary[k] || 0) + 4 + (i * 37) % 90; }); },
   unir(keys) { keys.forEach(k => { if (UNIONS.includes(k)) G.unions[k] = 1; }); },
   feuilleter(d) { flipBestiaire(d); },
   refermer() { closeBestiaire(); },
+  // montage : la photocopieuse arrive tout de suite, à 420 px du joueur
+  photocopie() { if (G.state !== 'play') return; G.photoDone = true; const a = rnd(TAU); spawnPhotocopieuse(clamp(G.p.x + Math.cos(a) * 420, 80, WORLD.w - 80), clamp(G.p.y + Math.sin(a) * 420, 80, WORLD.h - 80)); },
   heal() { if (G.p) G.p.hp = G.p.maxHp; },
   // donne des mots d'un coup (montage) puis ouvre un choix : un mot composé prêt y est toujours proposé
   grant(mots) { for (const k in mots) { G.mots[k] = Math.max(lvl(k), mots[k]); if (!G.motOrder.includes(k)) G.motOrder.push(k); } computeStats(); G.pointCd = Math.min(G.pointCd, 1.5); },

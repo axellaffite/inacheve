@@ -260,6 +260,14 @@ const AU = {
       case 'lift': this.tone(160, 0.9, { vol: 0.08, slide: 2.2 }); break;
       case 'slam': this.tone(58, 0.55, { vol: 0.4, slide: 0.5 }); this.noise(0.35, { f: 2500, q: 0.6, vol: 0.24, sweep: 0.3 }); this.tone(1567.98, 0.9, { vol: 0.035 }); this.tone(2349.3, 0.7, { vol: 0.02 }); break;
       case 'boss3': this.tone(49, 2.4, { type: 'sawtooth', vol: 0.1, attack: 0.6 }); this.tone(73.42, 2.4, { type: 'sawtooth', vol: 0.07, attack: 0.8 }); this.tone(1046.5, 1.8, { vol: 0.03, attack: 0.3 }); break;
+      // la photocopieuse égarée
+      case 'photoArrive': [0, 1, 2, 3].forEach(i => this.noise(0.07, { f: 1800, q: 4, vol: 0.12, when: i * 0.16 })); this.tone(392, 0.25, { type: 'square', vol: 0.03, when: 0.7 }); this.tone(523.25, 0.3, { type: 'square', vol: 0.03, when: 0.82 }); break;
+      case 'photoWarn': this.tone(880, 0.12, { type: 'square', vol: 0.04 }); this.tone(880, 0.12, { type: 'square', vol: 0.04, when: 0.3 }); this.noise(0.25, { f: 700, q: 1, vol: 0.07, when: 0.05 }); break;
+      case 'photoScan': this.tone(220, 1.1, { type: 'sawtooth', vol: 0.035, slide: 1.25 }); this.noise(1.1, { f: 2600, q: 1.5, vol: 0.06, sweep: 1.6 }); break;
+      case 'photoCopy': if (this.throttle('photoCopy', 90)) this.tone(1318.5, 0.08, { type: 'square', vol: 0.025 }); break;
+      case 'photoDouble': [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => this.tone(f, 0.35, { type: 'triangle', vol: 0.1, when: i * 0.07 })); this.noise(0.3, { f: 3000, q: 1, vol: 0.06 }); break;
+      case 'photoEject': [0, 1, 2].forEach(i => this.noise(0.12, { f: 1200, q: 1.2, vol: 0.1, sweep: 1.8, when: i * 0.08 })); break;
+      case 'photoJam': this.tone(110, 0.5, { type: 'square', vol: 0.06, slide: 0.6 }); this.noise(0.45, { f: 900, q: 0.8, vol: 0.18, sweep: 0.4 }); [0, 1, 2].forEach(i => this.tone(1760, 0.06, { type: 'square', vol: 0.03, when: 0.5 + i * 0.12 })); break;
       case 'lignesNew': [392, 493.88, 587.33].forEach((f, i) => this.tone(f * 2, 0.3, { type: 'triangle', vol: 0.07, when: i * 0.09 })); this.noise(0.4, { f: 3600, q: 3, vol: 0.05, sweep: 0.7, when: 0.25 }); break;
       case 'ligneMot': { const F = [587.33, 659.25, 739.99, 783.99, 880, 987.77, 1108.73, 1174.66]; this.tone(F[k % 8], 0.35, { type: 'triangle', vol: 0.12 }); break; }
       case 'lignes': {   // la phrase rejouée mot à mot, puis la cloche de la récré

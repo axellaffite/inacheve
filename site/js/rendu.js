@@ -60,6 +60,7 @@ function drawEnemy(e) {
   const fr = boilFrame(G.time, e.boilOff);
   ctx.save(); ctx.translate(e.x, e.y);
   const fl = e.flash > 0;
+  if (e.copie) ctx.globalAlpha = 0.55;   // une photocopie : plus pâle
   if (e.type === 'gribouillis' || e.type === 'gouttelette') {
     ctx.rotate(e.rot);
     ctx.strokeStyle = fl ? C.red : C.graphite; ctx.lineWidth = e.type === 'gouttelette' ? 2 : 2.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
@@ -106,6 +107,8 @@ function drawEnemy(e) {
     drawBrouillonEnemy(e, fr, fl);
   } else if (e.type === 'stylo') {
     drawStylo(e, fr, fl);
+  } else if (e.type === 'photocopieuse') {
+    drawPhotocopieuse(e, fr, fl);
   } else if (e.type === 'boss') {
     if (e.phase === 'aim') { ctx.save(); ctx.strokeStyle = C.red; ctx.globalAlpha = 0.4; ctx.setLineDash([16, 10]); ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(e.cx * 420, e.cy * 420); ctx.stroke(); ctx.restore(); }
     const pulse = 1 + Math.sin(G.time * 5) * 0.03;
@@ -121,11 +124,13 @@ function drawEnemy(e) {
     ctx.fillStyle = C.graphite; ctx.beginPath(); ctx.arc(ex, ey, 6.5, 0, TAU); ctx.fill();
   }
   ctx.restore();
+  if (e.copie) txt('bis', e.x + e.r * 0.8, e.y - e.r - 8, 15, { color: '#3c9a4c', alpha: 0.8 });
 }
 function roundRect(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
 
-function drawPlayer() {
-  const p = G.p; if (!p) return;
+// copy : la copie grise imprimée par la photocopieuse
+function drawPlayer(p = G.p, copy = false) {
+  if (!p) return;
   if (p.inv > 0 && G.state === 'play' && Math.floor(G.time * 16) % 2 === 0 && p.dashT <= 0) return;
   const r = p.r, st = 1 + p.squash * 0.35;
   if (p.hidden > 0) {
@@ -141,8 +146,8 @@ function drawPlayer() {
   ctx.bezierCurveTo(-r * 1.25, -r * 0.35, -r * 0.95, -r, 0, -r);
   ctx.arc(0, 0, r, -Math.PI / 2, Math.PI / 2);
   ctx.bezierCurveTo(-r * 0.95, r, -r * 1.25, r * 0.35, -r * 2.15, 0);
-  ctx.fillStyle = C.ink; ctx.fill();
-  ctx.strokeStyle = C.inkDeep; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = copy ? '#8b8b92' : C.ink; ctx.fill();
+  ctx.strokeStyle = copy ? '#55555c' : C.inkDeep; ctx.lineWidth = 1.5; ctx.stroke();
   ctx.restore();
   // reflet + yeux
   ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.beginPath(); ctx.ellipse(-r * 0.25, -r * 0.45, r * 0.32, r * 0.18, -0.5, 0, TAU); ctx.fill();
@@ -219,13 +224,13 @@ function drawWorld() {
   ctx.lineCap = 'round';
   for (const s of G.shots) {
     ctx.strokeStyle = 'rgba(29,58,138,0.35)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(s.x - s.vx * 0.03, s.y - s.vy * 0.03); ctx.lineTo(s.x, s.y); ctx.stroke();
-    ctx.fillStyle = s.echo ? C.inkLight : G.S.burn ? '#2b4fb5' : C.ink; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, TAU); ctx.fill();
+    ctx.fillStyle = s.copie ? '#8b8b92' : s.echo ? C.inkLight : G.S.burn ? '#2b4fb5' : C.ink; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, TAU); ctx.fill();
     if (G.S.burn) { ctx.fillStyle = C.fire; ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 0.45, 0, TAU); ctx.fill(); }
   }
   if (G.quotes) drawCitations();
   // traits rouges du boss
   ctx.strokeStyle = C.red; ctx.lineWidth = 4;
-  for (const b of G.ebul) { if (b.note || b.deg || b.cork || b.blot || b.ink || b.fleur || b.crayon || b.copeau) continue; const n = Math.hypot(b.vx, b.vy) || 1; ctx.beginPath(); ctx.moveTo(b.x - b.vx / n * 9, b.y - b.vy / n * 9); ctx.lineTo(b.x + b.vx / n * 9, b.y + b.vy / n * 9); ctx.stroke(); }
+  for (const b of G.ebul) { if (b.note || b.deg || b.cork || b.blot || b.ink || b.fleur || b.crayon || b.copeau || b.sheet) continue; const n = Math.hypot(b.vx, b.vy) || 1; ctx.beginPath(); ctx.moveTo(b.x - b.vx / n * 9, b.y - b.vy / n * 9); ctx.lineTo(b.x + b.vx / n * 9, b.y + b.vy / n * 9); ctx.stroke(); }
   drawNoteBullets();
   drawDegBullets();
   if (G.waves) drawWaves();
@@ -234,10 +239,12 @@ function drawWorld() {
   if (G.strokes) drawCalliFx(v);
   if (G.ribbons) drawGardeFx();
   if (G.tapes) drawBrouillonFx();
+  if (G.enemies) drawPhotoFx();   // vitre, lumière et feuilles de la photocopieuse
   for (const e of G.enemies) if (e.type === 'soupir' && e.phase === 'fade') {   // là où le soupir va se poser
     ctx.save(); ctx.strokeStyle = C.pencil; ctx.globalAlpha = 0.7; ctx.setLineDash([5, 6]); ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(e.bx, e.by, 14 + 8 * (e.pt / 0.65), 0, TAU); ctx.stroke(); ctx.restore();
   }
+  drawDouble();
   drawPlayer();
   for (const pt of G.points) {
     if (pt.done) { const k = (pt.t - pt.fall) / 0.6; ctx.strokeStyle = 'rgba(18,39,95,' + (1 - k) + ')'; ctx.lineWidth = 6 * (1 - k) + 1; ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.r * ease(k), 0, TAU); ctx.stroke(); continue; }
@@ -454,6 +461,7 @@ function endTally() {
   if (G.enlus) parts.push(['lettrines', G.enlus]);
   if (G.sceaux) parts.push(['ex-libris', G.sceaux]);
   if (G.morpions) parts.push(['morpions', G.morpions]);
+  if (G.photos) parts.push(['photocopies', G.photos]);
   return parts.length > 1 ? [parts.map(q => q[0]).join(' · '), parts.map(q => q[1]).join(' · ')] : ['dictées réussies', G.dictees];
 }
 function drawEnd() {

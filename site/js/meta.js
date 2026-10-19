@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 13, date: '2026-10-16', title: 'Le cahier de brouillon', chapter: 'VII', chapterName: 'Le cahier de brouillon' };
+const GAME_META = { iteration: 14, date: '2026-10-19', title: 'La photocopieuse', chapter: 'VII', chapterName: 'Le cahier de brouillon' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -115,6 +115,14 @@ const JOURNAL = [
       "Quatre ratures de brouillon : le trombone qui bondit, la tache de café qui renverse des flaques collantes, le taille-crayon qui mange tes lettres et le blanco qui déroule son ruban brûlant.",
       "Au bout du brouillon t’attend le Stylo Rouge : il entoure les fautes, barre la page de trois traits et referme sur toi un grand zéro… dont il faut trouver l’ouverture.",
       "La musique ? « Frère Jacques », en canon. Le bestiaire gagne une septième page, et le devoir du jour peut maintenant tomber sur le brouillon."
+    ] },
+  { iteration: 14, date: '2026-10-19', title: 'La photocopieuse',
+    notes: [
+      "Clac, clac… Une photocopieuse s’est égarée dans le cahier. Vers 1:40, elle débarque sur chaque page, même au brouillon.",
+      "Elle soulève son capot, annonce une bande de page en pointillés verts, puis la balaie de sa lumière : chaque rature prise dedans est photocopiée. Les copies sont plus pâles, plus fragiles, et portent un petit « bis ».",
+      "Et si c’est toi qui passes dans la lumière ? Elle imprime une copie grise de la goutte, qui te suit et tire avec toi pendant douze secondes. À toi de choisir : fuir la lumière, ou plonger dedans.",
+      "Après chaque passage, elle crache ses feuilles en éventail. Biffe-la : bourrage papier, et toutes ses copies s’effacent d’un coup. Sinon, à court de papier, elle finit par s’en aller.",
+      "L’écran de fin compte maintenant tes photocopies."
     ] }
 ];
 window.GAME_META = GAME_META;

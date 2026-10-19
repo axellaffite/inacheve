@@ -264,6 +264,21 @@ Tenu depuis la note de marge « un deuxième cahier ? » du chapitre VI (qui ré
 - Le bestiaire a une septième page (trombone, tache de café, taille-crayon, blanco, Stylo Rouge) ; le carnet des unions devient la page 8.
 - Le devoir du jour peut tomber sur les sept chapitres (`CHAPTERS.length - 1`), et les morpions gagnés comptent comme exploits. Cela a de nouveau changé la correspondance entre les dates et les devoirs à partir du 16 octobre 2026.
 
+## La photocopieuse (itération 14)
+
+Une rature « errante » qui n'appartient à aucune page : une machine de bureau égarée dans le cahier. Tout est dans `photocopieuse.js` (chargé après `morpion.js`), qui ajoute `photocopieuse` à `ETYPES`.
+
+- **Arrivée** : une fois par chapitre, à 1:40 (`PHOTO.at`), si le patron n'est pas là (`stepPhoto`, `G.photoDone`, remis à zéro quand on tourne la page). Sur toutes les pages, au brouillon et dans le devoir du jour.
+- **PV** : 70 × (1 + t / 190) × (1 + 0,15 × `scale` du chapitre). Les ratures des pages lointaines sont multipliées par `scale` entier (32 au brouillon) ; la machine, elle, ne doit jamais tenir plus qu'un patron (107 PV au chapitre I, 620 au VII). La goutte la vise en priorité quand elle est à moins de 480 px, comme un patron.
+- **Cycle** : elle garde ses distances (250 px, elle recule à peine), puis soulève son capot et annonce sa **vitre** (`warn`, 1,05 s) : un rectangle de 600 × 320 px en pointillés verts, devant elle, tourné vers le joueur (il le suit pendant la première moitié de l'annonce). Puis la **barre de lumière** balaie la vitre en 1,1 s (`scan`, `scanPass`) : chaque rature qu'elle touche est copiée (`copyEnemy`, 6 au plus par passage, 24 copies vivantes au plus, ni patron, ni tourbillon, ni copie de copie). Puis elle **crache cinq feuilles** en éventail (`ejectSheets`, `b.sheet`, 1 dégât). Et ainsi de suite toutes les 4,6 s.
+- **Les copies** (`e.copie`) : même rature, moitié des PV et de l'expérience, dessinées à 55 % d'opacité avec un « bis » vert au crayon.
+- **La copie de la goutte** (`G.double`, `makeDouble`) : si le joueur est dans la lumière quand la barre passe, une goutte grise est imprimée à côté de lui. Elle le suit à distance fixe pendant 12 s, invulnérable, et tire sur la rature la plus proche (cadence × 0,75, dégâts × 0,8, `s.copie`, `s.k`), puis pâlit et s'efface. Une nouvelle photocopie la rafraîchit. C'est le choix du chapitre : fuir la lumière (pas de copies de ratures près de soi) ou plonger dedans.
+- **Bourrage papier** (`photoDeath`) : biffée, elle efface toutes les copies vivantes, lâche douze lettres et 500 points. Au bout de 40 s (`PHOTO.stay`), à court de papier, elle s'en va sans rien laisser.
+- Le pilote se place au milieu de la vitre pendant l'annonce (`photoTarget`), sinon il va la biffer.
+- L'écran de fin compte les « photocopies » (de la goutte) ; `__cap.state()` donne `photos`, `copies`, `photoKills` et `double` ; `__cap.photocopie()` la fait venir tout de suite à 420 px (montage, test de fumée).
+- Sons : clac-clac à l'arrivée, deux bips à l'annonce, le bourdonnement de la lumière, un bip par copie, un arpège pour la copie de la goutte, des feuilles, et le bourrage.
+- Pas encore au bestiaire : elle n'appartient à aucune page (voir le carnet d'idées : une page des « rares »).
+
 ## Vitesse du jeu (itération 11)
 
 - Bouton « Vitesse » ou touche V : 100 %, 80 % ou 60 % (`G.speed`, appliqué au pas de temps dans `frame`, jamais en capture). Gardé dans `inacheve.vitesse`.
@@ -307,6 +322,8 @@ Itération 12 (les lignes, chapitre I en partie normale, pilote) : sans les lign
 
 Itération 13 (chapitre VII, brouillon de 52 mots, pilote) : le brouillon d'origine (`scale` 21, `rateCap` 16,5) était une promenade, 6 graines sur 6 sans descendre sous 6 cœurs. À 40 et 20, les combats du Stylo Rouge duraient jusqu'à 90 s. Retenu : `scale` 32, `rateCap` 19, trombones un peu plus vifs (128 px/s) : 8 graines sur 8 gagnent entre 3:33 et 3:53, en descendant à 2 à 5 cœurs, comme au chapitre VI (qui donne 4 à 6 aujourd'hui). En vidéo, la fin de chapitre était couverte de taches de café (lentes et solides, elles s'entassent) : leur part est passée de 26 % à 21 % des apparitions ; le Stylo Rouge tombe alors entre 3:46 et 4:15. Le pilote gagne 2 à 5 morpions par partie. Pour un humain, le chapitre reste à surveiller : si le brouillon paraît trop facile, monter `rateCap` (20) ou les PV du Stylo Rouge.
 
+Itération 14 (la photocopieuse, pilote) : à 120 PV de base et `scale` entier, la machine n'était jamais biffée (elle reculait hors de portée et tenait plus qu'un patron au brouillon). Retenu : 70 PV de base, 0,15 × `scale`, recul limité, visée prioritaire. Elle tombe alors entre 1:56 et 2:23 aux chapitres I à VI ; au VII, une fois sur deux elle repart à court de papier. Chapitre I en partie normale : 4 graines sur 4 battent la Grande Rature ; au brouillon des chapitres IV et VII : 4 sur 4 aussi. Elle fait 5 à 35 copies par chapitre et photocopie le pilote 0 à 4 fois.
+
 Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois pages tournées), le pilote ouvre 6 à 7 trésors et bat la Pieuvre-Buvard sans grande peine. Au brouillon (37 mots au hasard), 4 graines sur 6 gagnent, en descendant à 2 cœurs ; les 2 autres meurent vers 2:50 et 3:10. Premiers réglages beaucoup trop faciles (`scale` 3,6, pieuvre à 2 100 PV, pas de bouteilles avant 100 s) : aucun pilote ne perdait plus de deux cœurs et le combat durait plus d'une minute.
 
 ## Outils
@@ -333,7 +350,7 @@ Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois page
 - ~~**Combinaisons de mots**~~ : fait à l'itération 2 (cinq mots composés), puis trois de plus à l'itération 9 (CITATION, CALLIGRAPHIE, LUNE ROUSSE). Pour plus tard : CLAIR DE LUNE (SOUFFLE + LUNE, les lunes soignent ?), VENT + VIRGULE, un mot composé à trois mots très rare (une « phrase » ?), des unions propres à un chapitre (une union qui n'existe que sur la portée).
 - ~~**Accessibilité : secousses**~~ : fait à l'itération 2 (réglage « Secousses »). ~~Vitesse du jeu~~ : faite à l'itération 11. Restent : contraste renforcé, daltonisme.
 - **Nouvelles ratures** : ~~le tipp-ex, la tache de café, le trombone, le taille-crayon~~ (faits à l'itération 13, au brouillon). Restent : la règle qui balaie la page, l'agrafeuse, le compas à pointe sèche qui épingle la goutte.
-- **Patrons de chapitres** : ~~le Correcteur au stylo rouge~~ (le Stylo Rouge, itération 13), ~~le Cartable~~ (itération 10). Reste : la Photocopieuse qui duplique tout (les ratures, et toi ?).
+- **Patrons de chapitres** : ~~le Correcteur au stylo rouge~~ (le Stylo Rouge, itération 13), ~~le Cartable~~ (itération 10). ~~la Photocopieuse qui duplique tout (les ratures, et toi ?)~~ : faite à l'itération 14, en machine errante plutôt qu'en patron. Pour plus tard : une photocopieuse patron d'un cahier de bureau, qui copie aussi les attaques des patrons précédents.
 - **Le morpion, la suite** : une grille de 4 × 4 (« puissance 4 » au brouillon ?), des X qui trichent quand le Stylo Rouge est là, un morpion à jouer contre un ami sur le même clavier, un « morpion ultime » (neuf grilles) pour le cahier de vacances.
 - **Lisibilité** : quand la page est très tachée en fin de chapitre, les taches pourraient sécher plus vite (ou une option « page propre »).
 - **Accessibilité** : options de contraste, daltonisme (les secousses et la vitesse sont faites).
@@ -346,4 +363,5 @@ Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois page
 - ~~**Citations, la suite**~~ : des citations propres à chaque page, faites à l'itération 10. Reste : une citation qu'on pourrait lire en entier en pause.
 - **L'ex-libris, la suite** : écrire soi-même son nom sur l'étiquette du cahier (gardé en local, jamais envoyé) ; un sceau piégé qui fond si on traîne ; une page « collection » des six emblèmes ; des sceaux sur d'autres chapitres (porter une note jusqu'à la portée ?).
 - **Le Cartable, la suite** : qu'il recrache des ratures de tous les chapitres (le bestiaire en entier), une fermeture éclair qui coupe la page en deux.
+- **La photocopieuse, la suite** : une page des « rares » au bestiaire (photocopieuse, et d'autres ratures errantes : un trombone géant, une agrafeuse) ; une copie qui copie aussi les mots-pouvoirs (lunes, citations) ; une photocopie « en couleur » très rare qui copie une lettrine dorée ; une feuille de copie qui reste sur la page et qu'on peut ramasser (une lettre en double ?) ; un mot composé avec ÉCHO qui ferait de chaque tir une photocopie.
 - **Musique** : ~~« Frère Jacques » en canon~~ (fait à l'itération 13, au brouillon). Pour plus tard : d'autres comptines traditionnelles pour d'autres pages (« À la claire fontaine », « Une souris verte »), et un refrain du chapitre II à deux voix sur le même principe.

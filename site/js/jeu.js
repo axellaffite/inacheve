@@ -57,7 +57,8 @@ function newGame(demo, start = 1, devoir = null) {
     ribbons: [], sceau: null, sceaux: 0, nextSceau: SCEAU.first, stamps: [], sceauSeen: false, jumpSeen: false,
     ligne: null, lignes: 0, nextLigne: LIGNES.first, sweeps: [], ligneSeen: false,
     cafes: [], tapes: [], tapeN: 0, fautes: [], bars: [], zeros: [], fauteSeen: false, zeroSeen: false,
-    morpion: null, morpions: 0, nextMorpion: MORPION.first, morpionFx: [], morpionSeen: false, morpionLost: false
+    morpion: null, morpions: 0, nextMorpion: MORPION.first, morpionFx: [], morpionSeen: false, morpionLost: false,
+    photoDone: false, double: null, photos: 0, copies: 0, photoKills: 0, photoSeen: false
   });
   const hp = demo ? 7 : 6;
   G.p = { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, r: 13, hp, maxHp: hp, inv: 1.2, dashCd: 0, dashT: 0, dx: 1, dy: 0, face: 0, fireCd: 0.5, look: 0, puddleT: 0, squash: 0, hidden: 0, gx: 0, gy: 0 };
@@ -97,7 +98,7 @@ function turnPage() {
     tents: [], drops: [], tresor: null, nextTresor: TRESOR.first, chests: [], coins: [],
     strokes: [], strokeN: 0, sigs: [], enlu: null, nextEnlu: ENLU.first, glows: [], trail: [], quotes: [],
     ribbons: [], sceau: null, nextSceau: SCEAU.first, stamps: [], ligne: null, nextLigne: LIGNES.first, sweeps: [],
-    cafes: [], tapes: [], tapeN: 0, fautes: [], bars: [], zeros: [], morpion: null, nextMorpion: MORPION.first, morpionFx: []
+    cafes: [], tapes: [], tapeN: 0, fautes: [], bars: [], zeros: [], morpion: null, nextMorpion: MORPION.first, morpionFx: [], photoDone: false, double: null
   });
   G.dicteeWord = CH().dictees[0];
   const p = G.p; Object.assign(p, { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, hp: p.maxHp, inv: 2.5, dashT: 0, hidden: 0 });
@@ -212,6 +213,7 @@ function killEnemy(e) {
   const paper = CH().paper;
   if (paper === 'portee') AU.play('noteKill', staffPitch(e.y)); else if (paper === 'milli') AU.play('mmKill'); else if (paper === 'carte') AU.play('carteKill'); else if (paper === 'calli') AU.play('calliKill'); else if (paper === 'garde') AU.play('gardeKill'); else if (paper === 'brouillon') AU.play('brouKill'); else AU.play('kill');
   if (BROU_TYPES.has(e.type)) brouillonDeath(e);   // le café se renverse, le taille-crayon rend ses lettres
+  if (e.type === 'photocopieuse') photoDeath(e);   // bourrage papier : ses copies s'effacent
   if (e.type === 'tache') { for (let i = 0; i < 2; i++) { const g = spawnEnemy('gouttelette', e.x + rnd(-10, 10), e.y + rnd(-10, 10)); g.vx = rnd(-150, 150); g.vy = rnd(-150, 150); } }
   let v = e.xp;
   const n = v <= 2 ? v : 2 + (v > 4 ? 1 : 0);
@@ -247,7 +249,7 @@ function botInput() {
   let goal = null, gd = 1e9;
   const need = G.dicteeWord[G.dicteeProg];
   for (const it of G.items) { const d = Math.hypot(it.x - p.x, it.y - p.y) - (it.ch === need ? 160 : 0) - (it.rare ? 80 : 0); if (d < gd && d < 520) { gd = d; goal = it; } }
-  const rn = (G.refrain && G.refrain.notes[G.refrain.prog]) || figureTarget() || tresorTarget() || enluTarget() || sceauTarget() || lignesTarget() || morpionTarget();   // refrain, figure, trésor, lettrine, sceau, lignes et morpion passent avant les lettres
+  const rn = photoTarget() || (G.refrain && G.refrain.notes[G.refrain.prog]) || figureTarget() || tresorTarget() || enluTarget() || sceauTarget() || lignesTarget() || morpionTarget();   // photocopieuse, refrain, figure, trésor, lettrine, sceau, lignes et morpion passent avant les lettres
   const toSong = rn && Math.hypot(rn.x - p.x, rn.y - p.y) < 1600;
   if (toSong) goal = rn;
   if (!goal) goal = { x: WORLD.w / 2 + Math.cos(G.t * 0.21) * 700, y: WORLD.h / 2 + Math.sin(G.t * 0.17) * 420 };
@@ -320,7 +322,7 @@ function stepPlayer(dt) {
   p.fireCd -= dt;
   if (p.fireCd <= 0) {
     let tgt = null, bd = 600 * 600;
-    for (const e of G.enemies) { let d = (e.x - p.x) ** 2 + (e.y - p.y) ** 2; if (e.ghost) continue; if (e.isBoss && d < 480 * 480) d *= 0.15; if (d < bd) { bd = d; tgt = e; } }
+    for (const e of G.enemies) { let d = (e.x - p.x) ** 2 + (e.y - p.y) ** 2; if (e.ghost) continue; if ((e.isBoss || e.type === 'photocopieuse') && d < 480 * 480) d *= 0.15; if (d < bd) { bd = d; tgt = e; } }
     if (tgt) {
       p.fireCd = 1 / S.rate;
       const lead = Math.sqrt(bd) / S.pspeed;
@@ -437,6 +439,8 @@ function stepPlay(dt) {
       stepGarde(e, dt, dx, dy, d, slow, hid); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else if (BROU_TYPES.has(e.type)) {
       stepBrouillon(e, dt, dx, dy, d, slow, hid); tx = MV.x; ty = MV.y; agil = MV.agil;
+    } else if (e.type === 'photocopieuse') {
+      stepPhotocopieuse(e, dt, dx, dy, d, slow, hid); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else e.rot += e.spin * dt;
     const k = 1 - Math.exp(-dt * agil);
     e.vx = lerp(e.vx, tx, k); e.vy = lerp(e.vy, ty, k);
@@ -463,7 +467,7 @@ function stepPlay(dt) {
       if (e.dead || e.ghost || s.hit.has(e.id)) continue;
       const rr = e.r + s.r; if ((e.x - s.x) ** 2 + (e.y - s.y) ** 2 > rr * rr) continue;
       const sp = Math.hypot(s.vx, s.vy) || 1;
-      hurtEnemy(e, S.dmg, 'shot', s.vx / sp, s.vy / sp); s.hit.add(e.id);
+      hurtEnemy(e, S.dmg * (s.k || 1), 'shot', s.vx / sp, s.vy / sp); s.hit.add(e.id);
       G.parts.push({ x: s.x, y: s.y, vx: rnd(-80, 80), vy: rnd(-80, 80), life: 0.3, max: 0.3, size: rnd(1.5, 3), color: C.ink, drag: 5 });
       if (s.bounce > 0) {
         s.bounce--; let nt = null, nd = 340 * 340;
@@ -560,6 +564,7 @@ function stepPlay(dt) {
   stepSceau(dt);
   stepLignes(dt);
   stepMorpion(dt);
+  stepPhoto(dt);   // la photocopieuse égarée, et la copie de la goutte
   for (const c of G.coins) c.t += dt;
   G.coins = G.coins.filter(c => c.t < c.dur);
   for (const sg of G.songs) sg.t += dt;
