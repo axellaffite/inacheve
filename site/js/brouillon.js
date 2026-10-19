@@ -9,6 +9,7 @@ const NOTES_BROU = [
   { x: WORLD.w * 0.7, y: -96, t: 'ajouté : un deuxième cahier (c’est fait, et c’est un brouillon)', r: 0.025 },
   { x: WORLD.w + 175, y: WORLD.h * 0.3, t: 'ici, plus tard :', r: 0.06 },
   { x: WORLD.w + 190, y: WORLD.h * 0.3 + 46, t: 'le cahier de vacances ?', r: 0.04 },
+  { x: WORLD.w + 200, y: WORLD.h * 0.3 + 96, t: '→ oui : avec des labyrinthes !', r: 0.07 },
   { x: -185, y: WORLD.h * 0.45, t: 'ici, on a', r: -0.07 },
   { x: -175, y: WORLD.h * 0.45 + 44, t: 'le droit de rater', r: -0.05 },
   { x: WORLD.w * 0.28, y: WORLD.h + 140, t: 'frère Jacques, dormez-vous ?', r: 0.03 },

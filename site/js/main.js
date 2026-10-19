@@ -66,12 +66,7 @@ function setUI() {
   document.getElementById('btnSpeed').textContent = 'Vitesse : ' + speedLabel();
   document.getElementById('btnDevoir').classList.toggle('hidden', G.state !== 'title');
   document.getElementById('btnTitre').classList.toggle('hidden', !(G.state === 'pause' || G.state === 'gameover' || G.state === 'victory'));
-  document.getElementById('btnCh2').classList.toggle('hidden', !(G.state === 'title' && G.unlocked >= 2));
-  document.getElementById('btnCh3').classList.toggle('hidden', !(G.state === 'title' && G.unlocked >= 3));
-  document.getElementById('btnCh4').classList.toggle('hidden', !(G.state === 'title' && G.unlocked >= 4));
-  document.getElementById('btnCh5').classList.toggle('hidden', !(G.state === 'title' && G.unlocked >= 5));
-  document.getElementById('btnCh6').classList.toggle('hidden', !(G.state === 'title' && G.unlocked >= 6));
-  document.getElementById('btnCh7').classList.toggle('hidden', !(G.state === 'title' && G.unlocked >= 7));
+  for (let n = 2; n < CHAPTERS.length; n++) document.getElementById('btnCh' + n).classList.toggle('hidden', !(G.state === 'title' && G.unlocked >= n));
 }
 function primaryAction() {
   AU.init();
@@ -129,12 +124,8 @@ if (!CAPTURE) {
       else if (e.code === 'Enter' || e.code === 'Space') chooseMot(G.sel);
       return;
     }
-    if ((e.code === 'Digit2' || e.code === 'Numpad2') && G.state === 'title' && G.unlocked >= 2) { newGame(false, 2); return; }
-    if ((e.code === 'Digit3' || e.code === 'Numpad3') && G.state === 'title' && G.unlocked >= 3) { newGame(false, 3); return; }
-    if ((e.code === 'Digit4' || e.code === 'Numpad4') && G.state === 'title' && G.unlocked >= 4) { newGame(false, 4); return; }
-    if ((e.code === 'Digit5' || e.code === 'Numpad5') && G.state === 'title' && G.unlocked >= 5) { newGame(false, 5); return; }
-    if ((e.code === 'Digit6' || e.code === 'Numpad6') && G.state === 'title' && G.unlocked >= 6) { newGame(false, 6); return; }
-    if ((e.code === 'Digit7' || e.code === 'Numpad7') && G.state === 'title' && G.unlocked >= 7) { newGame(false, 7); return; }
+    const dig = /^(Digit|Numpad)([2-9])$/.exec(e.code), chn = dig ? parseInt(dig[2], 10) : 0;   // touches 2 à 8 : commencer plus loin dans le cahier
+    if (chn && chn < CHAPTERS.length && G.state === 'title' && G.unlocked >= chn) { newGame(false, chn); return; }
     if (e.code === 'Enter' || (e.code === 'Space' && G.state !== 'play')) primaryAction();
     if ((e.code === 'Space' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') && G.state === 'play') G.input.dashQueued = true;
     if (e.code === 'Escape' || e.code === 'KeyP') togglePause();
@@ -185,12 +176,7 @@ if (!CAPTURE) {
   document.getElementById('btnSpeed').addEventListener('click', toggleSpeed);
   document.getElementById('btnDevoir').addEventListener('click', () => { AU.init(); if (G.state === 'title') startDevoir(false); });
   document.getElementById('btnTitre').addEventListener('click', () => { AU.init(); if (['pause', 'gameover', 'victory'].includes(G.state)) goTitle(); cv.focus(); });
-  document.getElementById('btnCh2').addEventListener('click', () => { AU.init(); if (G.state === 'title') newGame(false, 2); });
-  document.getElementById('btnCh3').addEventListener('click', () => { AU.init(); if (G.state === 'title') newGame(false, 3); });
-  document.getElementById('btnCh4').addEventListener('click', () => { AU.init(); if (G.state === 'title') newGame(false, 4); });
-  document.getElementById('btnCh5').addEventListener('click', () => { AU.init(); if (G.state === 'title') newGame(false, 5); });
-  document.getElementById('btnCh6').addEventListener('click', () => { AU.init(); if (G.state === 'title') newGame(false, 6); });
-  document.getElementById('btnCh7').addEventListener('click', () => { AU.init(); if (G.state === 'title') newGame(false, 7); });
+  for (let n = 2; n < CHAPTERS.length; n++) document.getElementById('btnCh' + n).addEventListener('click', () => { AU.init(); if (G.state === 'title') newGame(false, n); });
   document.getElementById('btnPause').addEventListener('click', () => togglePause());
 }
 function videoFor(n) {
@@ -251,7 +237,7 @@ window.__cap = {
   devoir(over) { if (over) devoirOver = over; startDevoir(true); },
   start(chapter) { newGame(true, chapter || 1); },
   caption(t, d) { caption(t, d); },
-  state() { return { state: G.state, chapter: G.chapter || 1, t: G.t, boss: !!G.boss, bossDefeated: !!G.bossDefeated, level: G.level, hp: G.p ? G.p.hp : 0, enemies: G.enemies ? G.enemies.length : 0, kills: G.kills, mots: G.mots, refrains: G.refrains || 0, refrain: G.refrain ? G.refrain.prog : -1, figures: G.figures || 0, tresors: G.tresors || 0, tresor: G.tresor ? G.tresor.shown : -1, enlus: G.enlus || 0, enlu: G.enlu ? Math.round(100 * G.enlu.painted / G.enlu.cells.length) : -1, croquis: bestCount(), page: G.bestPage, unions: unionCount(), quotes: G.quotes ? G.quotes.length : 0, sceaux: G.sceaux || 0, sceau: G.sceau ? (G.sceau.carried ? 1 : 0) : -1, devoir: !!G.devoir, note: G.note ? G.note.n : -1, lignes: G.lignes || 0, ligne: G.ligne ? Math.round(100 * G.ligne.prog / G.ligne.len) : -1, morpions: G.morpions || 0, morpion: G.morpion ? G.morpion.cells.filter(c => c).length : -1, photos: G.photos || 0, copies: G.copies || 0, photoKills: G.photoKills || 0, double: G.double ? 1 : 0 }; },
+  state() { return { state: G.state, chapter: G.chapter || 1, t: G.t, boss: !!G.boss, bossDefeated: !!G.bossDefeated, level: G.level, hp: G.p ? G.p.hp : 0, enemies: G.enemies ? G.enemies.length : 0, kills: G.kills, mots: G.mots, refrains: G.refrains || 0, refrain: G.refrain ? G.refrain.prog : -1, figures: G.figures || 0, tresors: G.tresors || 0, tresor: G.tresor ? G.tresor.shown : -1, enlus: G.enlus || 0, enlu: G.enlu ? Math.round(100 * G.enlu.painted / G.enlu.cells.length) : -1, croquis: bestCount(), page: G.bestPage, unions: unionCount(), quotes: G.quotes ? G.quotes.length : 0, sceaux: G.sceaux || 0, sceau: G.sceau ? (G.sceau.carried ? 1 : 0) : -1, devoir: !!G.devoir, note: G.note ? G.note.n : -1, lignes: G.lignes || 0, ligne: G.ligne ? Math.round(100 * G.ligne.prog / G.ligne.len) : -1, morpions: G.morpions || 0, morpion: G.morpion ? G.morpion.cells.filter(c => c).length : -1, labys: G.labys || 0, laby: G.laby ? (G.laby.inEnt ? G.laby.trail.length : 0) : -1, photos: G.photos || 0, copies: G.copies || 0, photoKills: G.photoKills || 0, double: G.double ? 1 : 0 }; },
   bestiaire(page) { openBestiaire(page); },
   croque(types) { types.forEach((k, i) => { if (BEST_TYPES.has(k)) G.bestiary[k] = (G.bestiary[k] || 0) + 4 + (i * 37) % 90; }); },
   unir(keys) { keys.forEach(k => { if (UNIONS.includes(k)) G.unions[k] = 1; }); },

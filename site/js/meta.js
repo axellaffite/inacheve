@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 14, date: '2026-10-19', title: 'La photocopieuse', chapter: 'VII', chapterName: 'Le cahier de brouillon' };
+const GAME_META = { iteration: 15, date: '2026-10-19', title: 'Le cahier de vacances', chapter: 'VIII', chapterName: 'Le cahier de vacances' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -123,6 +123,14 @@ const JOURNAL = [
       "Et si c’est toi qui passes dans la lumière ? Elle imprime une copie grise de la goutte, qui te suit et tire avec toi pendant douze secondes. À toi de choisir : fuir la lumière, ou plonger dedans.",
       "Après chaque passage, elle crache ses feuilles en éventail. Biffe-la : bourrage papier, et toutes ses copies s’effacent d’un coup. Sinon, à court de papier, elle finit par s’en aller.",
       "L’écran de fin compte maintenant tes photocopies."
+    ] },
+  { iteration: 15, date: '2026-10-19', title: 'Le cahier de vacances',
+    notes: [
+      "Le brouillon est plein : derrière le Stylo Rouge s’ouvre un troisième cahier, le cahier de vacances, couvert d’exercices en couleurs (relie les points, mots croisés, devinettes…).",
+      "Un vrai labyrinthe s’imprime sur la page. Ses murs t’arrêtent, mais les ratures, elles, passent par-dessus ! Entre par « entrée », ressors par « sortie » : le soleil d’été balaie alors toute la page.",
+      "Quatre ratures d’été : le coquillage qui roule, le pointillé (des points à relier, seule la tête craint tes gouttes), le ballon de plage qui rebondit sur les murs et le cornet de glace qui lance sa boule là où tu vas.",
+      "Au bout des vacances t’attend le Grand Soleil : rayons qui tournent, marée qu’on ne traverse que par la bouée, et coucher de soleil où la page entière plonge dans la nuit.",
+      "La musique ? Une petite chanson de plage au ukulélé. Le bestiaire gagne une huitième page, et le devoir du jour peut tomber sur le cahier de vacances."
     ] }
 ];
 window.GAME_META = GAME_META;

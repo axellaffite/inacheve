@@ -52,11 +52,18 @@ const BESTIAIRE = [null,
     ['taillecrayon', 'le taille-crayon', 'Aspire tes lettres et crache ses copeaux. Biffé, il rend tout.'],
     ['blanco', 'le blanco', 'Roule tout droit en déroulant son ruban. Tant qu’il est humide, il brûle.'],
     ['stylo', 'le Stylo Rouge', 'Corrige tout ce qui bouge. Dans son zéro, cherche l’ouverture.']
+  ],
+  [
+    ['coquillage', 'le coquillage', 'Roule par à-coups, comme poussé par les vagues. Il y en a toujours un de plus.'],
+    ['pointille', 'le pointillé', 'Des points à relier qui se sont reliés tout seuls. Seule la tête, le 1, craint tes gouttes.'],
+    ['ballon', 'le ballon de plage', 'Vise, puis file en rebondissant sur les bords et les murs des labyrinthes.'],
+    ['cornet', 'le cornet de glace', 'Lance sa boule là où tu vas. Vide, il se sauve en attendant qu’elle repousse.'],
+    ['soleil', 'le Grand Soleil', 'Rayons, marée, coucher de soleil : il a tout l’été devant lui.']
   ]
 ];
 const BEST_TYPES = new Set(BESTIAIRE.slice(1).flat().map(b => b[0]));
 // rayon apparent de chaque croquis, pour qu'il tienne dans sa case
-const BEST_VIS = { stylo: 150, blanco: 32, taillecrayon: 30, cafe: 30, trombone: 24, cartable: 130, tampon: 38, peigne: 36, signet: 26, marbrure: 22, paraphe: 175, majuscule: 40, plumeoie: 30, arabesque: 36, delie: 30, boss: 92, fausse: 128, regle: 282, pieuvre: 150, metronome: 54, compas: 42, tourbillon: 34, equerre: 32, rapporteur: 32, bouteille: 34, crabe: 34, mouette: 24, tache: 30, gomme: 32 };
+const BEST_VIS = { soleil: 135, cornet: 34, ballon: 30, pointille: 70, coquillage: 24, stylo: 150, blanco: 32, taillecrayon: 30, cafe: 30, trombone: 24, cartable: 130, tampon: 38, peigne: 36, signet: 26, marbrure: 22, paraphe: 175, majuscule: 40, plumeoie: 30, arabesque: 36, delie: 30, boss: 92, fausse: 128, regle: 282, pieuvre: 150, metronome: 54, compas: 42, tourbillon: 34, equerre: 32, rapporteur: 32, bouteille: 34, crabe: 34, mouette: 24, tache: 30, gomme: 32 };
 const BEST_TOAST = 3.4;
 
 G.bestiary = {};
@@ -164,6 +171,11 @@ function bestFake(type, i) {
   else if (type === 'cafe') e.rot = Math.sin(t * 1.5) * 0.2;
   else if (type === 'taillecrayon') { e.rot = t * 2; e.eaten = 3; }
   else if (type === 'stylo') e.write = Math.max(0, Math.sin(t * 1.3));
+  else if (type === 'coquillage') e.rot = t * 2;
+  else if (type === 'ballon') e.rot = t * 1.5;
+  else if (type === 'pointille') e.x = 55;
+  else if (type === 'cornet') e.rot = Math.sin(t * 2) * 0.15;
+  else if (type === 'soleil') e.spinA = t * 0.4;
   return e;
 }
 function drawCroquis(type, i, cx, cy, R) {

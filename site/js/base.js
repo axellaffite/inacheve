@@ -364,6 +364,25 @@ const AU = {
       }
       case 'morpionLose': [392, 349.23, 311.13].forEach((f, i) => this.tone(f, 0.35, { type: 'square', vol: 0.03, when: i * 0.14 })); break;
       case 'morpionNul': [523.25, 523.25].forEach((f, i) => this.tone(f, 0.3, { type: 'triangle', vol: 0.09, when: i * 0.16 })); break;
+      // chapitre VIII : le cahier de vacances
+      case 'vacKill': if (this.throttle('kill', 45)) { this.tone(392 + Math.random() * 300, 0.09, { type: 'sine', vol: 0.1, slide: 1.8 }); this.noise(0.06, { f: 2600, q: 1.5, vol: 0.07 }); } break;
+      case 'ballAim': if (this.throttle('ballAim', 150)) this.tone(220, 0.5, { type: 'triangle', vol: 0.05, slide: 1.6 }); break;
+      case 'ballBounce': if (this.throttle('ballBounce', 70)) { this.tone(160, 0.22, { type: 'sine', vol: 0.18, slide: 2.6 }); this.noise(0.04, { f: 900, q: 1, vol: 0.06 }); } break;
+      case 'lob': if (this.throttle('lob', 120)) this.tone(600, 0.5, { type: 'sine', vol: 0.06, slide: 1.8 }); break;
+      case 'lobLand': if (this.throttle('lobLand', 90)) { this.noise(0.25, { f: 700, q: 0.7, vol: 0.14, type: 'lowpass', sweep: 0.5 }); this.tone(140, 0.2, { vol: 0.12, slide: 0.6 }); } break;
+      case 'rayWarn': this.tone(880, 0.9, { type: 'sine', vol: 0.04, slide: 1.5 }); this.tone(1318.5, 0.9, { type: 'sine', vol: 0.025, slide: 1.5, when: 0.1 }); break;
+      case 'rayFire': this.noise(0.6, { f: 5200, q: 0.8, vol: 0.08, sweep: 0.5 }); this.tone(1046.5, 0.5, { type: 'triangle', vol: 0.05 }); break;
+      case 'tideWarn': this.noise(1.1, { f: 400, q: 0.6, vol: 0.08, type: 'lowpass', sweep: 3 }); break;
+      case 'tide': this.noise(2.4, { f: 900, q: 0.5, vol: 0.12, type: 'lowpass', sweep: 0.4 }); this.noise(1.6, { f: 4000, q: 0.8, vol: 0.04, sweep: 0.5, when: 0.3 }); break;
+      case 'dusk': [698.46, 587.33, 523.25, 440, 349.23].forEach((f, i) => this.tone(f, 0.7, { type: 'sine', vol: 0.07, when: i * 0.16 })); this.tone(87.31, 3, { type: 'sine', vol: 0.12, attack: 0.5 }); break;
+      case 'boss8': [349.23, 440, 523.25, 698.46].forEach((f, i) => this.tone(f, 2.2 - i * 0.3, { type: 'triangle', vol: 0.08, when: i * 0.22, attack: 0.05 })); this.tone(43.65, 2.8, { type: 'sawtooth', vol: 0.08, attack: 0.7 }); this.noise(1.2, { f: 6000, q: 0.6, vol: 0.05, sweep: 0.4, when: 0.6 }); break;
+      case 'labyNew': [349.23, 440, 523.25, 698.46, 880].forEach((f, i) => this.tone(f, 0.3, { type: 'triangle', vol: 0.08, when: i * 0.06 })); break;
+      case 'labyIn': this.tone(523.25, 0.2, { type: 'triangle', vol: 0.08 }); this.tone(659.25, 0.25, { type: 'triangle', vol: 0.08, when: 0.08 }); break;
+      case 'labyWin': {   // un petit air de vacances, puis l'accord
+        [523.25, 587.33, 659.25, 698.46, 880, 698.46, 1046.5].forEach((f, i) => { this.tone(f, 0.35, { type: 'triangle', vol: 0.12, when: i * 0.09 }); this.tone(f / 2, 0.3, { vol: 0.04, when: i * 0.09 + 0.04 }); });
+        [349.23, 440, 523.25].forEach(f => this.tone(f * 2, 1.4, { vol: 0.07, when: 0.65 }));
+        this.noise(0.9, { f: 4500, q: 0.7, vol: 0.06, sweep: 1.8, when: 0.6 }); break;
+      }
       case 'lose': [6, 4, 2, 0].forEach((n, i) => this.tone(PENTA[n], 0.8, { type: 'triangle', vol: 0.15, when: i * 0.18 })); break;
     }
   },
@@ -381,6 +400,9 @@ const AU = {
             [659.25], [698.46], [783.99], 0, [659.25], [698.46], [783.99], 0,
             [783.99, 880], [783.99, 698.46], [659.25], [523.25], [783.99, 880], [783.99, 698.46], [659.25], [523.25],
             [523.25], [392], [523.25], 0, [523.25], [392], [523.25], 0],
+  // la chanson de plage du chapitre VIII (un air original), un temps par case ; 0 = silence
+  PLAGE: [880, 0, 1046.5, 880, 783.99, 0, 698.46, 0, 587.33, 698.46, 880, 0, 783.99, 0, 0, 0,
+          880, 0, 1046.5, 1174.66, 1046.5, 880, 783.99, 0, 698.46, 783.99, 880, 783.99, 698.46, 0, 0, 0],
   // la mélodie d'« au clair de la lune » (traditionnelle), un temps par case ; 0 = la note précédente continue
   LUNE: [[523.25, 523.25, 523.25, 587.33, 659.25, 0, 587.33, 0, 523.25, 659.25, 587.33, 587.33, 523.25, 0, 0, 0],
          [587.33, 587.33, 587.33, 587.33, 440, 0, 440, 0, 587.33, 523.25, 493.88, 440, 392, 0, 0, 0]],
@@ -441,6 +463,18 @@ const AU = {
       if (s >= 8 || intensity > 0.2) voice(8, 0.5, 0.09, 'sine');
       if (intensity > 0.5) voice(16, 2, 0.03, 'triangle');   // quand ça chauffe, une troisième voix, tout en haut
       if (s % 2 === 1) this.noise(0.02, { f: 4200, q: 5, vol: 0.02, when });   // un crayon qui tapote
+      if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
+      return;
+    }
+    if (chap === 8) {   // une chanson de plage en fa majeur (un air original) : ukulélé gratté en 3-3-2, maracas et ressac
+      const bar = s % 8, root = [87.31, 73.42, 58.27, 65.41][Math.floor(s / 8) % 4], third = Math.floor(s / 8) % 4 === 1 ? 1.19 : 1.26;
+      if (bar === 0 || bar === 4) this.tone(root, beat * 3.6, { type: 'sine', vol: 0.2, when, dest: this.mus, attack: 0.03 });
+      if (bar === 0 || bar === 3 || bar === 6) [2, 2 * third, 3, 4].forEach((m, j) => this.tone(root * m, beat * 0.9, { type: 'triangle', vol: 0.03, when: when + j * 0.012, dest: this.mus, attack: 0.002 }));
+      this.noise(0.04, { f: 7000, q: 1.2, vol: bar % 2 ? 0.012 : 0.02, when });   // maracas
+      if (s % 32 === 0) this.noise(2.4, { f: 600, q: 0.5, vol: 0.035, type: 'lowpass', when, sweep: 0.5 });   // le ressac
+      const n = this.PLAGE[s % 32];
+      if (n && (s >= 16 || intensity > 0.15)) this.tone(n, beat * 1.4, { type: 'sine', vol: 0.1, when, dest: this.mus, attack: 0.004 });
+      if (n && intensity > 0.5) this.tone(n * 2, beat * 0.6, { type: 'triangle', vol: 0.025, when: when + beat / 2, dest: this.mus, attack: 0.003 });
       if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
       return;
     }
