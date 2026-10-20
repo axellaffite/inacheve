@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 16, date: '2026-10-20', title: 'Le bureau', chapter: 'VIII', chapterName: 'Le cahier de vacances' };
+const GAME_META = { iteration: 17, date: '2026-10-20', title: 'La rentrée', chapter: 'IX', chapterName: 'La rentrée' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -139,6 +139,14 @@ const JOURNAL = [
       "Chaque page débloquée révèle une phrase de l’histoire de la goutte. Lues dans l’ordre, elles racontent tout le cahier.",
       "Le bureau garde tes records : combien de fois tu as battu chaque patron, et en combien de temps au mieux. Une étoile dorée marque les pages gagnées.",
       "Le devoir du jour est punaisé sur le bureau, à côté d’une place vide… pour un quatrième cahier ?"
+    ] },
+  { iteration: 17, date: '2026-10-20', title: 'La rentrée',
+    notes: [
+      "Les vacances sont finies : derrière le Grand Soleil s’ouvre un quatrième cahier, tout neuf. Le chapitre IX se joue au dos de sa couverture, là où sont imprimées les tables de multiplication.",
+      "Nouveau : le calcul mental ! Une ardoise pose une multiplication, et les réponses flottent dans des bulles autour d’elle. Touche la bonne : toute la page est frappée. Une mauvaise ? « Faux ! », et des chiffres s’échappent.",
+      "Quatre ratures de calcul : le chiffre qui trottine, le signe fois qui tire en croix, le signe égal qui lance ses deux traits, et la retenue qui saute sur les autres ratures pour les rendre plus solides.",
+      "Au bout de la rentrée t’attend le Boulier : des rangées de perles où une seule tringle est vide, des billes qui tombent du ciel, et une grande table de Pythagore dont la ligne et la colonne s’allument sous tes pieds.",
+      "La musique ? Une petite marche de rentrée au glockenspiel, avec la cloche de l’école. Le bureau accueille le cahier neuf, et le bestiaire gagne une neuvième page."
     ] }
 ];
 window.GAME_META = GAME_META;

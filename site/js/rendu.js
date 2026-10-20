@@ -31,7 +31,7 @@ function drawPage(v) {
   ctx.restore();
   ctx.fillStyle = paperPattern; ctx.fillRect(Math.max(0, v.x0), Math.max(0, v.y0), Math.min(WORLD.w, v.x1) - Math.max(0, v.x0), Math.min(WORLD.h, v.y1) - Math.max(0, v.y0));
   const paper = CH().paper;
-  if (paper === 'portee') drawPortee(v); else if (paper === 'milli') drawMilli(v); else if (paper === 'carte') drawCarte(v); else if (paper === 'calli') drawCalli(v); else if (paper === 'garde') drawGarde(v); else if (paper === 'brouillon') drawBrouillon(v); else if (paper === 'vacances') drawVacances(v); else drawSeyes(v);
+  if (paper === 'portee') drawPortee(v); else if (paper === 'milli') drawMilli(v); else if (paper === 'carte') drawCarte(v); else if (paper === 'calli') drawCalli(v); else if (paper === 'garde') drawGarde(v); else if (paper === 'brouillon') drawBrouillon(v); else if (paper === 'vacances') drawVacances(v); else if (paper === 'tables') drawTables(v); else drawSeyes(v);
   // bord crayonné
   ctx.save(); ctx.strokeStyle = C.pencil; ctx.globalAlpha = 0.55; ctx.lineWidth = 1.6; ctx.setLineDash([14, 9]);
   ctx.strokeRect(-6, -6, WORLD.w + 12, WORLD.h + 12); ctx.restore();
@@ -111,6 +111,10 @@ function drawEnemy(e) {
     drawVacancesEnemy(e, fr, fl);
   } else if (e.type === 'soleil') {
     drawSoleil(e, fr, fl);
+  } else if (TABLES_TYPES.has(e.type)) {
+    drawTablesEnemy(e, fr, fl);
+  } else if (e.type === 'boulier') {
+    drawBoulier(e, fr, fl);
   } else if (e.type === 'photocopieuse') {
     drawPhotocopieuse(e, fr, fl);
   } else if (e.type === 'boss') {
@@ -196,6 +200,7 @@ function drawWorld() {
   if (G.sweeps) drawLignes();
   if (G.morpionFx) drawMorpion(v);
   if (G.labyFx) drawLaby(v);
+  if (G.calcFx) drawCalc(v);
   // lettres
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for (const it of G.items) {
@@ -235,7 +240,7 @@ function drawWorld() {
   if (G.quotes) drawCitations();
   // traits rouges du boss
   ctx.strokeStyle = C.red; ctx.lineWidth = 4;
-  for (const b of G.ebul) { if (b.note || b.deg || b.cork || b.blot || b.ink || b.fleur || b.crayon || b.copeau || b.sheet || b.sun) continue; const n = Math.hypot(b.vx, b.vy) || 1; ctx.beginPath(); ctx.moveTo(b.x - b.vx / n * 9, b.y - b.vy / n * 9); ctx.lineTo(b.x + b.vx / n * 9, b.y + b.vy / n * 9); ctx.stroke(); }
+  for (const b of G.ebul) { if (b.note || b.deg || b.cork || b.blot || b.ink || b.fleur || b.crayon || b.copeau || b.sheet || b.sun || b.bead || b.eq) continue; const n = Math.hypot(b.vx, b.vy) || 1; ctx.beginPath(); ctx.moveTo(b.x - b.vx / n * 9, b.y - b.vy / n * 9); ctx.lineTo(b.x + b.vx / n * 9, b.y + b.vy / n * 9); ctx.stroke(); }
   drawNoteBullets();
   drawDegBullets();
   if (G.waves) drawWaves();
@@ -245,6 +250,7 @@ function drawWorld() {
   if (G.ribbons) drawGardeFx();
   if (G.tapes) drawBrouillonFx();
   if (G.lobs) drawVacancesFx();
+  if (G.tables) drawTablesFx();
   if (G.enemies) drawPhotoFx();   // vitre, lumière et feuilles de la photocopieuse
   for (const e of G.enemies) if (e.type === 'soupir' && e.phase === 'fade') {   // là où le soupir va se poser
     ctx.save(); ctx.strokeStyle = C.pencil; ctx.globalAlpha = 0.7; ctx.setLineDash([5, 6]); ctx.lineWidth = 2;
@@ -465,6 +471,7 @@ function endTally() {
   if (G.sceaux) parts.push(['ex-libris', G.sceaux]);
   if (G.morpions) parts.push(['morpions', G.morpions]);
   if (G.labys) parts.push(['labyrinthes', G.labys]);
+  if (G.calculs) parts.push(['calculs', G.calculs]);
   if (G.photos) parts.push(['photocopies', G.photos]);
   return parts.length > 1 ? [parts.map(q => q[0]).join(' · '), parts.map(q => q[1]).join(' · ')] : ['dictées réussies', G.dictees];
 }
@@ -520,6 +527,7 @@ function render() {
     drawLignesArrow();
     drawMorpionArrow();
     drawLabyArrow();
+    drawCalcArrow();
     if (G.state === 'play') drawBestToast();
     if (G.state === 'levelup') drawLevelUp();
     else if (G.state === 'pause') { dimPage(0.7); txt('Pause', W / 2, H / 2 - 40 * U, 80 * U, { font: FONT_CURSIVE, weight: 400 }); txt(G.input.touch ? 'Touche pour reprendre' : 'Échap ou Entrée pour reprendre', W / 2, H / 2 + 40 * U, 30 * U, { hl: C.hl }); if (!G.input.touch) txt('B : ouvrir le bestiaire', W / 2, H / 2 + 92 * U, 22 * U, { color: C.pencil, weight: 400 }); }

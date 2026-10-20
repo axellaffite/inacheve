@@ -9,6 +9,7 @@ const NOTES_VAC = [
   { x: WORLD.w * 0.72, y: -96, t: 'ajouté : un cahier de vacances (à finir avant la rentrée)', r: 0.025 },
   { x: WORLD.w + 175, y: WORLD.h * 0.3, t: 'ici, plus tard :', r: 0.06 },
   { x: WORLD.w + 190, y: WORLD.h * 0.3 + 46, t: 'la rentrée ?', r: 0.04 },
+  { x: WORLD.w + 200, y: WORLD.h * 0.3 + 96, t: '→ oui : avec les tables !', r: 0.07 },
   { x: -185, y: WORLD.h * 0.45, t: 'les corrigés', r: -0.07 },
   { x: -175, y: WORLD.h * 0.45 + 44, t: 'sont à la fin', r: -0.05 },
   { x: -160, y: WORLD.h * 0.45 + 88, t: '(ne pas tricher)', r: -0.04 },

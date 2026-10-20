@@ -384,6 +384,28 @@ const AU = {
         [349.23, 440, 523.25].forEach(f => this.tone(f * 2, 1.4, { vol: 0.07, when: 0.65 }));
         this.noise(0.9, { f: 4500, q: 0.7, vol: 0.06, sweep: 1.8, when: 0.6 }); break;
       }
+      // chapitre IX : la rentrée (un xylophone qui compte, une cloche d'école)
+      case 'tablesKill': if (this.throttle('kill', 45)) { this.tone([523.25, 587.33, 659.25, 698.46, 783.99, 880, 987.77, 1046.5, 1174.66][(k || 5) - 1], 0.16, { type: 'triangle', vol: 0.11 }); this.noise(0.03, { f: 3500, q: 6, vol: 0.06 }); } break;
+      case 'foisAim': if (this.throttle('foisAim', 150)) this.tone(660, 0.45, { type: 'square', vol: 0.025, slide: 1.4 }); break;
+      case 'foisFire': if (this.throttle('foisFire', 90)) { this.noise(0.08, { f: 2400, q: 3, vol: 0.08 }); this.tone(330, 0.1, { type: 'square', vol: 0.03 }); } break;
+      case 'egalAim': if (this.throttle('egalAim', 150)) { this.tone(392, 0.6, { type: 'triangle', vol: 0.04 }); this.tone(392, 0.6, { type: 'triangle', vol: 0.04, when: 0.004, slide: 1.01 }); } break;
+      case 'egalFire': if (this.throttle('egalFire', 90)) [0, 0.13, 0.26, 0.39].forEach(w => this.noise(0.04, { f: 3000, q: 4, vol: 0.06, when: w })); break;
+      case 'retenueHop': if (this.throttle('retenueHop', 100)) this.tone(440, 0.3, { type: 'sine', vol: 0.06, slide: 2 }); break;
+      case 'retenuePlus': this.tone(880, 0.12, { type: 'triangle', vol: 0.1 }); this.tone(1318.5, 0.25, { type: 'triangle', vol: 0.1, when: 0.08 }); break;
+      case 'retenueLand': if (this.throttle('retenueLand', 90)) { this.tone(130, 0.18, { vol: 0.14, slide: 0.6 }); this.noise(0.12, { f: 600, q: 0.8, vol: 0.1 }); } break;
+      case 'beads': for (let i = 0; i < 9; i++) this.noise(0.03, { f: 2600 + i * 180, q: 9, vol: 0.07, when: i * 0.05 }); break;
+      case 'billes': for (let i = 0; i < 6; i++) this.tone(900 + i * 120, 0.12, { type: 'sine', vol: 0.04, when: i * 0.1, slide: 1.3 }); break;
+      case 'billeLand': if (this.throttle('billeLand', 70)) { this.noise(0.05, { f: 1800, q: 6, vol: 0.12 }); this.tone(1046.5, 0.08, { type: 'triangle', vol: 0.06 }); } break;
+      case 'tableWarn': [523.25, 659.25, 783.99].forEach((f, i) => this.tone(f, 0.25, { type: 'square', vol: 0.025, when: i * 0.12 })); break;
+      case 'tableFire': this.noise(0.5, { f: 1600, q: 0.6, vol: 0.12, sweep: 0.4 }); this.tone(196, 0.4, { type: 'sawtooth', vol: 0.05, slide: 0.7 }); break;
+      case 'calcNew': for (let i = 0; i < 8; i++) this.tone(i % 2 ? 1318.5 : 1567.98, 0.09, { type: 'triangle', vol: 0.06, when: i * 0.055 }); break;   // driiing !
+      case 'calcOk': {   // la bonne réponse : la gamme monte jusqu'à l'accord
+        [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => this.tone(f, 0.3, { type: 'triangle', vol: 0.11, when: i * 0.07 }));
+        [523.25, 659.25, 783.99].forEach(f => this.tone(f * 2, 1.2, { vol: 0.07, when: 0.4 }));
+        this.noise(0.8, { f: 4500, q: 0.7, vol: 0.05, sweep: 1.8, when: 0.35 }); break;
+      }
+      case 'calcFaux': this.tone(233.08, 0.35, { type: 'square', vol: 0.05 }); this.tone(220, 0.45, { type: 'square', vol: 0.05, when: 0.18, slide: 0.9 }); break;
+      case 'boss9': for (let i = 0; i < 18; i++) this.tone(i % 2 ? 1174.66 : 1396.91, 0.08, { type: 'triangle', vol: 0.07, when: i * 0.05 }); this.tone(49, 2.4, { type: 'sawtooth', vol: 0.08, attack: 0.6 }); [98, 146.83, 196].forEach((f, i) => this.tone(f, 1.6, { type: 'triangle', vol: 0.07, when: 1 + i * 0.15 })); break;
       case 'lose': [6, 4, 2, 0].forEach((n, i) => this.tone(PENTA[n], 0.8, { type: 'triangle', vol: 0.15, when: i * 0.18 })); break;
     }
   },
@@ -404,6 +426,9 @@ const AU = {
   // la chanson de plage du chapitre VIII (un air original), un temps par case ; 0 = silence
   PLAGE: [880, 0, 1046.5, 880, 783.99, 0, 698.46, 0, 587.33, 698.46, 880, 0, 783.99, 0, 0, 0,
           880, 0, 1046.5, 1174.66, 1046.5, 880, 783.99, 0, 698.46, 783.99, 880, 783.99, 698.46, 0, 0, 0],
+  // la marche de la rentrée (un air original en sol majeur), un temps par case ; 0 = silence
+  RENTREE: [392, 440, 493.88, 523.25, 587.33, 0, 587.33, 0, 659.25, 587.33, 523.25, 493.88, 440, 0, 0, 0,
+            392, 440, 493.88, 523.25, 587.33, 659.25, 739.99, 783.99, 739.99, 659.25, 587.33, 493.88, 392, 0, 0, 0],
   // la mélodie d'« au clair de la lune » (traditionnelle), un temps par case ; 0 = la note précédente continue
   LUNE: [[523.25, 523.25, 523.25, 587.33, 659.25, 0, 587.33, 0, 523.25, 659.25, 587.33, 587.33, 523.25, 0, 0, 0],
          [587.33, 587.33, 587.33, 587.33, 440, 0, 440, 0, 587.33, 523.25, 493.88, 440, 392, 0, 0, 0]],
@@ -476,6 +501,18 @@ const AU = {
       const n = this.PLAGE[s % 32];
       if (n && (s >= 16 || intensity > 0.15)) this.tone(n, beat * 1.4, { type: 'sine', vol: 0.1, when, dest: this.mus, attack: 0.004 });
       if (n && intensity > 0.5) this.tone(n * 2, beat * 0.6, { type: 'triangle', vol: 0.025, when: when + beat / 2, dest: this.mus, attack: 0.003 });
+      if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
+      return;
+    }
+    if (chap === 9) {   // la marche de la rentrée (un air original) : glockenspiel, basse de fanfare, wood-block, et la cloche de l'école
+      const bar = s % 8, root = [98, 130.81, 146.83, 98][Math.floor(s / 8) % 4];
+      if (bar % 4 === 0) this.tone(root, beat * 1.6, { type: 'sine', vol: 0.22, when, dest: this.mus, attack: 0.02 });
+      if (bar % 4 === 2) this.tone(root * 1.5, beat * 1.2, { type: 'sine', vol: 0.13, when, dest: this.mus, attack: 0.02 });
+      if (s % 2 === 1) this.noise(0.03, { f: 1900, q: 12, vol: 0.05, when });   // le wood-block
+      if (s % 64 === 0) for (let i = 0; i < 10; i++) this.tone(i % 2 ? 1318.5 : 1567.98, 0.07, { type: 'triangle', vol: 0.025, when: when + i * 0.05 });   // driiing !
+      const n = this.RENTREE[s % 32];
+      if (n && (s >= 16 || intensity > 0.15)) { this.tone(n * 2, beat * 1.2, { type: 'sine', vol: 0.09, when, dest: this.mus, attack: 0.002 }); this.tone(n * 4, beat * 0.4, { vol: 0.015, when, dest: this.mus, attack: 0.002 }); }
+      if (n && intensity > 0.5) this.tone(n, beat * 0.8, { type: 'triangle', vol: 0.035, when: when + beat / 2, dest: this.mus, attack: 0.003 });
       if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
       return;
     }

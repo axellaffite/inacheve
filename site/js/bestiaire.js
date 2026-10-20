@@ -59,11 +59,18 @@ const BESTIAIRE = [null,
     ['ballon', 'le ballon de plage', 'Vise, puis file en rebondissant sur les bords et les murs des labyrinthes.'],
     ['cornet', 'le cornet de glace', 'Lance sa boule là où tu vas. Vide, il se sauve en attendant qu’elle repousse.'],
     ['soleil', 'le Grand Soleil', 'Rayons, marée, coucher de soleil : il a tout l’été devant lui.']
+  ],
+  [
+    ['chiffre', 'le chiffre', 'Trottine en comptant ses pas. Il y en a de 1 à 9, et ils se ressemblent tous un peu.'],
+    ['fois', 'le signe fois', 'Vise en croix, puis en plus, et tire dans ses quatre directions.'],
+    ['egal', 'le signe égal', 'Garde ses distances, puis lance ses deux traits côte à côte.'],
+    ['retenue', 'la retenue', 'Saute sur une autre rature et s’y ajoute : + 1, elle compte double.'],
+    ['boulier', 'le Boulier', 'Perles, tables de Pythagore, billes : il compte tout, sauf sur toi.']
   ]
 ];
 const BEST_TYPES = new Set(BESTIAIRE.slice(1).flat().map(b => b[0]));
 // rayon apparent de chaque croquis, pour qu'il tienne dans sa case
-const BEST_VIS = { soleil: 135, cornet: 34, ballon: 30, pointille: 70, coquillage: 24, stylo: 150, blanco: 32, taillecrayon: 30, cafe: 30, trombone: 24, cartable: 130, tampon: 38, peigne: 36, signet: 26, marbrure: 22, paraphe: 175, majuscule: 40, plumeoie: 30, arabesque: 36, delie: 30, boss: 92, fausse: 128, regle: 282, pieuvre: 150, metronome: 54, compas: 42, tourbillon: 34, equerre: 32, rapporteur: 32, bouteille: 34, crabe: 34, mouette: 24, tache: 30, gomme: 32 };
+const BEST_VIS = { boulier: 125, chiffre: 26, fois: 30, egal: 30, retenue: 26, soleil: 135, cornet: 34, ballon: 30, pointille: 70, coquillage: 24, stylo: 150, blanco: 32, taillecrayon: 30, cafe: 30, trombone: 24, cartable: 130, tampon: 38, peigne: 36, signet: 26, marbrure: 22, paraphe: 175, majuscule: 40, plumeoie: 30, arabesque: 36, delie: 30, boss: 92, fausse: 128, regle: 282, pieuvre: 150, metronome: 54, compas: 42, tourbillon: 34, equerre: 32, rapporteur: 32, bouteille: 34, crabe: 34, mouette: 24, tache: 30, gomme: 32 };
 const BEST_TOAST = 3.4;
 
 G.bestiary = {};
@@ -176,6 +183,11 @@ function bestFake(type, i) {
   else if (type === 'pointille') e.x = 55;
   else if (type === 'cornet') e.rot = Math.sin(t * 2) * 0.15;
   else if (type === 'soleil') e.spinA = t * 0.4;
+  else if (type === 'chiffre') { e.id = 7; e.rot = Math.sin(t * 3) * 0.15; }
+  else if (type === 'fois') e.rot = t * 1.5;
+  else if (type === 'egal') e.rot = Math.sin(t) * 0.12;
+  else if (type === 'retenue') e.rot = Math.sin(t * 2) * 0.2;
+  else if (type === 'boulier') e.count = t * 1.2;
   return e;
 }
 function drawCroquis(type, i, cx, cy, R) {

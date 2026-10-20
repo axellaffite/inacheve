@@ -1,4 +1,4 @@
-// Le bureau (itération 16) : les trois cahiers posés sur un pupitre d'écolier, un onglet par page.
+// Le bureau (itération 16) : les cahiers posés sur un pupitre d'écolier, un onglet par page.
 // On y choisit où commencer ; chaque onglet a sa musique, son record et sa phrase de l'histoire.
 // Scripts classiques partagés : les déclarations de premier niveau sont visibles des fichiers chargés ensuite.
 'use strict';
@@ -7,7 +7,8 @@
 const CAHIERS = [
   { name: 'Cahier n° 1', sub: 'pages I à VI', pages: [1, 2, 3, 4, 5, 6], cover: '#3d6cb5', dark: '#24467e', doodle: 'goutte' },
   { name: 'Brouillon', sub: 'page VII', pages: [7], cover: '#9aa58a', dark: '#66705a', doodle: 'cafe' },
-  { name: 'Vacances', sub: 'page VIII', pages: [8], cover: '#f0a238', dark: '#b8711a', doodle: 'soleil' }
+  { name: 'Vacances', sub: 'page VIII', pages: [8], cover: '#f0a238', dark: '#b8711a', doodle: 'soleil' },
+  { name: 'Cahier neuf', sub: 'page IX', pages: [9], cover: '#c8423f', dark: '#8e2a28', doodle: 'tables' }
 ];
 // L'histoire du cahier : une phrase par page, qu'on ne lit qu'une fois la page débloquée
 const HISTOIRE = [null,
@@ -18,9 +19,10 @@ const HISTOIRE = [null,
   'À la page de calligraphie, elle apprit à être pleine et déliée à la fois.',
   'La page de garde lui souffla : « ce cahier t’appartient ».',
   'Au brouillon, elle eut enfin le droit de rater, et elle en profita.',
-  'En vacances, elle se perdit exprès dans les labyrinthes, pour le plaisir de ressortir.'
+  'En vacances, elle se perdit exprès dans les labyrinthes, pour le plaisir de ressortir.',
+  'À la rentrée, dans un cahier tout neuf, elle apprit que les tables ne servent pas qu’à manger.'
 ];
-const TAB_COLORS = [null, '#f6e75e', '#ff9ec4', '#9be59b', '#8fd3f0', '#f7b267', '#c9a7f0', '#dcd6bc', '#ffd36b'];
+const TAB_COLORS = [null, '#f6e75e', '#ff9ec4', '#9be59b', '#8fd3f0', '#f7b267', '#c9a7f0', '#dcd6bc', '#ffd36b', '#b5e3d0'];
 const BUREAU = { hop: 0.24, key: 'inacheve.pages' };
 
 /* ----- les records de chaque page : { chapitre: { w: victoires, t: meilleur temps } } ----- */
@@ -108,7 +110,7 @@ function bureauLayout() {
     for (let ci = 0; ci < nC; ci++) books.push({ ci, x: l + gap + ci * (step + gap), y, w: bw, h: bh });
     ghost = { x: l + gap + nC * (step + gap), y, w: bw, h: bh };
     devoir = { x: l + gap + (nC + 1) * (step + gap), y: y + bh * 0.16, w: bw * 1.05, h: bw * 0.82 };
-  } else {   // en hauteur : deux colonnes, le devoir à la place du quatrième cahier
+  } else {   // en hauteur : deux colonnes, le devoir après le dernier cahier
     const cols = 2, rows = Math.ceil((nC + 1) / cols);
     bw = Math.min(200 * s, aw / (cols * 1.17 + 0.5), (availH / rows - 14 * s) / 1.32); bh = bw * 1.32;
     const step = bw * 1.17, gap = (aw - cols * step) / (cols + 1), rh = availH / rows;
@@ -266,6 +268,11 @@ function drawDoodle(kind, x, y, r, open) {
     ctx.stroke();
     ctx.fillStyle = C.graphite; ctx.fillRect(-r * 0.36, -r * 0.14, r * 0.3, r * 0.16); ctx.fillRect(r * 0.06, -r * 0.14, r * 0.3, r * 0.16);
   }
+  else if (kind === 'tables') {   // « 7 × 8 », à la craie, et une perle de boulier
+    ctx.font = '700 ' + (r * 0.8) + 'px ' + FONT_MAIN; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fffdf4';
+    ctx.fillText('7 × 8', 0, -r * 0.1);
+    ctx.fillStyle = '#f8c83c'; ctx.beginPath(); ctx.ellipse(0, r * 0.75, r * 0.2, r * 0.27, Math.PI / 2, 0, TAU); ctx.fill();
+  }
   ctx.restore();
 }
 // la place du cahier suivant : pas encore écrit (la promesse des marges)
@@ -277,7 +284,7 @@ function drawGhost(g, k) {
   roundRect(g.x, g.y, g.w, g.h, 6 * s); ctx.stroke(); ctx.setLineDash([]);
   const fz = Math.min(19 * s, g.w / 9);
   txt('ici, plus tard :', g.x + g.w / 2, g.y + g.h / 2 - fz * 0.8, fz, { color: '#fff3d8', weight: 400, rot: -0.05 });
-  txt('un quatrième cahier ?', g.x + g.w / 2, g.y + g.h / 2 + fz * 0.6, fz, { color: '#fff3d8', weight: 400, rot: -0.05 });
+  txt('un ' + ['premier', 'deuxième', 'troisième', 'quatrième', 'cinquième', 'sixième', 'septième'][CAHIERS.length] + ' cahier ?', g.x + g.w / 2, g.y + g.h / 2 + fz * 0.6, fz, { color: '#fff3d8', weight: 400, rot: -0.05 });
   ctx.restore();
 }
 function drawDevoirSheet(d, me, k) {
