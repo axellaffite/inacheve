@@ -46,12 +46,21 @@ async function load(seed) {
 // Montage (itération 15, « Le cahier de vacances ») : on ouvre directement le troisième cahier (chapitre VIII). Un labyrinthe
 // s'imprime à 0:08 et le pilote le traverse (les murs l'arrêtent, les ratures passent par-dessus) ; on montre ensuite les
 // ratures d'été vers 1:30, puis le Grand Soleil à 3:00 : rayons, marée et bouée, coucher de soleil.
+// le montage : le bureau, une goutte qui saute d'onglet en onglet, trois pages ouvertes, puis le Grand Soleil
+const hop = (cap, play = 0.8) => ({ act: () => window.__cap.choisir(1), cap, play });
 const STEPS = [
-  { cap: ['Derrière le brouillon, un troisième cahier : le cahier de vacances !'], act: () => window.__cap.start(8), play: 5 },
-  { cap: ['Un labyrinthe s’imprime sur la page : ses murs t’arrêtent…', '… mais les ratures, elles, passent par-dessus !'], play: 12, need: r => r.labys >= 1 },
-  { act: () => { for (let i = 0; i < 400 && window.__cap.state().t < 92; i++) window.__cap.skip(0.5); }, cap: ['Ballons qui rebondissent, cornets de glace, pointillés à relier…'], play: 8 }
+  { act: () => { const c = window.__cap; c.debloque(8); c.croque(['boss', 'fausse', 'regle', 'pieuvre', 'paraphe', 'cartable', 'stylo', 'soleil', 'gribouillis', 'biffure', 'croche', 'segment', 'compas', 'mouette', 'delie', 'marbrure', 'trombone', 'coquillage']); c.unir(['POINT_VIRGULE', 'CITATION']); c.pages({ 1: { w: 4, t: 212 }, 2: { w: 2, t: 229 }, 3: { w: 1, t: 233 }, 4: { w: 1, t: 241 }, 5: { w: 1, t: 226 } }); c.bureau(1); },
+    cap: ['Nouveau : le bureau ! Les trois cahiers posés sur un pupitre d’écolier'], play: 2.6 },
+  hop(['Un onglet par page, et chacun joue sa musique']), hop(),
+  { act: () => window.__cap.commencer(), cap: ['On commence où l’on veut : ici, le papier millimétré'], play: 6 },
+  { act: () => window.__cap.bureau(3), play: 1 },
+  hop(['Chaque page débloquée raconte un bout de l’histoire…']), hop(), hop(['… et le bureau garde tes records et tes étoiles'], 1.2),
+  { act: () => window.__cap.commencer(), cap: ['La page de garde, en papier marbré'], play: 6 },
+  { act: () => window.__cap.bureau(6), play: 1 },
+  hop(), hop([], 1),
+  { act: () => window.__cap.commencer(), cap: ['Tout au bout : le cahier de vacances et ses labyrinthes'], play: 6 }
 ];
-const BOSS_AT = 180, BOSS_FILM = 48;   // le Grand Soleil se lève à 3:00 ; secondes de combat filmées au plus
+const BOSS_AT = 180, BOSS_FILM = 40;   // le Grand Soleil se lève à 3:00 ; secondes de combat filmées au plus
 const argOf = (st, s) => st.arg ? st.arg(s) : undefined;
 // Joue tout le montage en accéléré (sans filmer) pour savoir comment se termine la partie avec la graine s
 async function simulate(s) {
@@ -71,7 +80,7 @@ if (SEED === null && !SMOKE) {
   let best = null;
   for (const s of [42, 7, 5, 99, 3, 11, 23, 64, 1, 8, 13, 21]) {
     const r = await simulate(s);
-    console.log(`graine ${s} : ${r.state} à ${r.t.toFixed(0)} s (niveau ${r.level}, ${r.hp} cœur(s), ${r.labys} labyrinthe(s)${r.ok ? '' : ', labyrinthe pas filmé'})`);
+    console.log(`graine ${s} : ${r.state} à ${r.t.toFixed(0)} s (chapitre ${r.chapter}, niveau ${r.level}, ${r.hp} cœur(s), ${r.labys} labyrinthe(s))`);
     const score = x => (good(x) ? 1e6 : 0) + (x.ok ? 1e5 : 0) + (x.state === 'victory' ? 5e4 - x.t : x.t);
     if (!best || score(r) > score(best.r)) best = { s, r };
     if (good(r)) break;
@@ -84,6 +93,7 @@ const fail = msg => { console.error('ÉCHEC : ' + msg); if (errors.length) conso
 
 if (SMOKE) {
   await page.evaluate(() => { window.__cap.start(); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(2); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(3); window.__cap.skip(30); window.__cap.frames(3); window.__cap.start(4); window.__cap.skip(30); window.__cap.frames(3); window.__cap.start(5); window.__cap.skip(40); window.__cap.frames(3); window.__cap.grant({ PLUME: 2, ENCRE: 2, GUILLEMETS: 2, ITALIQUE: 2, LUNE: 2, FEU: 2, CALLIGRAPHIE: 1, CITATION: 1, LUNE_ROUSSE: 1 }); window.__cap.skip(15); window.__cap.frames(3); window.__cap.start(6); window.__cap.skip(100); window.__cap.frames(3); window.__cap.skip(90); window.__cap.frames(3); window.__cap.start(7); window.__cap.skip(100); window.__cap.frames(3); window.__cap.skip(100); window.__cap.frames(3); window.__cap.start(8); window.__cap.skip(12); window.__cap.frames(3); window.__cap.skip(90); window.__cap.frames(3); window.__cap.skip(95); for (let i = 0; i < 12; i++) { window.__cap.skip(1.5); window.__cap.frames(1); } window.__cap.bestiaire(8); window.__cap.frames(3); window.__cap.start(3); window.__cap.skip(10); window.__cap.photocopie(); for (let i = 0; i < 12; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.bestiaire(7); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(3); window.__cap.refermer();
+    window.__cap.debloque(8); window.__cap.pages({ 1: { w: 2, t: 200 } }); window.__cap.bureau(); window.__cap.frames(3); for (let i = 0; i < 10; i++) { window.__cap.choisir(1); window.__cap.frames(2); } window.__cap.bureau(5); window.__cap.commencer(); window.__cap.skip(5); window.__cap.frames(2); window.__cap.debloque(1); window.__cap.bureau(4); window.__cap.commencer(); window.__cap.frames(2); window.__cap.bureau(); window.__cap.choisir(-1); window.__cap.commencer(); window.__cap.skip(5); window.__cap.frames(2);
     for (const [chapter, consigne, pouce] of [[1, 'miroir', 'pluie'], [1, 'sansPate', 'propre'], [4, 'courant', 'pluie'], [2, 'brouillard', 'souffle'], [6, 'double', 'aimant'], [3, 'presse', 'souffle'], [5, 'fragile', 'propre'], [7, 'courant', 'aimant'], [8, 'miroir', 'pluie']]) {
       window.__cap.devoir({ chapter, consigne, pouce, seed: chapter }); window.__cap.skip(25); window.__cap.frames(2);
     }

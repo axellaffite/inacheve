@@ -106,7 +106,7 @@ function openBestiaire(page) {
   if (G.state === 'play') { G.state = 'pause'; }
   G.bestFrom = G.state; G.bestFromT = G.stateT;
   G.state = 'bestiaire'; G.stateT = 0;
-  G.bestPage = clamp(page || (G.p ? G.chapter || 1 : 1), 1, unionPage()); G.bestFlip = 9;
+  G.bestPage = clamp(page || (G.bestFrom === 'bureau' ? bureauChapter() : G.p ? G.chapter || 1 : 1), 1, unionPage()); G.bestFlip = 9;
   AU.play('turn');
   setUI();
 }

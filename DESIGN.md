@@ -303,9 +303,23 @@ Tenu depuis la note de marge « le cahier de vacances ? » du chapitre VII (qui 
 ### Commencer au chapitre VIII (itération 15)
 
 - Battre le Stylo Rouge enregistre `inacheve.chapitre` = 8 : touche 8 ou bouton « Commencer au chapitre VIII ». Brouillon de 52 mots, niveau 53. `__cap.start(8)` le lance en démo (test de fumée).
-- Les boutons et les touches de chapitre sont maintenant générés par une boucle sur `CHAPTERS` (il suffit d'ajouter le bouton `btnChN` dans `index.html`).
+- Les touches de chapitre sont générées par une boucle sur `CHAPTERS`. (Les boutons « Commencer au chapitre N » ont été remplacés par le bureau à l'itération 16.)
 - Le bestiaire a une huitième page (coquillage, pointillé, ballon de plage, cornet de glace, Grand Soleil) ; le carnet des unions devient la page 9.
 - Le devoir du jour peut tomber sur les huit chapitres, et les labyrinthes comptent comme exploits. Cela a de nouveau changé la correspondance entre les dates et les devoirs à partir du 19 octobre 2026.
+
+## Le bureau (itération 16)
+
+Tout est dans `bureau.js` (chargé après `devoir.js`). Un nouvel état, `bureau`, qui remplace les huit boutons « Commencer au chapitre N » de l'écran titre.
+
+- **Ouvrir** : touche Tab ou bouton « Le bureau » depuis l'écran titre ; Échap, Retour arrière, Tab ou la croix ramènent au titre (sans rejouer l'animation du titre). Les touches 2 à 8 du titre marchent toujours.
+- **Le pupitre** (`deskTexture`, calculé une fois par taille d'écran, hasard à part `mulberry32(1616)`) : bois veiné en planches, quelques nœuds, et sur écran large la rainure avec son crayon et l'encrier encastré ; une vieille tache d'encre et « la goutte était là » gravé dans le bois.
+- **Les cahiers** (`CAHIERS` : nom, pages, couleurs, dessin de couverture) : le cahier n° 1 (pages I à VI, bleu, une goutte), le brouillon (VII, gris-vert, une marque de tasse), les vacances (VIII, orange, un soleil à lunettes). Un chapitre rangé dans aucun cahier va dans le dernier (`cahierPages`). Chaque page est un **onglet** de couleur (`TAB_COLORS`) qui dépasse à droite de la couverture ; une page pas encore débloquée a un onglet gris hachuré, un cahier sans page débloquée est assombri et marqué « pas encore écrit ». Une étoile dorée marque les pages gagnées, et la couverture compte les étoiles.
+- **Après les cahiers** : une place en pointillés, « ici, plus tard : un quatrième cahier ? » (la promesse des marges, version bureau ; pas sur écran en hauteur), et le devoir du jour punaisé, qu'on peut choisir comme une page.
+- **Choisir** (`bureauItems` : les pages dans l'ordre, puis le devoir) : ← → ↑ ↓ ou ZQSD/WASD, survol à la souris, toucher. La goutte saute de l'objet choisi au suivant (`bureauSpot`, un arc de 0,24 s) avec un « plip » qui monte avec le numéro de la page. **La musique est celle de l'onglet choisi** (`musicChapter`, utilisé par `AU.tick` et par le journal du son en capture).
+- **La fiche** en bas : le croquis du patron (s'il est au bestiaire), le nom de la page, sa **phrase de l'histoire** (`HISTOIRE`, une par page, cachée tant que la page n'est pas débloquée : « La suite de l'histoire se cache derrière… »), le bestiaire de la page, le record. Entrée, toucher la fiche ou toucher à nouveau l'onglet commence la page (`bureauGo` : la partie complète pour le I, le brouillon au-delà, le devoir pour la fiche du devoir). Une page fermée fait trembler la fiche et dit quel patron battre.
+- **Les records** (`inacheve.pages`, `{ chapitre: { w: victoires, t: meilleur temps } }`, validé au chargement) : `notePage` est appelé par `killEnemy` quand le patron d'une page tombe pour la première fois (ni en démo, ni au devoir). Un meilleur temps donne un sous-titre « Nouveau record pour cette page ».
+- Capture : `__cap.bureau(n)` (ouvre le bureau sur la page n, depuis n'importe où), `__cap.choisir(±1)`, `__cap.commencer()` (lance la page choisie avec le pilote), `__cap.debloque(n)`, `__cap.pages(o)` ; `__cap.state()` donne `bureau` (le chapitre choisi, -1 hors du bureau) et `records`.
+- Mise en page (`bureauLayout`) : sur écran large, tout sur une ligne (cahiers, place vide, devoir) ; en hauteur, deux colonnes et le devoir à la place du quatrième cahier.
 
 ## Vitesse du jeu (itération 11)
 
@@ -321,6 +335,7 @@ Tenu depuis la note de marge « le cahier de vacances ? » du chapitre VII (qui 
 - `inacheve.devoir` : la meilleure note du devoir du jour, `{ date, best }` (validée au chargement).
 - `inacheve.vitesse` : vitesse du jeu (1, 0,8 ou 0,6).
 - `inacheve.unions` : le carnet des unions, la liste des mots composés déjà choisis (validée au chargement, enregistrée à chaque nouvelle union).
+- `inacheve.pages` : les records de chaque page (victoires et meilleur temps contre son patron), montrés au bureau.
 
 ## Déterminisme
 
@@ -367,11 +382,12 @@ Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois page
 
 ## Carnet d'idées (libre à toi de piocher, de modifier ou d'ignorer)
 
-- ~~**Portées musicales**~~ : fait à l'itération 3 (chapitre II). ~~**Papier millimétré**~~ : fait à l'itération 5 (chapitre III). ~~**Carte au trésor**~~ : faite à l'itération 6 (chapitre IV), avec le buvard qui boit tout en patron. ~~**Calligraphie**~~ : faite à l'itération 8 (chapitre V). ~~**Page de garde**~~ : faite à l'itération 10 (chapitre VI, papier marbré, ex-libris, le Cartable). ~~**Un deuxième cahier**~~ : le cahier de brouillon, fait à l'itération 13 (chapitre VII, morpion, Stylo Rouge). ~~**Le cahier de vacances**~~ : fait à l'itération 15 (chapitre VIII, labyrinthe, Grand Soleil). **La suite** (promesse dans la marge du VIII) : la rentrée (un cahier neuf, tout propre, où chaque rature se voit ?), ou le dos de la couverture avec ses tables de multiplication. Il faudra vraiment une façon de choisir son cahier sur l'écran titre (des cahiers posés sur un bureau ?) : les boutons de chapitre sont huit.
+- ~~**Portées musicales**~~ : fait à l'itération 3 (chapitre II). ~~**Papier millimétré**~~ : fait à l'itération 5 (chapitre III). ~~**Carte au trésor**~~ : faite à l'itération 6 (chapitre IV), avec le buvard qui boit tout en patron. ~~**Calligraphie**~~ : faite à l'itération 8 (chapitre V). ~~**Page de garde**~~ : faite à l'itération 10 (chapitre VI, papier marbré, ex-libris, le Cartable). ~~**Un deuxième cahier**~~ : le cahier de brouillon, fait à l'itération 13 (chapitre VII, morpion, Stylo Rouge). ~~**Le cahier de vacances**~~ : fait à l'itération 15 (chapitre VIII, labyrinthe, Grand Soleil). **La suite** (promesse dans la marge du VIII) : la rentrée (un cahier neuf, tout propre, où chaque rature se voit ?), ou le dos de la couverture avec ses tables de multiplication. ~~Une façon de choisir son cahier sur l'écran titre~~ : faite à l'itération 16 (le bureau) ; un nouveau cahier s'ajoute à `CAHIERS`, une nouvelle page à `pages` d'un cahier, sa phrase à `HISTOIRE` et sa couleur à `TAB_COLORS`.
 - **Le cahier de vacances, la suite** : des mots croisés à remplir avec les lettres ramassées, un « relie les points » qui dessine une rature à biffer, des labyrinthes à plusieurs sorties (une seule est la bonne), une clé à ramasser dans le labyrinthe, un pointillé qu'on relie soi-même dans l'ordre pour le biffer d'un coup, un château de sable que les ballons démolissent, une marée qui efface l'encre.
 - **La carte, la suite** : des îles qui comptent vraiment (sable qui ralentit, mer où l'on glisse), un perroquet qui répète la dernière attaque, une boussole à soi (mot BOUSSOLE ?) qui montre le trésor, des trésors piégés (un coffre-mimique), une carte qui se déchire.
 - **La figure, la suite** : des figures imposées (« trace un carré »), des points qui bougent, un compas à soi (mot COMPAS ?) qui trace un cercle protecteur ; des mots de géométrie comme pouvoirs (ANGLE, RAYON).
-- ~~**Commencer au chapitre II**~~ : fait à l'itération 4 (brouillon de 19 mots au hasard), et au chapitre III à l'itération 5. Pour plus tard : un écran titre qui montre les pages débloquées comme les onglets d'un classeur.
+- ~~**Commencer au chapitre II**~~ : fait à l'itération 4 (brouillon de 19 mots au hasard), et au chapitre III à l'itération 5. ~~Les pages comme les onglets d'un classeur~~ : le bureau, itération 16.
+- **Le bureau, la suite** : des objets du bureau qui servent (la trousse qui ouvre les réglages, le bestiaire posé en carnet, le carnet de bord en cahier de textes), une rature qui se promène sur le bureau et qu'on peut biffer, la goutte qu'on dirige soi-même d'un cahier à l'autre, un cahier qu'on ouvre vraiment (les pages qui se tournent), un défi « toutes les pages d'affilée » avec son record, la phrase de l'histoire lue à voix de boîte à musique quand on gagne la page.
 - ~~**Refrain**~~ : fait à l'itération 4 (notes à toucher dans l'ordre). Pour plus tard : un refrain « en canon » que deux mélodies se partagent ; un refrain caché que seul l'écho d'une ligne traversée révèle ; ~~une version du chapitre I (une phrase à recopier mot à mot, la « copie »)~~ : faite à l'itération 12 (les lignes).
 - **Les paroles** (TODO dans la marge, et nouvelle promesse « les paroles ? » à côté du refrain) : des syllabes sous les notes du refrain, qui forment un mot ; les dictées du chapitre II écrites sous la portée, comme des paroles de chanson.
 - **Les lignes, la suite** : des lignes en deux couleurs (un mot au stylo rouge à repasser), une ligne qui se recopie en miroir, une rature « pâté » qui fait des taches sur la ligne en cours, la phrase de fin écrite comme une ligne au bas de la page, des lignes à copier aussi sur les autres pages (une portée à recopier note à note ?).
@@ -385,7 +401,7 @@ Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois page
 - **Le morpion, la suite** : une grille de 4 × 4 (« puissance 4 » au brouillon ?), des X qui trichent quand le Stylo Rouge est là, un morpion à jouer contre un ami sur le même clavier, un « morpion ultime » (neuf grilles) pour le cahier de vacances.
 - **Lisibilité** : quand la page est très tachée en fin de chapitre, les taches pourraient sécher plus vite (ou une option « page propre »).
 - **Accessibilité** : options de contraste, daltonisme (les secousses et la vitesse sont faites).
-- **Histoire** : une phrase d'histoire se révèle à chaque chapitre, comme si le cahier racontait quelque chose.
+- ~~**Histoire**~~ : une phrase par page, révélée au bureau (itération 16). Pour plus tard : la phrase écrite à la plume sur la page à la victoire, une dernière phrase quand toutes les pages sont gagnées, une histoire qui change selon les mots-pouvoirs les plus utilisés.
 - **Musique** : un thème par chapitre (fait à l'itération 3 pour le I et le II) ; reste une musique qui réagit aux mots choisis.
 - **Encre sympathique, la suite** : des lettres invisibles cachées dans la page, révélées seulement quand on est soi-même invisible.
 - **La calligraphie, la suite** : une lettrine à dorer avec un motif imposé (rouge puis or), un mot à recopier lettre par lettre en suivant des pointillés (la « copie »), un encrier à soi qui recharge la plume, un mot composé PLUME + ENCRE = « CALLIGRAPHIE » qui laisserait derrière toi un trait qui brûle les ratures.

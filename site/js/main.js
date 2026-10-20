@@ -16,6 +16,7 @@ function initTitle() {
 function update(dt) {
   G.time += dt; G.stateT += dt;
   if (G.state !== 'levelup') { for (const c of G.captions) c.t += dt; G.captions = G.captions.filter(c => c.t < c.dur); }
+  if (G.state === 'bureau') { stepBureau(dt); return; }
   if (G.state === 'title') {
     for (const d of G.deco) { d.x += d.vx * dt; d.y += d.vy * dt; d.rot += d.spin * dt; if (Math.abs(d.x - WORLD.w / 2) > 950) d.vx *= -1; if (Math.abs(d.y - WORLD.h / 2) > 560) d.vy *= -1; }
     G.cam.x = WORLD.w / 2 + Math.sin(G.time * 0.08) * 120; G.cam.y = WORLD.h / 2 + Math.cos(G.time * 0.06) * 60;
@@ -51,7 +52,7 @@ function frame(now) {
   const dt = Math.min(0.05, (now - lastT) / 1000 || 0.016); lastT = now;
   update(dt * G.speed); render();
   if (G.chapter >= 5 && G.state !== 'title' && !marbleCv) marbleWork(6);   // le papier marbré du chapitre VI se prépare en douce
-  AU.tick(G.state === 'play' ? Math.min(1, G.t / 180) : 0.1, !!G.boss && G.state === 'play', G.state === 'title' ? 1 : G.chapter);
+  AU.tick(G.state === 'play' ? Math.min(1, G.t / 180) : 0.1, !!G.boss && G.state === 'play', musicChapter());
   requestAnimationFrame(frame);
 }
 
@@ -66,7 +67,7 @@ function setUI() {
   document.getElementById('btnSpeed').textContent = 'Vitesse : ' + speedLabel();
   document.getElementById('btnDevoir').classList.toggle('hidden', G.state !== 'title');
   document.getElementById('btnTitre').classList.toggle('hidden', !(G.state === 'pause' || G.state === 'gameover' || G.state === 'victory'));
-  for (let n = 2; n < CHAPTERS.length; n++) document.getElementById('btnCh' + n).classList.toggle('hidden', !(G.state === 'title' && G.unlocked >= n));
+  document.getElementById('btnBureau').classList.toggle('hidden', G.state !== 'title');
 }
 function primaryAction() {
   AU.init();
@@ -108,6 +109,22 @@ if (!CAPTURE) {
       else if (e.code === 'Escape' || e.code === 'KeyB' || e.code === 'Enter' || e.code === 'Space' || e.code === 'Backspace') closeBestiaire();
       return;
     }
+    if (e.code === 'Tab' && (G.state === 'title' || G.state === 'bureau')) e.preventDefault();
+    if (G.state === 'bureau') {   // le bureau : choisir sa page
+      const dg = /^(Digit|Numpad)([1-9])$/.exec(e.code), at = dg ? bureauItems().findIndex(it => it.kind === 'page' && it.n === parseInt(dg[2], 10)) : -1;
+      if (['ArrowLeft', 'ArrowUp', 'KeyA', 'KeyW'].includes(e.code)) bureauSelect(G.bureauSel - 1);
+      else if (['ArrowRight', 'ArrowDown', 'KeyD', 'KeyS'].includes(e.code)) bureauSelect(G.bureauSel + 1);
+      else if (e.code === 'Enter' || e.code === 'Space') bureauGo();
+      else if (e.code === 'Escape' || e.code === 'Backspace' || e.code === 'Tab') closeBureau();
+      else if (e.code === 'KeyB') openBestiaire();
+      else if (e.code === 'KeyJ') startDevoir(false);
+      else if (e.code === 'KeyM') toggleMute();
+      else if (e.code === 'KeyC') toggleCalm();
+      else if (e.code === 'KeyV') toggleSpeed();
+      else if (at >= 0) { bureauSelect(at); bureauGo(); }
+      return;
+    }
+    if (e.code === 'Tab' && G.state === 'title') { openBureau(); return; }
     if (e.code === 'KeyB' && ['title', 'play', 'pause', 'gameover', 'victory'].includes(G.state)) { openBestiaire(); return; }
     if (e.code === 'KeyM') toggleMute();
     if (e.code === 'KeyC') toggleCalm();
@@ -145,6 +162,11 @@ if (!CAPTURE) {
       if (h === 'close') closeBestiaire(); else if (h === 'prev') flipBestiaire(-1); else if (h === 'next') flipBestiaire(1);
       return;
     }
+    if (G.state === 'bureau') {
+      const h = bureauHit(x, y);
+      if (h === 'close') closeBureau(); else if (h === 'go') bureauGo(); else if (h !== null) { if (h === G.bureauSel) bureauGo(); else bureauSelect(h); }
+      return;
+    }
     if (G.state === 'levelup') {
       if (G.stateT < 0.35) return;
       cardRects().forEach((r, i) => { if (x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) chooseMot(i); });
@@ -159,6 +181,7 @@ if (!CAPTURE) {
   });
   cv.addEventListener('pointermove', e => {
     const j = G.input.joy;
+    if (G.state === 'bureau' && e.pointerType === 'mouse') { const h = bureauHit(e.clientX, e.clientY); if (typeof h === 'number') bureauSelect(h); }
     if (G.state === 'levelup') { cardRects().forEach((r, i) => { if (e.clientX >= r.x && e.clientX <= r.x + r.w && e.clientY >= r.y && e.clientY <= r.y + r.h) G.sel = i; }); }
     if (j && j.active && j.id === e.pointerId) { j.x = e.clientX; j.y = e.clientY; }
   });
@@ -176,7 +199,7 @@ if (!CAPTURE) {
   document.getElementById('btnSpeed').addEventListener('click', toggleSpeed);
   document.getElementById('btnDevoir').addEventListener('click', () => { AU.init(); if (G.state === 'title') startDevoir(false); });
   document.getElementById('btnTitre').addEventListener('click', () => { AU.init(); if (['pause', 'gameover', 'victory'].includes(G.state)) goTitle(); cv.focus(); });
-  for (let n = 2; n < CHAPTERS.length; n++) document.getElementById('btnCh' + n).addEventListener('click', () => { AU.init(); if (G.state === 'title') newGame(false, n); });
+  document.getElementById('btnBureau').addEventListener('click', () => { AU.init(); if (G.state === 'title') openBureau(); cv.focus(); });
   document.getElementById('btnPause').addEventListener('click', () => togglePause());
 }
 function videoFor(n) {
@@ -225,7 +248,7 @@ window.__cap = {
     const out = [];
     for (let i = 0; i < n; i++) {
       CAPLOG.on = true; update(dt); CAPLOG.on = false; render(); out.push(cv.toDataURL('image/jpeg', quality));
-      CAPLOG.states.push({ t: CAPLOG.t, i: G.state === 'play' ? Math.min(1, G.t / 180) : 0.1, b: !!G.boss && G.state === 'play', c: G.state === 'title' ? 1 : G.chapter || 1 });
+      CAPLOG.states.push({ t: CAPLOG.t, i: G.state === 'play' ? Math.min(1, G.t / 180) : 0.1, b: !!G.boss && G.state === 'play', c: musicChapter() });
       CAPLOG.t += dt;
     }
     return out;
@@ -237,7 +260,7 @@ window.__cap = {
   devoir(over) { if (over) devoirOver = over; startDevoir(true); },
   start(chapter) { newGame(true, chapter || 1); },
   caption(t, d) { caption(t, d); },
-  state() { return { state: G.state, chapter: G.chapter || 1, t: G.t, boss: !!G.boss, bossDefeated: !!G.bossDefeated, level: G.level, hp: G.p ? G.p.hp : 0, enemies: G.enemies ? G.enemies.length : 0, kills: G.kills, mots: G.mots, refrains: G.refrains || 0, refrain: G.refrain ? G.refrain.prog : -1, figures: G.figures || 0, tresors: G.tresors || 0, tresor: G.tresor ? G.tresor.shown : -1, enlus: G.enlus || 0, enlu: G.enlu ? Math.round(100 * G.enlu.painted / G.enlu.cells.length) : -1, croquis: bestCount(), page: G.bestPage, unions: unionCount(), quotes: G.quotes ? G.quotes.length : 0, sceaux: G.sceaux || 0, sceau: G.sceau ? (G.sceau.carried ? 1 : 0) : -1, devoir: !!G.devoir, note: G.note ? G.note.n : -1, lignes: G.lignes || 0, ligne: G.ligne ? Math.round(100 * G.ligne.prog / G.ligne.len) : -1, morpions: G.morpions || 0, morpion: G.morpion ? G.morpion.cells.filter(c => c).length : -1, labys: G.labys || 0, laby: G.laby ? (G.laby.inEnt ? G.laby.trail.length : 0) : -1, photos: G.photos || 0, copies: G.copies || 0, photoKills: G.photoKills || 0, double: G.double ? 1 : 0 }; },
+  state() { return { state: G.state, chapter: G.chapter || 1, t: G.t, boss: !!G.boss, bossDefeated: !!G.bossDefeated, level: G.level, hp: G.p ? G.p.hp : 0, enemies: G.enemies ? G.enemies.length : 0, kills: G.kills, mots: G.mots, refrains: G.refrains || 0, refrain: G.refrain ? G.refrain.prog : -1, figures: G.figures || 0, tresors: G.tresors || 0, tresor: G.tresor ? G.tresor.shown : -1, enlus: G.enlus || 0, enlu: G.enlu ? Math.round(100 * G.enlu.painted / G.enlu.cells.length) : -1, croquis: bestCount(), page: G.bestPage, unions: unionCount(), quotes: G.quotes ? G.quotes.length : 0, sceaux: G.sceaux || 0, sceau: G.sceau ? (G.sceau.carried ? 1 : 0) : -1, devoir: !!G.devoir, note: G.note ? G.note.n : -1, lignes: G.lignes || 0, ligne: G.ligne ? Math.round(100 * G.ligne.prog / G.ligne.len) : -1, morpions: G.morpions || 0, morpion: G.morpion ? G.morpion.cells.filter(c => c).length : -1, labys: G.labys || 0, laby: G.laby ? (G.laby.inEnt ? G.laby.trail.length : 0) : -1, photos: G.photos || 0, copies: G.copies || 0, photoKills: G.photoKills || 0, double: G.double ? 1 : 0, bureau: G.state === 'bureau' ? bureauChapter() : -1, records: Object.keys(G.pages).length }; },
   bestiaire(page) { openBestiaire(page); },
   croque(types) { types.forEach((k, i) => { if (BEST_TYPES.has(k)) G.bestiary[k] = (G.bestiary[k] || 0) + 4 + (i * 37) % 90; }); },
   unir(keys) { keys.forEach(k => { if (UNIONS.includes(k)) G.unions[k] = 1; }); },
@@ -251,7 +274,13 @@ window.__cap = {
   levelup() { if (G.state === 'play' || G.state === 'levelup') G.pendingLv++; },
   // montage : fixe le niveau affiché, puis tourne la page (chapitre suivant, mêmes mots)
   level(n) { G.level = n; G.xp = 0; G.xpNext = xpFor(n); },
-  turn() { if (G.state === 'play' || G.state === 'victory') turnPage(); }
+  turn() { if (G.state === 'play' || G.state === 'victory') turnPage(); },
+  // le bureau : l'ouvrir (depuis n'importe où), y déplacer la goutte, commencer la page choisie
+  bureau(n) { if (G.state !== 'title') goTitle(); const i = n ? bureauItems().findIndex(it => it.kind === 'page' && it.n === n) : undefined; openBureau(i === -1 ? undefined : i); },
+  choisir(d) { bureauSelect(G.bureauSel + d); },
+  commencer() { bureauGo(true); },
+  debloque(n) { G.unlocked = clamp(n, 1, CHAPTERS.length - 1); },
+  pages(o) { for (const k in o) G.pages = Object.assign({}, G.pages, { [k]: o[k] }); }
 };
 if (!CAPTURE) { fontsReady.then(() => { lastT = performance.now(); requestAnimationFrame(frame); }); }
 else render();

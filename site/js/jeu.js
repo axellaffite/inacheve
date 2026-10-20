@@ -210,7 +210,7 @@ function killEnemy(e) {
   if (e.isBoss) {
     G.boss = null; G.cam.shake = 26; AU.play('win');
     for (let i = 0; i < 40; i++) dropLetter(e.x + rnd(-80, 80), e.y + rnd(-80, 80), i % 4 === 0 ? 5 : 2);
-    if (!G.bossDefeated) { G.bossDefeated = true; G.victoryAt = G.t + 1.6; unlockChapter(Math.min(CHAPTERS.length - 1, G.chapter + 1)); }
+    if (!G.bossDefeated) { G.bossDefeated = true; G.victoryAt = G.t + 1.6; unlockChapter(Math.min(CHAPTERS.length - 1, G.chapter + 1)); notePage(G.chapter, G.t); }
     return;
   }
   const paper = CH().paper;

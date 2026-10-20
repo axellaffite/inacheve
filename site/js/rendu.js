@@ -437,16 +437,12 @@ function drawTitle() {
   const a = clamp((t - 1.2) * 2, 0, 1);
   txt('un jeu qui s’écrit tout seul, toutes les douze heures', W / 2, ty + 128 * s, Math.min(32 * s, W / 22), { color: C.graphite, weight: 400, alpha: a });
   txt(G.input.touch ? 'Touche l’écran pour commencer' : 'Appuie sur Entrée pour commencer', W / 2, ty + 196 * s, Math.min(38 * s, W / 18), { color: C.ink, alpha: a * (0.6 + 0.4 * Math.sin(G.time * 3)), hl: C.hl });
-  if (!G.input.touch) txt('ZQSD, WASD ou flèches : bouger    Espace : pâté d’encre    Échap : pause    J : devoir du jour    B : bestiaire    M : son    V : vitesse', W / 2, ty + 252 * s, Math.min(22 * s, W / 40), { color: C.pencil, weight: 400, alpha: a });
+  if (!G.input.touch) txt('ZQSD, WASD ou flèches : bouger    Espace : pâté d’encre    Échap : pause    Tab : le bureau    J : devoir du jour    B : bestiaire    M : son', W / 2, ty + 252 * s, Math.min(22 * s, W / 40), { color: C.pencil, weight: 400, alpha: a });
   else txt('Glisse pour bouger, bouton « pâté » pour foncer', W / 2, ty + 252 * s, 22 * s, { color: C.pencil, weight: 400, alpha: a });
-  const news = G.unlocked >= 8 ? (G.input.touch ? 'Le chapitre VIII t’attend (bouton en bas) : le cahier de vacances, et ses labyrinthes.' : 'Touche 8 : chapitre VIII, le cahier de vacances. Trouveras-tu la sortie ?')
-    : G.unlocked >= 7 ? (G.input.touch ? 'Le chapitre VII t’attend (bouton en bas). Derrière le brouillon : un cahier de vacances !' : 'Touche 7 : chapitre VII. Tout au bout, un cahier de vacances…')
-    : G.unlocked >= 6 ? (G.input.touch ? 'Le chapitre VI t’attend (bouton en bas). Derrière la page de garde : un deuxième cahier !' : 'Touche 6 : chapitre VI. Derrière la page de garde, un deuxième cahier…')
-    : G.unlocked >= 5 ? (G.input.touch ? 'Nouveau : derrière le Grand Paraphe, la page de garde… puis un deuxième cahier.' : 'Touche 5 : chapitre V. Tout au bout, un deuxième cahier : le brouillon…')
-    : G.unlocked >= 4 ? (G.input.touch ? 'Plus loin : la calligraphie, la page de garde, puis un cahier de brouillon…' : 'Touche 4 : chapitre IV. Tout au bout, un cahier de brouillon…')
-    : G.unlocked >= 3 ? (G.input.touch ? 'Plus loin dans le cahier : une carte… et, tout au bout, un deuxième cahier.' : 'Touche 3 : chapitre III. Tout au bout, un deuxième cahier…')
-    : G.unlocked >= 2 ? (G.input.touch ? 'Tout au bout du premier cahier : un deuxième, tout raturé…' : 'Touche 2 : chapitre II. Tout au bout, un cahier de brouillon…')
-    : 'Nouveau : huit pages à écrire, trois cahiers, et un labyrinthe tout au bout…';
+  const nb = n => ['zéro', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix', 'onze', 'douze'][n] || String(n), pages = CHAPTERS.length - 1;
+  const news = G.input.touch ? 'Nouveau : le bureau (bouton en bas). ' + nb(CAHIERS.length).replace(/^./, c => c.toUpperCase()) + ' cahiers, ' + nb(pages) + ' pages : choisis la tienne.'
+    : G.unlocked >= 2 ? 'Nouveau : touche Tab, le bureau. Choisis ta page parmi les ' + nb(pages) + (G.unlocked > 2 ? ', ou touches 2 à ' + G.unlocked : ', ou touche 2') + '.'
+    : 'Nouveau : touche Tab, le bureau. ' + nb(CAHIERS.length).replace(/^./, c => c.toUpperCase()) + ' cahiers, ' + nb(pages) + ' pages à écrire… et une histoire à lire.';
   txt(news, W / 2, ty + (G.best ? 322 : 290) * s, Math.min(22 * s, W / 30), { color: C.ink, weight: 400, alpha: a * 0.85 });
   const bn = bestCount(), un = unionCount(), keyB = G.input.touch ? '' : ' (touche B)';
   const bnews = !(bn || un) ? 'Nouveau : le carnet des unions, au bout du bestiaire' + keyB
@@ -504,11 +500,16 @@ function drawEnd() {
 function render() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.fillStyle = C.unwritten; ctx.fillRect(0, 0, W, H);
-  drawWorld();
-  drawDevoirFx();   // courant d'air, brouillard de gomme
-  drawVacancesScreen();   // le coucher du Grand Soleil
-  if (G.state === 'bestiaire') { if (G.bestFrom !== 'title') drawHUD(); drawBestiaire(); }
+  const desk = G.state === 'bureau' || (G.state === 'bestiaire' && G.bestFrom === 'bureau');
+  if (desk) drawBureau();   // le bureau remplace la page
+  else {
+    drawWorld();
+    drawDevoirFx();   // courant d'air, brouillard de gomme
+    drawVacancesScreen();   // le coucher du Grand Soleil
+  }
+  if (G.state === 'bestiaire') { if (G.bestFrom !== 'title' && !desk) drawHUD(); drawBestiaire(); }
   else if (G.state === 'title') drawTitle();
+  else if (desk) { /* déjà dessiné */ }
   else {
     drawHUD();
     drawRefrainArrow();

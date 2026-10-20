@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 15, date: '2026-10-19', title: 'Le cahier de vacances', chapter: 'VIII', chapterName: 'Le cahier de vacances' };
+const GAME_META = { iteration: 16, date: '2026-10-20', title: 'Le bureau', chapter: 'VIII', chapterName: 'Le cahier de vacances' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -131,6 +131,14 @@ const JOURNAL = [
       "Quatre ratures d’été : le coquillage qui roule, le pointillé (des points à relier, seule la tête craint tes gouttes), le ballon de plage qui rebondit sur les murs et le cornet de glace qui lance sa boule là où tu vas.",
       "Au bout des vacances t’attend le Grand Soleil : rayons qui tournent, marée qu’on ne traverse que par la bouée, et coucher de soleil où la page entière plonge dans la nuit.",
       "La musique ? Une petite chanson de plage au ukulélé. Le bestiaire gagne une huitième page, et le devoir du jour peut tomber sur le cahier de vacances."
+    ] },
+  { iteration: 16, date: '2026-10-20', title: 'Le bureau',
+    notes: [
+      "Nouveau : le bureau ! Les trois cahiers sont posés sur un vieux pupitre d’écolier, avec un onglet de couleur pour chaque page. Touche Tab (ou le bouton « Le bureau ») pour l’ouvrir.",
+      "La goutte d’encre saute d’onglet en onglet, et chaque onglet joue la musique de sa page : la portée, la valse, « Frère Jacques », la chanson de plage…",
+      "Chaque page débloquée révèle une phrase de l’histoire de la goutte. Lues dans l’ordre, elles racontent tout le cahier.",
+      "Le bureau garde tes records : combien de fois tu as battu chaque patron, et en combien de temps au mieux. Une étoile dorée marque les pages gagnées.",
+      "Le devoir du jour est punaisé sur le bureau, à côté d’une place vide… pour un quatrième cahier ?"
     ] }
 ];
 window.GAME_META = GAME_META;
