@@ -129,7 +129,7 @@ if (!CAPTURE) {
     if (Array.isArray(raw)) for (const k of raw) if (UNIONS.includes(k)) G.unions[k] = 1;
   } catch (e) { G.unions = {}; }
 }
-const unionPage = () => CHAPTERS.length;
+const unionPage = () => CHAPTERS.length + 1;   // après la page des rares
 const unionCount = () => UNIONS.filter(k => G.unions[k]).length;
 function saveUnions() {
   if (CAPTURE) return;

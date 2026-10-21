@@ -117,6 +117,8 @@ function drawEnemy(e) {
     drawBoulier(e, fr, fl);
   } else if (e.type === 'photocopieuse') {
     drawPhotocopieuse(e, fr, fl);
+  } else if (e.type === 'agrafeuse') {
+    drawAgrafeuse(e, fr, fl);
   } else if (e.type === 'boss') {
     if (e.phase === 'aim') { ctx.save(); ctx.strokeStyle = C.red; ctx.globalAlpha = 0.4; ctx.setLineDash([16, 10]); ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(e.cx * 420, e.cy * 420); ctx.stroke(); ctx.restore(); }
     const pulse = 1 + Math.sin(G.time * 5) * 0.03;
@@ -240,7 +242,7 @@ function drawWorld() {
   if (G.quotes) drawCitations();
   // traits rouges du boss
   ctx.strokeStyle = C.red; ctx.lineWidth = 4;
-  for (const b of G.ebul) { if (b.note || b.deg || b.cork || b.blot || b.ink || b.fleur || b.crayon || b.copeau || b.sheet || b.sun || b.bead || b.eq) continue; const n = Math.hypot(b.vx, b.vy) || 1; ctx.beginPath(); ctx.moveTo(b.x - b.vx / n * 9, b.y - b.vy / n * 9); ctx.lineTo(b.x + b.vx / n * 9, b.y + b.vy / n * 9); ctx.stroke(); }
+  for (const b of G.ebul) { if (b.note || b.deg || b.cork || b.blot || b.ink || b.fleur || b.crayon || b.copeau || b.sheet || b.sun || b.bead || b.eq || b.agrafe) continue; const n = Math.hypot(b.vx, b.vy) || 1; ctx.beginPath(); ctx.moveTo(b.x - b.vx / n * 9, b.y - b.vy / n * 9); ctx.lineTo(b.x + b.vx / n * 9, b.y + b.vy / n * 9); ctx.stroke(); }
   drawNoteBullets();
   drawDegBullets();
   if (G.waves) drawWaves();
@@ -252,12 +254,14 @@ function drawWorld() {
   if (G.lobs) drawVacancesFx();
   if (G.tables) drawTablesFx();
   if (G.enemies) drawPhotoFx();   // vitre, lumière et feuilles de la photocopieuse
+  if (G.agrafes) drawAgrafFx();   // agrafes en vol, plantées, et ratures clouées
   for (const e of G.enemies) if (e.type === 'soupir' && e.phase === 'fade') {   // là où le soupir va se poser
     ctx.save(); ctx.strokeStyle = C.pencil; ctx.globalAlpha = 0.7; ctx.setLineDash([5, 6]); ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(e.bx, e.by, 14 + 8 * (e.pt / 0.65), 0, TAU); ctx.stroke(); ctx.restore();
   }
   drawDouble();
   drawPlayer();
+  drawPlayerPin();
   for (const pt of G.points) {
     if (pt.done) { const k = (pt.t - pt.fall) / 0.6; ctx.strokeStyle = 'rgba(18,39,95,' + (1 - k) + ')'; ctx.lineWidth = 6 * (1 - k) + 1; ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.r * ease(k), 0, TAU); ctx.stroke(); continue; }
     if (pt.t < 0) continue;
@@ -473,6 +477,7 @@ function endTally() {
   if (G.labys) parts.push(['labyrinthes', G.labys]);
   if (G.calculs) parts.push(['calculs', G.calculs]);
   if (G.photos) parts.push(['photocopies', G.photos]);
+  if (G.agrafPins) parts.push(['ratures agrafées', G.agrafPins]);
   return parts.length > 1 ? [parts.map(q => q[0]).join(' · '), parts.map(q => q[1]).join(' · ')] : ['dictées réussies', G.dictees];
 }
 function drawEnd() {

@@ -129,7 +129,7 @@ function stepTables(e, dt, dx, dy, d, slow, hid) {
       e.rot = Math.sin(G.t * 6 + e.id) * 0.2;
       if (e.pt <= 0) {
         let tgt = null, bd = RETENUE.reach * RETENUE.reach;
-        for (const o of G.enemies) { if (o === e || o.dead || o.isBoss || o.type === 'retenue' || o.ghost || (o.plus || 0) >= 2 || o.type === 'photocopieuse') continue; const q = (o.x - e.x) ** 2 + (o.y - e.y) ** 2; if (q < bd) { bd = q; tgt = o; } }
+        for (const o of G.enemies) { if (o === e || o.dead || o.isBoss || o.type === 'retenue' || o.ghost || (o.plus || 0) >= 2 || ERRANTES.has(o.type)) continue; const q = (o.x - e.x) ** 2 + (o.y - e.y) ** 2; if (q < bd) { bd = q; tgt = o; } }
         if (!tgt && (d > 520 || hid)) { e.pt = 0.4; return; }
         e.phase = 'hop'; e.pt = RETENUE.hop; e.hx = e.x; e.hy = e.y; e.tgt = tgt; e.ghost = true;
         const P = G.p; e.lx = tgt ? tgt.x : clamp(P.x + P.vx * 0.4, 20, WORLD.w - 20); e.ly = tgt ? tgt.y : clamp(P.y + P.vy * 0.4, 20, WORLD.h - 20);

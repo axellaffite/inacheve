@@ -277,7 +277,23 @@ Une rature « errante » qui n'appartient à aucune page : une machine de bureau
 - Le pilote se place au milieu de la vitre pendant l'annonce (`photoTarget`), sinon il va la biffer.
 - L'écran de fin compte les « photocopies » (de la goutte) ; `__cap.state()` donne `photos`, `copies`, `photoKills` et `double` ; `__cap.photocopie()` la fait venir tout de suite à 420 px (montage, test de fumée).
 - Sons : clac-clac à l'arrivée, deux bips à l'annonce, le bourdonnement de la lumière, un bip par copie, un arpège pour la copie de la goutte, des feuilles, et le bourrage.
-- Pas encore au bestiaire : elle n'appartient à aucune page (voir le carnet d'idées : une page des « rares »).
+- Au bestiaire depuis l'itération 18, sur la page des rares.
+
+## L'agrafeuse (itération 18)
+
+La deuxième machine errante : l'agrafeuse du bureau s'est échappée. Tout est dans `agrafeuse.js` (chargé juste après `photocopieuse.js`), qui ajoute `agrafeuse` à `ETYPES` et à `PHOTO_NOCOPY`. `ERRANTES` (photocopieuse, agrafeuse) liste les machines égarées : jamais copiées, jamais clouées, jamais rejointes par une retenue, visées en priorité à moins de 480 px.
+
+- **Arrivée** : une fois par chapitre, à 2:20 (`AGRAF.at`, après le départ de la photocopieuse), si le patron n'est pas là (`stepAgraf`, `G.agrafDone`, remis à zéro quand on tourne la page). PV : 70 × (1 + t / 190) × (1 + 0,15 × `scale`), comme la photocopieuse.
+- **Cycle** : elle tourne autour de toi à 300 px, puis ouvre sa mâchoire et annonce deux rails de pointillés rouges de 760 px (`warn`, 0,8 s, elle suit la goutte pendant les premiers 60 %), puis tire **trois agrafes** à 0,14 s d'écart (`fireAgrafe`, `b.agrafe`, 600 px/s), et recommence 3,2 s plus tard. Au bout de 40 s (`AGRAF.stay`), plus d'agrafes : elle s'en va.
+- **La goutte agrafée** (`agrafeHit`, `stepPin`, `p.pin`) : une agrafe qui touche (hors invulnérabilité et hors pâté) fait 1 dégât et **cloue la goutte** 1,1 s. Bouger raccourcit l'agrafe (jusqu'à 3,2 fois plus vite : « secoue-toi ! ») et un pâté l'arrache d'un coup (`unpin`). Le pilote s'en sort tout seul en bougeant.
+- **Les agrafes plantées** (`G.agrafes`, 18 au plus, 8 s) : une agrafe qui arrive au bout de sa course se plante dans la page. La première rature (ni patron, ni machine, ni fantôme) qui marche dessus est **clouée** 1,9 s (`pinEnemy`, `e.pin`) : elle ne bouge plus et n'attaque plus, mais elle mord encore au contact ; une agrafe est dessinée sur elle.
+- **Dernière rafale** (`agrafDeath`) : biffée, elle cloue toutes les ratures dans un rayon de 540 px pendant 2,8 s, lâche douze lettres et 500 points.
+- Le pilote vient se placer de biais à 230 px d'elle (`agrafTarget`) et fuit l'axe annoncé (`agrafDanger`). L'écran de fin compte les « ratures agrafées » ; `__cap.state()` donne `agrafees` (fois où la goutte a été clouée), `agrafPins`, `agrafKills` et `pin` ; `__cap.agrafeuse()` la fait venir tout de suite à 380 px (montage, test de fumée), `__cap.reprendre()` sort de la pause.
+- Sons : double clac à l'arrivée, ressort qui se tend à l'annonce, clac par agrafe, ting quand ça cloue, déchirure quand on s'arrache, rafale finale.
+
+### Les rares (itération 18)
+
+- Le bestiaire a une page de plus, juste avant le carnet des unions : **les rares** (`RARES`, `rarePage()` = `CHAPTERS.length`, `bestList(n)`), pour les machines égarées qui n'appartiennent à aucun chapitre (photocopieuse, agrafeuse). Une case vide dit « rôde quelque part dans le cahier ». Le carnet des unions devient la page 11 (`unionPage()` = `CHAPTERS.length + 1`).
 
 ## Chapitre VIII : le cahier de vacances (itération 15)
 
@@ -360,7 +376,7 @@ Tenu depuis la note de marge « la rentrée ? » du chapitre VIII (qui répond m
 - `inacheve.muted` : son coupé.
 - `inacheve.calme` : secousses d'écran désactivées (bouton « Secousses » ou touche C).
 - `inacheve.chapitre` : chapitre le plus loin débloqué (2 après la Grande Rature, 3 après la Fausse Note, 4 après la Règle de fer, 5 après la Pieuvre-Buvard, 6 après le Grand Paraphe, 7 après le Cartable, 8 après le Stylo Rouge, 9 après le Grand Soleil).
-- `inacheve.bestiaire` : le bestiaire, `{ type: nombre de ratures biffées }` (validé au chargement, enregistré à chaque nouveau croquis, en fin de partie et quand on quitte la page).
+- `inacheve.bestiaire` : le bestiaire, `{ type: nombre de ratures biffées }` (machines égarées comprises depuis l'itération 18) (validé au chargement, enregistré à chaque nouveau croquis, en fin de partie et quand on quitte la page).
 - `inacheve.devoir` : la meilleure note du devoir du jour, `{ date, best }` (validée au chargement).
 - `inacheve.vitesse` : vitesse du jeu (1, 0,8 ou 0,6).
 - `inacheve.unions` : le carnet des unions, la liste des mots composés déjà choisis (validée au chargement, enregistrée à chaque nouvelle union).
@@ -402,6 +418,8 @@ Itération 17 (chapitre IX, brouillon de 52 mots, pilote) : premiers réglages (
 
 Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois pages tournées), le pilote ouvre 6 à 7 trésors et bat la Pieuvre-Buvard sans grande peine. Au brouillon (37 mots au hasard), 4 graines sur 6 gagnent, en descendant à 2 cœurs ; les 2 autres meurent vers 2:50 et 3:10. Premiers réglages beaucoup trop faciles (`scale` 3,6, pieuvre à 2 100 PV, pas de bouteilles avant 100 s) : aucun pilote ne perdait plus de deux cœurs et le combat durait plus d'une minute.
 
+Itération 18 (l'agrafeuse, pilote) : appelée à 60 s au brouillon du chapitre VII, elle tombe en une vingtaine de secondes, cloue la goutte une ou deux fois et sa dernière rafale agrafe une cinquantaine de ratures (le brouillon en est couvert). Au chapitre III et au IX, elle tombe aussi avant de repartir. Arrivée naturelle à 2:20 : elle a alors environ 30 % de PV de plus. Pour un humain, l'agrafe est surtout une surprise : si elle frustre, raccourcir `AGRAF.pinP` plutôt que de supprimer le clouage.
+
 ## Outils
 
 - `tools/check.mjs` : vérifications sans navigateur.
@@ -428,7 +446,7 @@ Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois page
 - ~~**Page du jour**~~ : faite à l'itération 11 (le devoir du jour), avec la consigne « écrire en miroir » à l'itération 12. Pour plus tard : d'autres consignes (« dictée à l'envers », « une seule lettre compte »), un devoir du week-end plus long (deux pages d'affilée), un carnet de notes qui garde les sept derniers jours, un code du jour à recopier pour comparer sa note avec un ami (sans aucun serveur).
 - ~~**Combinaisons de mots**~~ : fait à l'itération 2 (cinq mots composés), puis trois de plus à l'itération 9 (CITATION, CALLIGRAPHIE, LUNE ROUSSE). Pour plus tard : CLAIR DE LUNE (SOUFFLE + LUNE, les lunes soignent ?), VENT + VIRGULE, un mot composé à trois mots très rare (une « phrase » ?), des unions propres à un chapitre (une union qui n'existe que sur la portée).
 - ~~**Accessibilité : secousses**~~ : fait à l'itération 2 (réglage « Secousses »). ~~Vitesse du jeu~~ : faite à l'itération 11. Restent : contraste renforcé, daltonisme.
-- **Nouvelles ratures** : ~~le tipp-ex, la tache de café, le trombone, le taille-crayon~~ (faits à l'itération 13, au brouillon). ~~Des ratures d'été~~ (coquillage, pointillé, ballon, cornet : itération 15). Restent : la règle qui balaie la page, l'agrafeuse, le compas à pointe sèche qui épingle la goutte, la mouette qui vole les lettres, le crabe qui pince la goutte et la ralentit.
+- **Nouvelles ratures** : ~~le tipp-ex, la tache de café, le trombone, le taille-crayon~~ (faits à l'itération 13, au brouillon). ~~Des ratures d'été~~ (coquillage, pointillé, ballon, cornet : itération 15). Restent : la règle qui balaie la page, ~~l'agrafeuse~~ (machine errante, itération 18), le compas à pointe sèche qui épingle la goutte, la mouette qui vole les lettres, le crabe qui pince la goutte et la ralentit.
 - **Patrons de chapitres** : ~~le Correcteur au stylo rouge~~ (le Stylo Rouge, itération 13), ~~le Cartable~~ (itération 10). ~~la Photocopieuse qui duplique tout (les ratures, et toi ?)~~ : faite à l'itération 14, en machine errante plutôt qu'en patron. Pour plus tard : une photocopieuse patron d'un cahier de bureau, qui copie aussi les attaques des patrons précédents.
 - **Le morpion, la suite** : une grille de 4 × 4 (« puissance 4 » au brouillon ?), des X qui trichent quand le Stylo Rouge est là, un morpion à jouer contre un ami sur le même clavier, un « morpion ultime » (neuf grilles) pour le cahier de vacances.
 - **Lisibilité** : quand la page est très tachée en fin de chapitre, les taches pourraient sécher plus vite (ou une option « page propre »).
@@ -442,5 +460,6 @@ Itération 6 (chapitre IV) : montage vidéo (mots donnés, niveau 46, trois page
 - ~~**Citations, la suite**~~ : des citations propres à chaque page, faites à l'itération 10. Reste : une citation qu'on pourrait lire en entier en pause.
 - **L'ex-libris, la suite** : écrire soi-même son nom sur l'étiquette du cahier (gardé en local, jamais envoyé) ; un sceau piégé qui fond si on traîne ; une page « collection » des six emblèmes ; des sceaux sur d'autres chapitres (porter une note jusqu'à la portée ?).
 - **Le Cartable, la suite** : qu'il recrache des ratures de tous les chapitres (le bestiaire en entier), une fermeture éclair qui coupe la page en deux.
-- **La photocopieuse, la suite** : une page des « rares » au bestiaire (photocopieuse, et d'autres ratures errantes : un trombone géant, une agrafeuse) ; une copie qui copie aussi les mots-pouvoirs (lunes, citations) ; une photocopie « en couleur » très rare qui copie une lettrine dorée ; une feuille de copie qui reste sur la page et qu'on peut ramasser (une lettre en double ?) ; un mot composé avec ÉCHO qui ferait de chaque tir une photocopie.
+- **La photocopieuse, la suite** : ~~une page des « rares » au bestiaire~~ et ~~une agrafeuse~~ (faites à l'itération 18) ; d'autres machines errantes pour la page des rares (un trombone géant, une perforatrice qui fait des trous dans la page, un taille-crayon électrique, un tampon dateur) ; une copie qui copie aussi les mots-pouvoirs (lunes, citations) ; une photocopie « en couleur » très rare qui copie une lettrine dorée ; une feuille de copie qui reste sur la page et qu'on peut ramasser (une lettre en double ?) ; un mot composé avec ÉCHO qui ferait de chaque tir une photocopie.
 - **Musique** : ~~« Frère Jacques » en canon~~ (fait à l'itération 13, au brouillon). Une chanson de plage originale au ukulélé (itération 15, au cahier de vacances). Pour plus tard : d'autres comptines traditionnelles pour d'autres pages (« À la claire fontaine », « Une souris verte »), et un refrain du chapitre II à deux voix sur le même principe.
+- **L'agrafeuse, la suite** : agrafer deux ratures ensemble (les coups portés à l'une blessent l'autre), une agrafe dorée très rare qui cloue un patron une seconde, un mot-pouvoir AGRAFE (tes gouttes clouent), une agrafeuse patron d'un futur cahier de bureau, une liasse de feuilles agrafées qu'on tourne comme un livre.

@@ -68,9 +68,16 @@ const BESTIAIRE = [null,
     ['boulier', 'le Boulier', 'Perles, tables de Pythagore, billes : il compte tout, sauf sur toi.']
   ]
 ];
-const BEST_TYPES = new Set(BESTIAIRE.slice(1).flat().map(b => b[0]));
+// Les rares (itération 18) : les machines égarées, qui n'appartiennent à aucune page
+const RARES = [
+  ['photocopieuse', 'la photocopieuse', 'Copie tout ce qui passe dans sa lumière. Toi aussi, si tu oses.'],
+  ['agrafeuse', 'l’agrafeuse', 'Cloue à la page tout ce qu’elle touche. Ses agrafes perdues clouent aussi les ratures.']
+];
+const rarePage = () => CHAPTERS.length;
+const bestList = n => n === rarePage() ? RARES : BESTIAIRE[n];
+const BEST_TYPES = new Set(BESTIAIRE.slice(1).concat([RARES]).flat().map(b => b[0]));
 // rayon apparent de chaque croquis, pour qu'il tienne dans sa case
-const BEST_VIS = { boulier: 125, chiffre: 26, fois: 30, egal: 30, retenue: 26, soleil: 135, cornet: 34, ballon: 30, pointille: 70, coquillage: 24, stylo: 150, blanco: 32, taillecrayon: 30, cafe: 30, trombone: 24, cartable: 130, tampon: 38, peigne: 36, signet: 26, marbrure: 22, paraphe: 175, majuscule: 40, plumeoie: 30, arabesque: 36, delie: 30, boss: 92, fausse: 128, regle: 282, pieuvre: 150, metronome: 54, compas: 42, tourbillon: 34, equerre: 32, rapporteur: 32, bouteille: 34, crabe: 34, mouette: 24, tache: 30, gomme: 32 };
+const BEST_VIS = { photocopieuse: 76, agrafeuse: 66, boulier: 125, chiffre: 26, fois: 30, egal: 30, retenue: 26, soleil: 135, cornet: 34, ballon: 30, pointille: 70, coquillage: 24, stylo: 150, blanco: 32, taillecrayon: 30, cafe: 30, trombone: 24, cartable: 130, tampon: 38, peigne: 36, signet: 26, marbrure: 22, paraphe: 175, majuscule: 40, plumeoie: 30, arabesque: 36, delie: 30, boss: 92, fausse: 128, regle: 282, pieuvre: 150, metronome: 54, compas: 42, tourbillon: 34, equerre: 32, rapporteur: 32, bouteille: 34, crabe: 34, mouette: 24, tache: 30, gomme: 32 };
 const BEST_TOAST = 3.4;
 
 G.bestiary = {};
@@ -86,7 +93,7 @@ function saveBestiaire() {
   try { localStorage.setItem('inacheve.bestiaire', JSON.stringify(G.bestiary)); } catch (e) { /* rien */ }
 }
 const bestCount = () => Object.keys(G.bestiary).length;
-const bestPageDone = n => BESTIAIRE[n].every(b => G.bestiary[b[0]]);
+const bestPageDone = n => bestList(n).every(b => G.bestiary[b[0]]);
 
 // Une rature biffée : on la compte, et la première fois on la croque
 function noteBestiaire(type) {
@@ -97,8 +104,8 @@ function noteBestiaire(type) {
   G.newCroquis = (G.newCroquis || 0) + 1;
   G.bestToasts.push({ type, t: 0 });
   AU.play('croquis');
-  const page = BESTIAIRE.findIndex(p => p && p.some(b => b[0] === type));
-  if (bestPageDone(page)) caption('Bestiaire : la page du chapitre ' + CHAPTERS[page].num + ' est complète !', 3.2, 'green');
+  const page = RARES.some(b => b[0] === type) ? rarePage() : BESTIAIRE.findIndex(p => p && p.some(b => b[0] === type));
+  if (bestPageDone(page)) caption(page === rarePage() ? 'Bestiaire : la page des rares est complète !' : 'Bestiaire : la page du chapitre ' + CHAPTERS[page].num + ' est complète !', 3.2, 'green');
   saveBestiaire();
 }
 function stepBestToasts(dt) {
@@ -133,7 +140,7 @@ function flipBestiaire(d) {
 function bestLayout() {
   const s = U, x = SAFE.l + 14 * s, y = SAFE.t + 12 * s, w = W - SAFE.l - SAFE.r - 28 * s, h = H - SAFE.t - SAFE.b - 24 * s;
   const narrow = w < 640, ml = narrow ? 34 * s : 70 * s;
-  const uni = G.bestPage === unionPage(), n = uni ? UNIONS.length : BESTIAIRE[G.bestPage].length, cols = narrow ? 2 : uni ? 4 : 3, rows = Math.ceil(n / cols);
+  const uni = G.bestPage === unionPage(), n = uni ? UNIONS.length : bestList(G.bestPage).length, cols = narrow ? 2 : uni ? 4 : 3, rows = Math.ceil(n / cols);
   const gx = x + ml + 8 * s, gy = y + (narrow ? 112 : 124) * s, gw = w - ml - 22 * s, gh = h - (narrow ? 112 : 124) * s - 74 * s;
   const cells = [];
   for (let i = 0; i < n; i++) {
@@ -188,6 +195,8 @@ function bestFake(type, i) {
   else if (type === 'egal') e.rot = Math.sin(t) * 0.12;
   else if (type === 'retenue') e.rot = Math.sin(t * 2) * 0.2;
   else if (type === 'boulier') e.count = t * 1.2;
+  else if (type === 'photocopieuse') { e.copied = new Set([1, 2]); e.lid = Math.max(0, Math.sin(t * 1.1)); }
+  else if (type === 'agrafeuse') { e.lid = Math.max(0, Math.sin(t * 1.4)); e.clac = 0; e.ang = 0; }
   return e;
 }
 function drawCroquis(type, i, cx, cy, R) {
@@ -227,11 +236,11 @@ function drawBestCell(b, i, c, a) {
   if (met) {
     const yy = wrap(note, c.x + c.w / 2, ty + fs * 1.15, c.w - 18 * s, small, small * 1.15, C.graphite, 400);
     if (yy < c.y + c.h - 2) txt(met === 1 ? 'biffé·e une fois' : 'biffé·e ' + met + ' fois', c.x + c.w / 2, Math.min(yy + 2 * s, c.y + c.h - small * 0.6), small, { color: C.margin, weight: 400 });
-  } else txt(Math.max(G.unlocked, G.p ? G.chapter || 1 : 1) >= G.bestPage ? 'pas encore croisé·e' : 'se cache plus loin dans le cahier', c.x + c.w / 2, ty + fs * 1.15, small, { color: C.pencil, weight: 400 });
+  } else txt(G.bestPage === rarePage() ? 'rôde quelque part dans le cahier' : Math.max(G.unlocked, G.p ? G.chapter || 1 : 1) >= G.bestPage ? 'pas encore croisé·e' : 'se cache plus loin dans le cahier', c.x + c.w / 2, ty + fs * 1.15, small, { color: C.pencil, weight: 400 });
   ctx.restore();
 }
 function drawBestiaire() {
-  const s = U, L = bestLayout(), uni = G.bestPage === unionPage(), page = BESTIAIRE[G.bestPage], ch = CHAPTERS[G.bestPage];
+  const s = U, L = bestLayout(), uni = G.bestPage === unionPage(), rare = G.bestPage === rarePage(), page = bestList(G.bestPage), ch = CHAPTERS[G.bestPage];
   dimPage(0.55);
   const open = ease(clamp(G.stateT * 4, 0, 1));
   ctx.save(); ctx.globalAlpha = open; ctx.translate(0, (1 - open) * 30 * s);
@@ -246,7 +255,7 @@ function drawBestiaire() {
   // en-tête
   const cxh = L.x + L.ml + (L.w - L.ml) / 2;
   txt(uni ? 'Carnet des unions' : 'Bestiaire des ratures', L.narrow ? cxh - 22 * s : cxh, L.y + (L.narrow ? 36 : 44) * s, Math.min(44 * s, (L.w - L.ml - 110 * s) / 10), { font: FONT_CURSIVE, weight: 400, color: C.ink });
-  txt(uni ? 'Les mots qui se tiennent la main' : 'Chapitre ' + ch.num + ' · ' + ch.name, cxh, L.y + (L.narrow ? 80 : 92) * s, Math.min(24 * s, L.w / 22), { color: C.graphite, weight: 400 });
+  txt(uni ? 'Les mots qui se tiennent la main' : rare ? 'Les rares · machines égarées, d’aucune page' : 'Chapitre ' + ch.num + ' · ' + ch.name, cxh, L.y + (L.narrow ? 80 : 92) * s, Math.min(24 * s, L.w / 22), { color: C.graphite, weight: 400 });
   if (!L.narrow) txt(uni ? unionCount() + ' / ' + UNIONS.length + ' unions' : bestCount() + ' / ' + BEST_TYPES.size + ' croquées', L.x + L.w - 70 * s, L.y + 92 * s, 21 * s, { color: C.margin, weight: 400, align: 'right' });
   // les cases (glissent un peu quand on tourne la page)
   const fk = ease(clamp(G.bestFlip / 0.35, 0, 1)), dx = (1 - fk) * 60 * s * G.bestDir;
@@ -274,7 +283,7 @@ function drawBestiaire() {
 function drawBestToast() {
   const q = G.bestToasts[0]; if (!q) return;
   const s = U, k = Math.min(ease(q.t * 3), ease((BEST_TOAST - q.t) * 3));
-  const b = BESTIAIRE.flat().find(x => x && x[0] === q.type), w = 132 * s, h = 150 * s;
+  const b = BESTIAIRE.concat([RARES]).flat().find(x => x && x[0] === q.type), w = 132 * s, h = 150 * s;
   const x = SAFE.l + 16 * s - (1 - k) * (w + 40 * s), y = H * 0.36;
   ctx.save(); ctx.translate(x + w / 2, y + h / 2); ctx.rotate(-0.05);
   ctx.shadowColor = 'rgba(40,40,30,0.25)'; ctx.shadowBlur = 12; ctx.shadowOffsetY = 4;

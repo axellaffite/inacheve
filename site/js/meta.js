@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 17, date: '2026-10-20', title: 'La rentrée', chapter: 'IX', chapterName: 'La rentrée' };
+const GAME_META = { iteration: 18, date: '2026-10-21', title: 'L’agrafeuse', chapter: 'IX', chapterName: 'La rentrée' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -147,6 +147,14 @@ const JOURNAL = [
       "Quatre ratures de calcul : le chiffre qui trottine, le signe fois qui tire en croix, le signe égal qui lance ses deux traits, et la retenue qui saute sur les autres ratures pour les rendre plus solides.",
       "Au bout de la rentrée t’attend le Boulier : des rangées de perles où une seule tringle est vide, des billes qui tombent du ciel, et une grande table de Pythagore dont la ligne et la colonne s’allument sous tes pieds.",
       "La musique ? Une petite marche de rentrée au glockenspiel, avec la cloche de l’école. Le bureau accueille le cahier neuf, et le bestiaire gagne une neuvième page."
+    ] },
+  { iteration: 18, date: '2026-10-21', title: 'L’agrafeuse',
+    notes: [
+      "Clac ! Une deuxième machine s’est échappée du bureau : l’agrafeuse. Vers 2:20, elle débarque sur chaque page, au brouillon comme dans le devoir du jour.",
+      "Elle ouvre la mâchoire, montre deux rails de pointillés rouges… puis tire trois agrafes d’affilée. Une agrafe qui te touche te cloue à la page : débats-toi dans tous les sens, ou fais un pâté, pour t’arracher.",
+      "Les agrafes qui ratent se plantent dans le papier. La première rature qui marche dessus reste clouée sur place un bon moment : à toi d’attirer les ratures sur le chemin des agrafes.",
+      "Biffe-la, et elle lâche une dernière rafale : toutes les ratures autour d’elle sont agrafées à la page d’un seul coup.",
+      "Le bestiaire ouvre une page pour les rares : les machines égarées qui n’appartiennent à aucun chapitre. La photocopieuse y a enfin son croquis, l’agrafeuse aussi."
     ] }
 ];
 window.GAME_META = GAME_META;

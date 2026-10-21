@@ -269,6 +269,13 @@ const AU = {
       case 'photoDouble': [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => this.tone(f, 0.35, { type: 'triangle', vol: 0.1, when: i * 0.07 })); this.noise(0.3, { f: 3000, q: 1, vol: 0.06 }); break;
       case 'photoEject': [0, 1, 2].forEach(i => this.noise(0.12, { f: 1200, q: 1.2, vol: 0.1, sweep: 1.8, when: i * 0.08 })); break;
       case 'photoJam': this.tone(110, 0.5, { type: 'square', vol: 0.06, slide: 0.6 }); this.noise(0.45, { f: 900, q: 0.8, vol: 0.18, sweep: 0.4 }); [0, 1, 2].forEach(i => this.tone(1760, 0.06, { type: 'square', vol: 0.03, when: 0.5 + i * 0.12 })); break;
+      // l'agrafeuse égarée
+      case 'agrafArrive': this.noise(0.06, { f: 3200, q: 3, vol: 0.18 }); this.tone(140, 0.12, { type: 'square', vol: 0.05, slide: 0.7 }); this.noise(0.06, { f: 3200, q: 3, vol: 0.14, when: 0.22 }); this.tone(140, 0.12, { type: 'square', vol: 0.04, slide: 0.7, when: 0.22 }); break;
+      case 'agrafWarn': this.tone(320, 0.5, { type: 'triangle', vol: 0.05, slide: 1.6 }); this.noise(0.4, { f: 1500, q: 4, vol: 0.05, sweep: 1.5 }); break;
+      case 'agrafClac': if (this.throttle('agrafClac', 60)) { this.noise(0.05, { f: 4200, q: 2, vol: 0.2 }); this.tone(190, 0.07, { type: 'square', vol: 0.05, slide: 0.6 }); } break;
+      case 'agrafPin': this.noise(0.05, { f: 5200, q: 2.5, vol: 0.16 }); this.tone(1046.5, 0.18, { type: 'triangle', vol: 0.06, slide: 0.94 }); break;
+      case 'agrafTear': this.noise(0.18, { f: 2400, q: 0.8, vol: 0.12, sweep: 2 }); this.tone(660, 0.12, { type: 'triangle', vol: 0.05, slide: 1.5 }); break;
+      case 'agrafJam': [0, 1, 2].forEach(i => { this.noise(0.05, { f: 4200, q: 2, vol: 0.16, when: i * 0.1 }); this.tone(190 - i * 30, 0.08, { type: 'square', vol: 0.05, when: i * 0.1 }); }); this.tone(98, 0.5, { type: 'square', vol: 0.05, slide: 0.6, when: 0.32 }); break;
       case 'lignesNew': [392, 493.88, 587.33].forEach((f, i) => this.tone(f * 2, 0.3, { type: 'triangle', vol: 0.07, when: i * 0.09 })); this.noise(0.4, { f: 3600, q: 3, vol: 0.05, sweep: 0.7, when: 0.25 }); break;
       case 'ligneMot': { const F = [587.33, 659.25, 739.99, 783.99, 880, 987.77, 1108.73, 1174.66]; this.tone(F[k % 8], 0.35, { type: 'triangle', vol: 0.12 }); break; }
       case 'lignes': {   // la phrase rejouée mot à mot, puis la cloche de la récré
