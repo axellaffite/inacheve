@@ -8,7 +8,7 @@ const CAHIERS = [
   { name: 'Cahier n° 1', sub: 'pages I à VI', pages: [1, 2, 3, 4, 5, 6], cover: '#3d6cb5', dark: '#24467e', doodle: 'goutte' },
   { name: 'Brouillon', sub: 'page VII', pages: [7], cover: '#9aa58a', dark: '#66705a', doodle: 'cafe' },
   { name: 'Vacances', sub: 'page VIII', pages: [8], cover: '#f0a238', dark: '#b8711a', doodle: 'soleil' },
-  { name: 'Cahier neuf', sub: 'page IX', pages: [9], cover: '#c8423f', dark: '#8e2a28', doodle: 'tables' }
+  { name: 'Cahier neuf', sub: 'pages IX et X', pages: [9, 10], cover: '#c8423f', dark: '#8e2a28', doodle: 'tables' }
 ];
 // L'histoire du cahier : une phrase par page, qu'on ne lit qu'une fois la page débloquée
 const HISTOIRE = [null,
@@ -20,9 +20,10 @@ const HISTOIRE = [null,
   'La page de garde lui souffla : « ce cahier t’appartient ».',
   'Au brouillon, elle eut enfin le droit de rater, et elle en profita.',
   'En vacances, elle se perdit exprès dans les labyrinthes, pour le plaisir de ressortir.',
-  'À la rentrée, dans un cahier tout neuf, elle apprit que les tables ne servent pas qu’à manger.'
+  'À la rentrée, dans un cahier tout neuf, elle apprit que les tables ne servent pas qu’à manger.',
+  'À la récré, elle sauta jusqu’au Ciel sans toucher le caillou, et ne bougea plus quand on cria « soleil ! ».'
 ];
-const TAB_COLORS = [null, '#f6e75e', '#ff9ec4', '#9be59b', '#8fd3f0', '#f7b267', '#c9a7f0', '#dcd6bc', '#ffd36b', '#b5e3d0'];
+const TAB_COLORS = [null, '#f6e75e', '#ff9ec4', '#9be59b', '#8fd3f0', '#f7b267', '#c9a7f0', '#dcd6bc', '#ffd36b', '#b5e3d0', '#ffc4d6'];
 const BUREAU = { hop: 0.24, key: 'inacheve.pages' };
 
 /* ----- les records de chaque page : { chapitre: { w: victoires, t: meilleur temps } } ----- */

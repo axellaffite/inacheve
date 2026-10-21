@@ -413,6 +413,28 @@ const AU = {
       }
       case 'calcFaux': this.tone(233.08, 0.35, { type: 'square', vol: 0.05 }); this.tone(220, 0.45, { type: 'square', vol: 0.05, when: 0.18, slide: 0.9 }); break;
       case 'boss9': for (let i = 0; i < 18; i++) this.tone(i % 2 ? 1174.66 : 1396.91, 0.08, { type: 'triangle', vol: 0.07, when: i * 0.05 }); this.tone(49, 2.4, { type: 'sawtooth', vol: 0.08, attack: 0.6 }); [98, 146.83, 196].forEach((f, i) => this.tone(f, 1.6, { type: 'triangle', vol: 0.07, when: 1 + i * 0.15 })); break;
+      // chapitre X : la récré
+      case 'recreKill': if (this.throttle('kill', 45)) { this.tone([587.33, 659.25, 739.99, 880, 987.77][k % 5], 0.14, { type: 'triangle', vol: 0.1 }); this.noise(0.03, { f: 900, q: 3, vol: 0.06 }); } break;
+      case 'toupieWarn': if (this.throttle('toupieWarn', 150)) this.tone(300, 0.7, { type: 'sawtooth', vol: 0.025, slide: 3, attack: 0.2 }); break;
+      case 'toupieFire': if (this.throttle('toupieFire', 120)) this.noise(0.3, { f: 2500, q: 3, vol: 0.08, sweep: 0.5 }); break;
+      case 'cordeClac': if (this.throttle('cordeClac', 120)) { this.noise(0.04, { f: 1200, q: 4, vol: 0.1 }); this.tone(180, 0.05, { type: 'square', vol: 0.03 }); } break;
+      case 'avionAim': if (this.throttle('avionAim', 150)) this.tone(880, 0.3, { type: 'triangle', vol: 0.04, slide: 1.3 }); break;
+      case 'avionDive': if (this.throttle('avionDive', 150)) { this.noise(0.5, { f: 1800, q: 1.5, vol: 0.07, sweep: 0.4 }); this.tone(1200, 0.5, { vol: 0.035, slide: 0.4 }); } break;
+      case 'sifflet': for (let i = 0; i < 14; i++) this.tone(i % 2 ? 2349.3 : 2217.5, 0.045, { type: 'square', vol: 0.022, when: i * 0.04 }); this.noise(0.6, { f: 3000, q: 6, vol: 0.04 }); break;
+      case 'soleilCount': this.tone([392, 440, 493.88][Math.max(0, Math.min(2, k - 1))], 0.25, { type: 'triangle', vol: 0.12 }); this.noise(0.03, { f: 1900, q: 12, vol: 0.06 }); break;
+      case 'soleilLook': [587.33, 880, 1174.66].forEach((f, i) => this.tone(f, 0.7, { type: 'triangle', vol: 0.12 - i * 0.03, when: i * 0.07 })); this.noise(0.2, { f: 5000, q: 1, vol: 0.05 }); break;
+      case 'soleilCaught': this.tone(2349.3, 0.45, { type: 'square', vol: 0.035 }); this.tone(220, 0.4, { type: 'square', vol: 0.05, slide: 0.8, when: 0.1 }); break;
+      case 'balleThrow': this.noise(0.15, { f: 600, q: 1, vol: 0.15 }); this.tone(140, 0.15, { vol: 0.15, slide: 0.6 }); break;
+      case 'balleBounce': if (this.throttle('balleBounce', 80)) { this.tone(180, 0.12, { vol: 0.12, slide: 0.5 }); this.noise(0.04, { f: 800, q: 2, vol: 0.08 }); } break;
+      case 'marelleNew': this.noise(0.5, { f: 5200, q: 3, vol: 0.05, sweep: 0.6 }); [587.33, 739.99, 880].forEach((f, i) => this.tone(f, 0.25, { type: 'triangle', vol: 0.08, when: 0.2 + i * 0.09 })); break;
+      case 'marelleCase': this.tone([523.25, 587.33, 659.25, 698.46, 783.99, 880, 987.77, 1046.5, 1174.66][Math.max(0, Math.min(8, k - 1))], 0.18, { type: 'triangle', vol: 0.12 }); this.noise(0.05, { f: 300, q: 1, vol: 0.12 }); break;
+      case 'marelleRate': this.tone(311.13, 0.3, { type: 'square', vol: 0.05 }); this.tone(277.18, 0.4, { type: 'square', vol: 0.05, when: 0.15 }); break;
+      case 'marelleCiel': {   // jusqu'au Ciel : une gamme qui saute, puis l'accord
+        [587.33, 739.99, 880, 1174.66, 1479.98].forEach((f, i) => this.tone(f, 0.3, { type: 'triangle', vol: 0.11, when: i * 0.07 }));
+        [587.33, 739.99, 880].forEach(f => this.tone(f * 2, 1.2, { vol: 0.07, when: 0.4 }));
+        this.noise(0.8, { f: 5000, q: 0.7, vol: 0.05, sweep: 1.8, when: 0.35 }); break;
+      }
+      case 'boss10': this.tone(2349.3, 1.1, { type: 'square', vol: 0.03, attack: 0.02 }); for (let i = 0; i < 10; i++) this.tone(i % 2 ? 2349.3 : 2217.5, 0.05, { type: 'square', vol: 0.025, when: 1.15 + i * 0.045 }); this.tone(55, 2.4, { type: 'sawtooth', vol: 0.08, attack: 0.6 }); [73.42, 110, 146.83].forEach((f, i) => this.tone(f, 1.6, { type: 'triangle', vol: 0.07, when: 1 + i * 0.15 })); break;
       case 'lose': [6, 4, 2, 0].forEach((n, i) => this.tone(PENTA[n], 0.8, { type: 'triangle', vol: 0.15, when: i * 0.18 })); break;
     }
   },
@@ -436,6 +458,9 @@ const AU = {
   // la marche de la rentrée (un air original en sol majeur), un temps par case ; 0 = silence
   RENTREE: [392, 440, 493.88, 523.25, 587.33, 0, 587.33, 0, 659.25, 587.33, 523.25, 493.88, 440, 0, 0, 0,
             392, 440, 493.88, 523.25, 587.33, 659.25, 739.99, 783.99, 739.99, 659.25, 587.33, 493.88, 392, 0, 0, 0],
+  // la comptine de la récré (un air original en ré majeur), un temps par case ; 0 = silence
+  RECRE: [587.33, 0, 739.99, 0, 880, 880, 739.99, 0, 659.25, 0, 739.99, 659.25, 587.33, 0, 0, 0,
+          587.33, 0, 739.99, 0, 880, 987.77, 880, 739.99, 659.25, 739.99, 659.25, 554.37, 587.33, 0, 0, 0],
   // la mélodie d'« au clair de la lune » (traditionnelle), un temps par case ; 0 = la note précédente continue
   LUNE: [[523.25, 523.25, 523.25, 587.33, 659.25, 0, 587.33, 0, 523.25, 659.25, 587.33, 587.33, 523.25, 0, 0, 0],
          [587.33, 587.33, 587.33, 587.33, 440, 0, 440, 0, 587.33, 523.25, 493.88, 440, 392, 0, 0, 0]],
@@ -520,6 +545,18 @@ const AU = {
       const n = this.RENTREE[s % 32];
       if (n && (s >= 16 || intensity > 0.15)) { this.tone(n * 2, beat * 1.2, { type: 'sine', vol: 0.09, when, dest: this.mus, attack: 0.002 }); this.tone(n * 4, beat * 0.4, { vol: 0.015, when, dest: this.mus, attack: 0.002 }); }
       if (n && intensity > 0.5) this.tone(n, beat * 0.8, { type: 'triangle', vol: 0.035, when: when + beat / 2, dest: this.mus, attack: 0.003 });
+      if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
+      return;
+    }
+    if (chap === 10) {   // la comptine de la récré (un air original) : flûte à bec, basse sautillante, jeu de mains, et la corde qui tourne
+      const bar = s % 8, root = [73.42, 98, 110, 73.42][Math.floor(s / 8) % 4];
+      if (bar % 2 === 0) this.tone(bar % 4 === 0 ? root : root * 1.5, beat * 0.9, { type: 'sine', vol: 0.2, when, dest: this.mus, attack: 0.02 });
+      if (s % 2 === 1) this.noise(0.04, { f: 1500, q: 1, vol: 0.05, when });   // on tape dans les mains
+      if (bar === 7) this.noise(0.04, { f: 1500, q: 1, vol: 0.04, when: when + beat / 2 });
+      if (s % 4 === 0) this.noise(0.3, { f: 700, q: 0.8, vol: 0.02, type: 'lowpass', when, sweep: 2 });   // la corde qui fouette l'air
+      const n = this.RECRE[s % 32];
+      if (n && (s >= 16 || intensity > 0.15)) { this.tone(n, beat * 0.95, { type: 'triangle', vol: 0.09, when, dest: this.mus, attack: 0.01 }); this.tone(n * 2, beat * 0.5, { vol: 0.012, when, dest: this.mus, attack: 0.01 }); }
+      if (n && intensity > 0.5) this.tone(n * 1.5, beat * 0.5, { type: 'sine', vol: 0.03, when: when + beat / 2, dest: this.mus, attack: 0.003 });
       if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
       return;
     }

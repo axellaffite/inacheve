@@ -8,7 +8,7 @@ const NOTES_TAB = [
   { x: WORLD.w / 2, y: -150, t: '— cahier n° 4 · chapitre IX : la rentrée (dos de la couverture) —', r: -0.02 },
   { x: WORLD.w * 0.72, y: -96, t: 'ajouté : un cahier neuf, qui sent encore le neuf', r: 0.025 },
   { x: WORLD.w + 175, y: WORLD.h * 0.3, t: 'ici, plus tard :', r: 0.06 },
-  { x: WORLD.w + 190, y: WORLD.h * 0.3 + 46, t: 'la récré ?', r: 0.04 },
+  { x: WORLD.w + 190, y: WORLD.h * 0.3 + 46, t: 'la récré ? → oui : avec une marelle !', r: 0.04 },
   { x: -185, y: WORLD.h * 0.45, t: 'à apprendre', r: -0.07 },
   { x: -175, y: WORLD.h * 0.45 + 44, t: 'pour lundi', r: -0.05 },
   { x: -160, y: WORLD.h * 0.45 + 88, t: '(la table de 7 !)', r: -0.04 },

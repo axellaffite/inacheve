@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 18, date: '2026-10-21', title: 'L’agrafeuse', chapter: 'IX', chapterName: 'La rentrée' };
+const GAME_META = { iteration: 19, date: '2026-10-21', title: 'La récré', chapter: 'X', chapterName: 'La récré' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -155,6 +155,14 @@ const JOURNAL = [
       "Les agrafes qui ratent se plantent dans le papier. La première rature qui marche dessus reste clouée sur place un bon moment : à toi d’attirer les ratures sur le chemin des agrafes.",
       "Biffe-la, et elle lâche une dernière rafale : toutes les ratures autour d’elle sont agrafées à la page d’un seul coup.",
       "Le bestiaire ouvre une page pour les rares : les machines égarées qui n’appartiennent à aucun chapitre. La photocopieuse y a enfin son croquis, l’agrafeuse aussi."
+    ] },
+  { iteration: 19, date: '2026-10-21', title: 'La récré',
+    notes: [
+      "Driiing ! Derrière le Boulier, le cahier neuf s’ouvre sur le chapitre X : la récré. La page est restée par terre dans la cour, sur le bitume, couverte de dessins à la craie.",
+      "Nouveau : la marelle ! Elle se dessine près de toi avec un caillou dans une case. Saute de la Terre jusqu’au Ciel, case après case, sans jamais marcher sur le caillou : au Ciel, toute la cour est frappée. Un pâté, c’est un saut : il passe par-dessus les cases.",
+      "Quatre ratures de récré : le calot qui ne sait pas freiner, la toupie qui crache en spirale, la corde à sauter qu’on franchit d’un pâté quand elle frappe le sol, et l’avion en papier qui vise puis pique.",
+      "Au bout de la récré t’attend le Grand Sifflet : des ondes de sifflet où il faut trouver l’ouverture, la balle au prisonnier… et « un, deux, trois, soleil ! ». Quand il se retourne, tout le monde se fige : toi aussi, ne touche plus à rien !",
+      "La musique ? Une comptine de cour à la flûte, avec un jeu de mains. Sur le bureau, le cahier neuf a maintenant deux onglets, et la touche 0 ouvre directement la page X."
     ] }
 ];
 window.GAME_META = GAME_META;
