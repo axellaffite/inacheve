@@ -435,6 +435,30 @@ const AU = {
         this.noise(0.8, { f: 5000, q: 0.7, vol: 0.05, sweep: 1.8, when: 0.35 }); break;
       }
       case 'boss10': this.tone(2349.3, 1.1, { type: 'square', vol: 0.03, attack: 0.02 }); for (let i = 0; i < 10; i++) this.tone(i % 2 ? 2349.3 : 2217.5, 0.05, { type: 'square', vol: 0.025, when: 1.15 + i * 0.045 }); this.tone(55, 2.4, { type: 'sawtooth', vol: 0.08, attack: 0.6 }); [73.42, 110, 146.83].forEach((f, i) => this.tone(f, 1.6, { type: 'triangle', vol: 0.07, when: 1 + i * 0.15 })); break;
+      // chapitre XI : le cahier de poésie
+      case 'poesieKill': if (this.throttle('kill', 45)) { this.tone([440, 554.37, 659.25, 739.99, 880][k % 5], 0.35, { type: 'triangle', vol: 0.1, attack: 0.002 }); this.tone([440, 554.37, 659.25, 739.99, 880][k % 5] * 2, 0.2, { vol: 0.02 }); } break;
+      case 'rimeLink': if (this.throttle('rimeLink', 150)) { this.tone(659.25, 0.6, { type: 'sine', vol: 0.05, attack: 0.1 }); this.tone(659.25 * 1.5, 0.6, { type: 'sine', vol: 0.04, attack: 0.1, when: 0.12 }); } break;
+      case 'rimeZap': if (this.throttle('rimeZap', 120)) { this.noise(0.25, { f: 2600, q: 4, vol: 0.07, sweep: 1.6 }); this.tone(1318.5, 0.2, { type: 'triangle', vol: 0.05 }); } break;
+      case 'exclamWarn': if (this.throttle('exclamWarn', 150)) this.tone(523.25, 0.5, { type: 'square', vol: 0.025, slide: 1.5 }); break;
+      case 'exclamFall': if (this.throttle('exclamFall', 90)) { this.tone(110, 0.2, { vol: 0.16, slide: 0.5 }); this.noise(0.12, { f: 500, q: 1, vol: 0.12 }); } break;
+      case 'croa': if (this.throttle('croa', 160)) { this.tone(330, 0.16, { type: 'sawtooth', vol: 0.05, slide: 0.7 }); this.tone(300, 0.2, { type: 'sawtooth', vol: 0.045, slide: 0.6, when: 0.2 }); this.noise(0.3, { f: 900, q: 3, vol: 0.05 }); } break;
+      case 'fromage': if (this.throttle('fromage', 90)) { this.tone(160, 0.14, { vol: 0.13, slide: 0.6 }); this.noise(0.08, { f: 700, q: 1, vol: 0.1 }); } break;
+      case 'miam': [784, 988, 1175].forEach((f, i) => this.tone(f, 0.12, { type: 'triangle', vol: 0.08, when: i * 0.06 })); break;
+      case 'piedsWarn': [440, 554.37, 659.25].forEach((f, i) => this.tone(f, 0.3, { type: 'square', vol: 0.022, when: i * 0.1 })); break;
+      case 'pied': if (this.throttle('pied', 60)) { this.tone(98 + (k % 2) * 12, 0.12, { vol: 0.14, slide: 0.7 }); this.noise(0.05, { f: 400, q: 1, vol: 0.09 }); } break;
+      case 'rimesCroisees': for (let i = 0; i < 4; i++) this.tone(i % 2 ? 830.61 : 659.25, 0.18, { type: 'triangle', vol: 0.06, when: i * 0.34 }); break;
+      case 'cesureWarn': this.noise(0.9, { f: 3200, q: 6, vol: 0.03, sweep: 1.8 }); this.tone(880, 0.9, { type: 'sine', vol: 0.03, slide: 1.2, attack: 0.3 }); break;
+      case 'cesure': this.noise(0.3, { f: 1800, q: 0.8, vol: 0.14, sweep: 0.4 }); this.tone(220, 0.3, { type: 'sawtooth', vol: 0.05, slide: 0.6 }); break;
+      case 'rimesNew': [880, 739.99, 659.25, 554.37, 440].forEach((f, i) => this.tone(f, 0.25, { type: 'triangle', vol: 0.07, when: i * 0.07 })); this.noise(0.4, { f: 4000, q: 2, vol: 0.03 }); break;
+      case 'rimeFlip': this.noise(0.06, { f: 2600, q: 2, vol: 0.08 }); this.tone(k === 2 ? 659.25 : 554.37, 0.16, { type: 'triangle', vol: 0.07, when: 0.03 }); break;
+      case 'rimeOk': { const f = [440, 493.88, 554.37, 587.33, 659.25, 739.99][Math.max(0, Math.min(5, (k || 1) - 1))]; this.tone(f * 2, 0.4, { type: 'triangle', vol: 0.11 }); this.tone(f * 3, 0.5, { type: 'sine', vol: 0.05, when: 0.1 }); break; }
+      case 'rimeNon': this.tone(415.3, 0.3, { type: 'square', vol: 0.045 }); this.tone(392, 0.4, { type: 'square', vol: 0.045, when: 0.14, slide: 0.95 }); break;
+      case 'rimesFin': {   // la récitation : un arpège de harpe qui monte, puis l'accord
+        [440, 554.37, 659.25, 880, 1108.73, 1318.5].forEach((f, i) => this.tone(f, 0.5, { type: 'triangle', vol: 0.1, when: i * 0.07 }));
+        [440, 554.37, 659.25].forEach(f => this.tone(f * 2, 1.4, { vol: 0.06, when: 0.45 }));
+        this.noise(0.8, { f: 4500, q: 0.7, vol: 0.04, sweep: 1.8, when: 0.4 }); break;
+      }
+      case 'boss11': [220, 277.18, 329.63, 440].forEach((f, i) => this.tone(f, 1.2, { type: 'triangle', vol: 0.09, when: i * 0.22 })); for (let i = 0; i < 12; i++) this.tone(98 + (i % 2) * 12, 0.1, { vol: 0.12, slide: 0.7, when: 1 + i * 0.12 }); this.tone(55, 2.4, { type: 'sawtooth', vol: 0.06, attack: 0.6 }); break;
       case 'lose': [6, 4, 2, 0].forEach((n, i) => this.tone(PENTA[n], 0.8, { type: 'triangle', vol: 0.15, when: i * 0.18 })); break;
     }
   },
@@ -461,6 +485,8 @@ const AU = {
   // la comptine de la récré (un air original en ré majeur), un temps par case ; 0 = silence
   RECRE: [587.33, 0, 739.99, 0, 880, 880, 739.99, 0, 659.25, 0, 739.99, 659.25, 587.33, 0, 0, 0,
           587.33, 0, 739.99, 0, 880, 987.77, 880, 739.99, 659.25, 739.99, 659.25, 554.37, 587.33, 0, 0, 0],
+  // la berceuse du cahier de poésie (un air original en la majeur, à trois temps), un temps par case ; 0 = silence
+  POESIE: [659.25, 0, 554.37, 587.33, 659.25, 739.99, 659.25, 0, 0, 554.37, 0, 493.88, 440, 493.88, 554.37, 587.33, 0, 659.25, 554.37, 0, 493.88, 440, 0, 0],
   // la mélodie d'« au clair de la lune » (traditionnelle), un temps par case ; 0 = la note précédente continue
   LUNE: [[523.25, 523.25, 523.25, 587.33, 659.25, 0, 587.33, 0, 523.25, 659.25, 587.33, 587.33, 523.25, 0, 0, 0],
          [587.33, 587.33, 587.33, 587.33, 440, 0, 440, 0, 587.33, 523.25, 493.88, 440, 392, 0, 0, 0]],
@@ -557,6 +583,17 @@ const AU = {
       const n = this.RECRE[s % 32];
       if (n && (s >= 16 || intensity > 0.15)) { this.tone(n, beat * 0.95, { type: 'triangle', vol: 0.09, when, dest: this.mus, attack: 0.01 }); this.tone(n * 2, beat * 0.5, { vol: 0.012, when, dest: this.mus, attack: 0.01 }); }
       if (n && intensity > 0.5) this.tone(n * 1.5, beat * 0.5, { type: 'sine', vol: 0.03, when: when + beat / 2, dest: this.mus, attack: 0.003 });
+      if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
+      return;
+    }
+    if (chap === 11) {   // la berceuse du cahier de poésie (un air original) : harpe en arpèges à trois temps, et une page qui tourne
+      const bar = s % 3, root = [110, 146.83, 110, 82.41, 110, 146.83, 82.41, 110][Math.floor(s / 3) % 8];
+      if (bar === 0) this.tone(root, beat * 2.8, { type: 'sine', vol: 0.2, when, dest: this.mus, attack: 0.03 });
+      this.tone(root * 2 * [1, 1.26, 1.5][bar], beat * 1.6, { type: 'triangle', vol: 0.035, when, dest: this.mus, attack: 0.002 });
+      if (intensity > 0.35) this.tone(root * 4 * [1.5, 1, 1.26][bar], beat * 0.8, { type: 'triangle', vol: 0.018, when: when + beat / 2, dest: this.mus, attack: 0.002 });
+      if (s % 48 === 0) this.noise(0.5, { f: 3000, q: 0.6, vol: 0.025, when, sweep: 0.5 });   // une page qui tourne
+      const n = this.POESIE[s % 24];
+      if (n && (s >= 12 || intensity > 0.15)) { this.tone(n, beat * 1.3, { type: 'sine', vol: 0.1, when, dest: this.mus, attack: 0.004 }); this.tone(n * 2, beat * 0.5, { vol: 0.012, when, dest: this.mus, attack: 0.004 }); }
       if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
       return;
     }

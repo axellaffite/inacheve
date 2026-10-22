@@ -56,7 +56,12 @@ const CITATIONS_CH = [null, null,
   ['CQFD', 'à main levée', 'au millimètre près', 'mesure deux fois, trace une fois', 'la ligne droite'],
   ['X marque l’endroit', 'terre en vue !', 'cap au nord', 'ohé, du bateau !', 'à l’abordage'],
   ['pleins et déliés', 'une belle main', 'à la plume', 'lu et signé', 'sans un pâté'],
-  ['ex-libris', 'prête-moi ta plume', 'pour écrire un mot', 'fin… ou presque', 'à suivre, page suivante']];
+  ['ex-libris', 'prête-moi ta plume', 'pour écrire un mot', 'fin… ou presque', 'à suivre, page suivante'],
+  ['essai n° 2', 'à refaire', 'oups', 'c’est pour de faux', 'au propre demain'],
+  ['vive les vacances !', 'sous le parasol', 'plouf !', 'sortie par ici', 'tout le monde à l’eau'],
+  ['sept fois huit, cinquante-six', 'je retiens un', 'le compte est bon', 'neuf fois neuf…', 'par cœur !'],
+  ['chat perché !', 'pouce !', 'c’est toi le chat', 'un, deux, trois… soleil !', 'driiing !'],
+  ['il était une fois', 'par cœur', 'ça rime !', 'douze pieds', 'à la ligne']];
 const QUOTE = { cd: 4, speed: 480, life: 1.9, size: 34, thick: 18, write: 0.3 };
 function stepCitations(dt) {
   if (lvl('CITATION')) {

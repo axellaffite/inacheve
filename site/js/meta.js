@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 19, date: '2026-10-21', title: 'La récré', chapter: 'X', chapterName: 'La récré' };
+const GAME_META = { iteration: 20, date: '2026-10-22', title: 'Le cahier de poésie', chapter: 'XI', chapterName: 'Le cahier de poésie' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -163,6 +163,14 @@ const JOURNAL = [
       "Quatre ratures de récré : le calot qui ne sait pas freiner, la toupie qui crache en spirale, la corde à sauter qu’on franchit d’un pâté quand elle frappe le sol, et l’avion en papier qui vise puis pique.",
       "Au bout de la récré t’attend le Grand Sifflet : des ondes de sifflet où il faut trouver l’ouverture, la balle au prisonnier… et « un, deux, trois, soleil ! ». Quand il se retourne, tout le monde se fige : toi aussi, ne touche plus à rien !",
       "La musique ? Une comptine de cour à la flûte, avec un jeu de mains. Sur le bureau, le cahier neuf a maintenant deux onglets, et la touche 0 ouvre directement la page X."
+    ] },
+  { iteration: 20, date: '2026-10-22', title: 'Le cahier de poésie', notes: [
+      "Un cinquième cahier arrive sur le bureau : le cahier de poésie. Au chapitre XI, un dessin aux crayons de couleur à gauche, un poème recopié à droite.",
+      "Nouveau : les rimes ! Des fiches sont posées face cachée sur la page. Marche dessus pour les retourner deux par deux : LUNE et PLUME riment, elles restent ouvertes ; GOMME et CHAT, non… et deux vers s’échappent.",
+      "Toutes les paires trouvées, le poème est récité : ses mots s’envolent en couronne et frappent toute la page, puis il reste recopié sur le cahier.",
+      "Quatre ratures de poésie : le ver en béret qui avance en accordéon, les rimes jumelles qui se répondent à travers toi, le point d’exclamation qui tombe de tout son long, et le corbeau qui lâche son fromage (une fois tombé, ramasse-le : miam !).",
+      "Au bout du cahier t’attend le Grand Alexandrin : ses douze pieds qui marchent sur la page, ses rimes croisées, A, B, A, B… et sa césure qui coupe la page en deux.",
+      "La musique ? Une berceuse à la harpe. Les citations parlent maintenant la langue des pages VII à XI, et la touche à droite du 0 ouvre directement la page XI."
     ] }
 ];
 window.GAME_META = GAME_META;

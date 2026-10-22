@@ -73,6 +73,13 @@ const BESTIAIRE = [null,
     ['corde', 'la corde à sauter', 'Quand elle frappe le sol, saute par-dessus d’un pâté. Biffe le nœud du milieu.'],
     ['avion', 'l’avion en papier', 'Plie dans une feuille de cahier. Il vise, puis il pique tout droit.'],
     ['sifflet', 'le Grand Sifflet', 'Un, deux, trois… soleil ! Quand il se retourne, ne bouge plus.']
+  ],
+  [
+    ['ver', 'le ver', 'Un ver de terre en béret, qui avance en accordéon. Un vers, deux vers…'],
+    ['rime', 'les rimes jumelles', 'Elles vont par deux, de part et d’autre de toi. Quand elles se répondent, sors d’entre elles.'],
+    ['exclam', 'le point d’exclamation', 'Se dresse, vise, puis tombe de tout son long. Couché, il reprend son souffle.'],
+    ['corbeau', 'le corbeau', 'Croâ ! Il lâche son fromage. Une fois tombé, ramasse-le : miam.'],
+    ['alexandrin', 'le Grand Alexandrin', 'Douze pieds, des rimes croisées, une césure : il a tout du vers parfait.']
   ]
 ];
 // Les rares (itération 18) : les machines égarées, qui n'appartiennent à aucune page
@@ -84,7 +91,7 @@ const rarePage = () => CHAPTERS.length;
 const bestList = n => n === rarePage() ? RARES : BESTIAIRE[n];
 const BEST_TYPES = new Set(BESTIAIRE.slice(1).concat([RARES]).flat().map(b => b[0]));
 // rayon apparent de chaque croquis, pour qu'il tienne dans sa case
-const BEST_VIS = { sifflet: 120, calot: 22, toupie: 30, corde: 150, avion: 32, photocopieuse: 76, agrafeuse: 66, boulier: 125, chiffre: 26, fois: 30, egal: 30, retenue: 26, soleil: 135, cornet: 34, ballon: 30, pointille: 70, coquillage: 24, stylo: 150, blanco: 32, taillecrayon: 30, cafe: 30, trombone: 24, cartable: 130, tampon: 38, peigne: 36, signet: 26, marbrure: 22, paraphe: 175, majuscule: 40, plumeoie: 30, arabesque: 36, delie: 30, boss: 92, fausse: 128, regle: 282, pieuvre: 150, metronome: 54, compas: 42, tourbillon: 34, equerre: 32, rapporteur: 32, bouteille: 34, crabe: 34, mouette: 24, tache: 30, gomme: 32 };
+const BEST_VIS = { alexandrin: 125, ver: 30, rime: 52, exclam: 34, corbeau: 36, sifflet: 120, calot: 22, toupie: 30, corde: 150, avion: 32, photocopieuse: 76, agrafeuse: 66, boulier: 125, chiffre: 26, fois: 30, egal: 30, retenue: 26, soleil: 135, cornet: 34, ballon: 30, pointille: 70, coquillage: 24, stylo: 150, blanco: 32, taillecrayon: 30, cafe: 30, trombone: 24, cartable: 130, tampon: 38, peigne: 36, signet: 26, marbrure: 22, paraphe: 175, majuscule: 40, plumeoie: 30, arabesque: 36, delie: 30, boss: 92, fausse: 128, regle: 282, pieuvre: 150, metronome: 54, compas: 42, tourbillon: 34, equerre: 32, rapporteur: 32, bouteille: 34, crabe: 34, mouette: 24, tache: 30, gomme: 32 };
 const BEST_TOAST = 3.4;
 
 G.bestiary = {};
@@ -207,6 +214,11 @@ function bestFake(type, i) {
   else if (type === 'corde') { e.ang = 0; e.cyc = (t * 0.6) % 1; }
   else if (type === 'avion') e.rot = -0.5 + Math.sin(t) * 0.15;
   else if (type === 'sifflet') e.blow = Math.sin(t * 0.8) > 0.6 ? 1 : 0;
+  else if (type === 'ver') { e.cyc = t * 0.8; e.rot = 0; }
+  else if (type === 'rime') { e.pairI = 0; e.word = 0; e.twin = { dead: false }; }
+  else if (type === 'exclam') e.phase = 'walk';
+  else if (type === 'corbeau') { e.cheese = true; e.flap = t * 6; e.vx = 1; }
+  else if (type === 'alexandrin') e.quill = Math.sin(t) > 0.5 ? 1 : 0;
   else if (type === 'photocopieuse') { e.copied = new Set([1, 2]); e.lid = Math.max(0, Math.sin(t * 1.1)); }
   else if (type === 'agrafeuse') { e.lid = Math.max(0, Math.sin(t * 1.4)); e.clac = 0; e.ang = 0; }
   return e;

@@ -93,8 +93,8 @@ function stepDevoir(dt) {
 }
 
 /* ---------- la note ---------- */
-// les petits exploits de la page : lignes, refrains, figures, trésors, lettrines, ex-libris, morpions gagnés, labyrinthes, calculs, marelles
-function devoirExploits() { return (G.lignes || 0) + (G.refrains || 0) + (G.figures || 0) + (G.tresors || 0) + (G.enlus || 0) + (G.sceaux || 0) + (G.morpions || 0) + (G.labys || 0) + (G.calculs || 0) + (G.marelles || 0); }
+// les petits exploits de la page : lignes, refrains, figures, trésors, lettrines, ex-libris, morpions gagnés, labyrinthes, calculs, marelles, poèmes
+function devoirExploits() { return (G.lignes || 0) + (G.refrains || 0) + (G.figures || 0) + (G.tresors || 0) + (G.enlus || 0) + (G.sceaux || 0) + (G.morpions || 0) + (G.labys || 0) + (G.calculs || 0) + (G.marelles || 0) + (G.poemes || 0); }
 function gradeDevoir(win) {
   const d = G.devoir, ex = devoirExploits();
   // gagné : au moins la moyenne (11), puis dictées, exploits, cœurs restants et difficulté de la consigne ; perdu : jamais la moyenne

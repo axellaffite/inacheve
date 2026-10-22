@@ -8,7 +8,8 @@ const CAHIERS = [
   { name: 'Cahier n° 1', sub: 'pages I à VI', pages: [1, 2, 3, 4, 5, 6], cover: '#3d6cb5', dark: '#24467e', doodle: 'goutte' },
   { name: 'Brouillon', sub: 'page VII', pages: [7], cover: '#9aa58a', dark: '#66705a', doodle: 'cafe' },
   { name: 'Vacances', sub: 'page VIII', pages: [8], cover: '#f0a238', dark: '#b8711a', doodle: 'soleil' },
-  { name: 'Cahier neuf', sub: 'pages IX et X', pages: [9, 10], cover: '#c8423f', dark: '#8e2a28', doodle: 'tables' }
+  { name: 'Cahier neuf', sub: 'pages IX et X', pages: [9, 10], cover: '#c8423f', dark: '#8e2a28', doodle: 'tables' },
+  { name: 'Poésie', sub: 'page XI', pages: [11], cover: '#7b5ea7', dark: '#523c78', doodle: 'lune' }
 ];
 // L'histoire du cahier : une phrase par page, qu'on ne lit qu'une fois la page débloquée
 const HISTOIRE = [null,
@@ -21,9 +22,10 @@ const HISTOIRE = [null,
   'Au brouillon, elle eut enfin le droit de rater, et elle en profita.',
   'En vacances, elle se perdit exprès dans les labyrinthes, pour le plaisir de ressortir.',
   'À la rentrée, dans un cahier tout neuf, elle apprit que les tables ne servent pas qu’à manger.',
-  'À la récré, elle sauta jusqu’au Ciel sans toucher le caillou, et ne bougea plus quand on cria « soleil ! ».'
+  'À la récré, elle sauta jusqu’au Ciel sans toucher le caillou, et ne bougea plus quand on cria « soleil ! ».',
+  'Dans le cahier de poésie, elle apprit que deux mots qui riment se tiennent la main, même de loin.'
 ];
-const TAB_COLORS = [null, '#f6e75e', '#ff9ec4', '#9be59b', '#8fd3f0', '#f7b267', '#c9a7f0', '#dcd6bc', '#ffd36b', '#b5e3d0', '#ffc4d6'];
+const TAB_COLORS = [null, '#f6e75e', '#ff9ec4', '#9be59b', '#8fd3f0', '#f7b267', '#c9a7f0', '#dcd6bc', '#ffd36b', '#b5e3d0', '#ffc4d6', '#d9c2ff'];
 const BUREAU = { hop: 0.24, key: 'inacheve.pages' };
 
 /* ----- les records de chaque page : { chapitre: { w: victoires, t: meilleur temps } } ----- */
@@ -268,6 +270,10 @@ function drawDoodle(kind, x, y, r, open) {
     for (let k = 0; k < 8; k++) { const an = k * TAU / 8 + G.time * 0.3; ctx.moveTo(Math.cos(an) * r * 0.75, Math.sin(an) * r * 0.75); ctx.lineTo(Math.cos(an) * r * 1.05, Math.sin(an) * r * 1.05); }
     ctx.stroke();
     ctx.fillStyle = C.graphite; ctx.fillRect(-r * 0.36, -r * 0.14, r * 0.3, r * 0.16); ctx.fillRect(r * 0.06, -r * 0.14, r * 0.3, r * 0.16);
+  }
+  else if (kind === 'lune') {   // un croissant de lune et deux étoiles, au crayon doré
+    ctx.fillStyle = '#f6e7a8'; ctx.beginPath(); ctx.arc(0, 0, r * 0.6, 0.9, TAU - 0.9); ctx.arc(r * 0.18, -r * 0.16, r * 0.5, TAU - 1.1, 1.1, true); ctx.closePath(); ctx.fill();
+    for (const [sx, sy, k] of [[r * 0.7, -r * 0.6, 0.16], [r * 0.85, r * 0.35, 0.1]]) { ctx.beginPath(); for (let i = 0; i <= 10; i++) { const an = -Math.PI / 2 + i * Math.PI / 5, rr = (i % 2 ? 0.45 : 1) * r * k; ctx.lineTo(sx + Math.cos(an) * rr, sy + Math.sin(an) * rr); } ctx.fill(); }
   }
   else if (kind === 'tables') {   // « 7 × 8 », à la craie, et une perle de boulier
     ctx.font = '700 ' + (r * 0.8) + 'px ' + FONT_MAIN; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fffdf4';
