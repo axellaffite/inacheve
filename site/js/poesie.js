@@ -9,7 +9,7 @@ const NOTES_POESIE = [
   { x: WORLD.w / 2, y: -150, t: '— cahier n° 5 · chapitre XI : le cahier de poésie —', r: -0.02 },
   { x: WORLD.w * 0.72, y: -96, t: 'ajouté : des rimes, et des crayons de couleur', r: 0.025 },
   { x: WORLD.w + 175, y: WORLD.h * 0.3, t: 'ici, plus tard :', r: 0.06 },
-  { x: WORLD.w + 190, y: WORLD.h * 0.3 + 46, t: 'le cahier de textes ?', r: 0.04 },
+  { x: WORLD.w + 190, y: WORLD.h * 0.3 + 46, t: 'le cahier de textes ? → oui : avec un emploi du temps !', r: 0.04 },
   { x: -185, y: WORLD.h * 0.45, t: 'récitation', r: -0.07 },
   { x: -175, y: WORLD.h * 0.45 + 44, t: 'vendredi', r: -0.05 },
   { x: -160, y: WORLD.h * 0.45 + 88, t: '(par cœur !)', r: -0.04 },
@@ -310,7 +310,7 @@ function stepAlexandrin(e, dt, dx, dy, d, slow) {
 }
 function cesureDist(c, x, y) { return Math.abs(-(x - c.x) * Math.sin(c.a) + (y - c.y) * Math.cos(c.a)); }
 function stepPoesieFx(dt) {
-  if (CH().paper !== 'poesie') return;
+  if (CH().paper !== 'poesie' && CH().paper !== 'textes') return;   // et la poésie du cahier de textes
   const p = G.p, safe = p.inv > 0 || p.dashT > 0;
   for (const f of G.pieds) {
     const before = f.t; f.t += dt;

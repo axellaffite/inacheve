@@ -217,7 +217,7 @@ function inTable(T, x, y, pad = 0) {   // dans la ligne ou la colonne d'un des n
 }
 
 function stepTablesFx(dt) {
-  if (CH().paper !== 'tables') return;
+  if (CH().paper !== 'tables' && CH().paper !== 'textes') return;   // la Grande Horloge pose aussi des tables
   const p = G.p, safe = p.inv > 0 || p.dashT > 0;
   for (const T of G.tables) {
     T.t += dt;

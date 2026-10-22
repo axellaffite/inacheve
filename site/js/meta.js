@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 20, date: '2026-10-22', title: 'Le cahier de poésie', chapter: 'XI', chapterName: 'Le cahier de poésie' };
+const GAME_META = { iteration: 21, date: '2026-10-22', title: 'Le cahier de textes', chapter: 'XII', chapterName: 'Le cahier de textes' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -171,6 +171,14 @@ const JOURNAL = [
       "Quatre ratures de poésie : le ver en béret qui avance en accordéon, les rimes jumelles qui se répondent à travers toi, le point d’exclamation qui tombe de tout son long, et le corbeau qui lâche son fromage (une fois tombé, ramasse-le : miam !).",
       "Au bout du cahier t’attend le Grand Alexandrin : ses douze pieds qui marchent sur la page, ses rimes croisées, A, B, A, B… et sa césure qui coupe la page en deux.",
       "La musique ? Une berceuse à la harpe. Les citations parlent maintenant la langue des pages VII à XI, et la touche à droite du 0 ouvre directement la page XI."
+    ] },
+  { iteration: 21, date: '2026-10-22', title: 'Le cahier de textes', notes: [
+      "Un sixième cahier arrive sur le bureau : le cahier de textes. Au chapitre XII, l’emploi du temps de la semaine est collé à gauche, les devoirs à faire sont écrits à droite.",
+      "Driiing ! Toutes les 36 secondes, la cloche sonne et la matière change : calcul, musique, récré, géométrie, poésie… Les ratures de la page changent avec elle, et la musique aussi.",
+      "Nouveau : à chaque heure, un devoir s’écrit dans le cahier de textes. Biffe les ratures surlignées (elles sont plus fragiles), puis va cocher la case : toute la page est frappée. Si la cloche sonne avant, le devoir est oublié.",
+      "Deux ratures à soi : le réveil qui tremble puis sonne, et la cocotte en papier qui s’ouvre en quatre… et pince.",
+      "À 16 h 30 t’attend la Grande Horloge : ses aiguilles qui balaient la page, ses douze heures qui se referment sur toi (sors par celle qui manque !), et sa sonnerie qui fait venir la matière suivante.",
+      "Sur le bureau, la touche « = » (deux à droite du 0) ouvre directement la page XII, et la feuille du devoir du jour a retrouvé son titre en entier."
     ] }
 ];
 window.GAME_META = GAME_META;

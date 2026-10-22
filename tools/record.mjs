@@ -56,15 +56,20 @@ async function load(seed) {
 // Montage (itération 20, « Le cahier de poésie ») : un cinquième cahier arrive sur le bureau, on ouvre le chapitre XI. À 0:08,
 // les fiches des rimes sont distribuées face cachée et le pilote les retourne deux par deux jusqu'au poème complet ; les
 // ratures de poésie vers 1:40 (le corbeau et son fromage), puis le Grand Alexandrin à 3:00 (douze pieds, rimes croisées, césure).
+// Montage (itération 21, « Le cahier de textes ») : un sixième cahier arrive sur le bureau, on ouvre le chapitre XII. Le premier
+// devoir s'écrit à 0:03 et le pilote coche sa case ; deux sonneries forcées montrent la matière qui change (ratures et musique),
+// les réveils et les cocottes vers 1:30, puis la Grande Horloge à 3:00 (aiguilles, douze heures, sonnerie).
 const STEPS = [
-  { act: () => { const c = window.__cap; c.debloque(11); c.croque(['boss', 'fausse', 'regle', 'pieuvre', 'paraphe', 'cartable', 'stylo', 'soleil', 'boulier', 'sifflet', 'photocopieuse', 'agrafeuse', 'gribouillis', 'croche', 'segment', 'mouette', 'delie', 'marbrure', 'trombone', 'cafe', 'coquillage', 'chiffre', 'fois', 'calot', 'toupie']); c.pages({ 1: { w: 3, t: 212 }, 2: { w: 2, t: 229 }, 3: { w: 1, t: 233 }, 4: { w: 1, t: 241 }, 5: { w: 1, t: 236 }, 6: { w: 1, t: 228 }, 7: { w: 1, t: 231 }, 8: { w: 1, t: 224 }, 9: { w: 1, t: 238 }, 10: { w: 1, t: 226 } }); c.bureau(10); },
-    cap: ['Un cinquième cahier sur le bureau…'], play: 2.2 },
-  { act: () => window.__cap.choisir(1), cap: ['… le cahier de poésie !'], play: 2.4 },
-  { cap: ['Chapitre XI : un dessin à gauche, un poème à droite'], act: () => window.__cap.commencer(), play: 4 },
-  { cap: ['Nouveau : les rimes ! Des fiches posées face cachée…', '… à retourner deux par deux : trouve les mots qui riment'], play: 15, need: r => r.poemes >= 1 },
-  { skip: 80, cap: ['Vers, rimes jumelles, points d’exclamation, corbeaux : toute la strophe déboule'], play: 7 }
+  { act: () => { const c = window.__cap; c.debloque(12); c.croque(['boss', 'fausse', 'regle', 'pieuvre', 'paraphe', 'cartable', 'stylo', 'soleil', 'boulier', 'sifflet', 'alexandrin', 'photocopieuse', 'agrafeuse', 'gribouillis', 'croche', 'segment', 'mouette', 'delie', 'marbrure', 'trombone', 'cafe', 'coquillage', 'chiffre', 'fois', 'calot', 'toupie', 'ver', 'rime']); c.pages({ 1: { w: 3, t: 212 }, 2: { w: 2, t: 229 }, 3: { w: 1, t: 233 }, 4: { w: 1, t: 241 }, 5: { w: 1, t: 236 }, 6: { w: 1, t: 228 }, 7: { w: 1, t: 231 }, 8: { w: 1, t: 224 }, 9: { w: 1, t: 238 }, 10: { w: 1, t: 226 }, 11: { w: 1, t: 239 } }); c.bureau(11); },
+    cap: ['Un sixième cahier sur le bureau…'], play: 2.2 },
+  { act: () => window.__cap.choisir(1), cap: ['… le cahier de textes !'], play: 2.4 },
+  { cap: ['Chapitre XII : à gauche, l’emploi du temps de la semaine'], act: () => window.__cap.commencer(), play: 4 },
+  { cap: ['Nouveau : à chaque heure, un devoir dans le cahier de textes…', '… biffe les ratures surlignées, puis va cocher la case !'], play: 18, need: r => r.agendas >= 1 },
+  { act: () => window.__cap.sonnerie(), cap: ['Driiing ! À chaque sonnerie, la matière change…'], play: 5 },
+  { act: () => window.__cap.sonnerie(), cap: ['… et avec elle les ratures de la page, et sa musique'], play: 5 },
+  { skip: 60, cap: ['Le réveil qui sonne, la cocotte en papier qui pince…'], play: 6 }
 ];
-const BOSS_AT = 180, BOSS_FILM = 26;   // le Grand Alexandrin arrive à 3:00 ; secondes de combat filmées au plus (la suite est sautée)
+const BOSS_AT = 180, BOSS_FILM = 22;   // la Grande Horloge arrive à 3:00 ; secondes de combat filmées au plus (la suite est sautée)
 const argOf = (st, s) => st.arg ? st.arg(s) : undefined;
 // Joue tout le montage en accéléré (sans filmer) pour savoir comment se termine la partie avec la graine s
 async function simulate(s) {
@@ -77,14 +82,14 @@ async function simulate(s) {
   const r = await page.evaluate(() => { for (let i = 0; i < 320; i++) { window.__cap.skip(1); const r = window.__cap.state(); if (r.state === 'victory' || r.state === 'gameover') return r; } return window.__cap.state(); });
   return { ...r, ok };
 }
-// une bonne graine : un poème complété à l'écran, puis le Grand Alexandrin tombe avant la fin du tournage
-const good = r => r.ok && r.state === 'victory' && r.chapter === 11 && r.t <= BOSS_AT + 75;
+// une bonne graine : un devoir coché à l'écran, puis la Grande Horloge tombe avant la fin du tournage
+const good = r => r.ok && r.state === 'victory' && r.chapter === 12 && r.t <= BOSS_AT + 75;
 let SEED = SEED_ARG ? parseInt(SEED_ARG, 10) : null;
 if (SEED === null && !SMOKE) {
   let best = null;
   for (const s of [42, 7, 5, 99, 3, 11, 23, 64, 1, 8, 13, 21]) {
     const r = await simulate(s);
-    console.log(`graine ${s} : ${r.state} à ${r.t.toFixed(0)} s (chapitre ${r.chapter}, niveau ${r.level}, ${r.hp} cœur(s), ${r.poemes} poème(s), ${r.miams} fromage(s))`);
+    console.log(`graine ${s} : ${r.state} à ${r.t.toFixed(0)} s (chapitre ${r.chapter}, niveau ${r.level}, ${r.hp} cœur(s), ${r.agendas} devoir(s) coché(s), heure ${r.heure})`);
     const score = x => (good(x) ? 1e6 : 0) + (x.ok ? 1e5 : 0) + (x.state === 'victory' ? 5e4 - x.t : x.t);
     if (!best || score(r) > score(best.r)) best = { s, r };
     if (good(r)) break;
@@ -96,11 +101,12 @@ const meta = await page.evaluate(() => window.__cap.meta);
 const fail = msg => { console.error('ÉCHEC : ' + msg); if (errors.length) console.error(errors.join('\n')); process.exitCode = 1; };
 
 if (SMOKE) {
-  await page.evaluate(() => { window.__cap.start(); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(2); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(3); window.__cap.skip(30); window.__cap.frames(3); window.__cap.start(4); window.__cap.skip(30); window.__cap.frames(3); window.__cap.start(5); window.__cap.skip(40); window.__cap.frames(3); window.__cap.grant({ PLUME: 2, ENCRE: 2, GUILLEMETS: 2, ITALIQUE: 2, LUNE: 2, FEU: 2, CALLIGRAPHIE: 1, CITATION: 1, LUNE_ROUSSE: 1 }); window.__cap.skip(15); window.__cap.frames(3); window.__cap.start(6); window.__cap.skip(100); window.__cap.frames(3); window.__cap.skip(90); window.__cap.frames(3); window.__cap.start(7); window.__cap.skip(100); window.__cap.frames(3); window.__cap.skip(100); window.__cap.frames(3); window.__cap.start(9); window.__cap.skip(12); window.__cap.frames(3); window.__cap.skip(170); for (let i = 0; i < 12; i++) { window.__cap.skip(1.5); window.__cap.frames(1); } window.__cap.bestiaire(9); window.__cap.frames(3); window.__cap.start(8); window.__cap.skip(12); window.__cap.frames(3); window.__cap.skip(90); window.__cap.frames(3); window.__cap.skip(95); for (let i = 0; i < 12; i++) { window.__cap.skip(1.5); window.__cap.frames(1); } window.__cap.bestiaire(8); window.__cap.frames(3); window.__cap.start(3); window.__cap.skip(10); window.__cap.photocopie(); for (let i = 0; i < 12; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.agrafeuse(); for (let i = 0; i < 20; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.bestiaire(12); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(3); window.__cap.refermer(); window.__cap.start(7); window.__cap.skip(150); for (let i = 0; i < 10; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.bestiaire(7); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(3); window.__cap.refermer();
+  await page.evaluate(() => { window.__cap.start(); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(2); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(3); window.__cap.skip(30); window.__cap.frames(3); window.__cap.start(4); window.__cap.skip(30); window.__cap.frames(3); window.__cap.start(5); window.__cap.skip(40); window.__cap.frames(3); window.__cap.grant({ PLUME: 2, ENCRE: 2, GUILLEMETS: 2, ITALIQUE: 2, LUNE: 2, FEU: 2, CALLIGRAPHIE: 1, CITATION: 1, LUNE_ROUSSE: 1 }); window.__cap.skip(15); window.__cap.frames(3); window.__cap.start(6); window.__cap.skip(100); window.__cap.frames(3); window.__cap.skip(90); window.__cap.frames(3); window.__cap.start(7); window.__cap.skip(100); window.__cap.frames(3); window.__cap.skip(100); window.__cap.frames(3); window.__cap.start(9); window.__cap.skip(12); window.__cap.frames(3); window.__cap.skip(170); for (let i = 0; i < 12; i++) { window.__cap.skip(1.5); window.__cap.frames(1); } window.__cap.bestiaire(9); window.__cap.frames(3); window.__cap.start(8); window.__cap.skip(12); window.__cap.frames(3); window.__cap.skip(90); window.__cap.frames(3); window.__cap.skip(95); for (let i = 0; i < 12; i++) { window.__cap.skip(1.5); window.__cap.frames(1); } window.__cap.bestiaire(8); window.__cap.frames(3); window.__cap.start(3); window.__cap.skip(10); window.__cap.photocopie(); for (let i = 0; i < 12; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.agrafeuse(); for (let i = 0; i < 20; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.bestiaire(13); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(3); window.__cap.refermer(); window.__cap.start(7); window.__cap.skip(150); for (let i = 0; i < 10; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.bestiaire(7); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(3); window.__cap.refermer();
     window.__cap.start(10); window.__cap.skip(14); window.__cap.frames(3); window.__cap.skip(60); window.__cap.frames(3); window.__cap.sifflet(); for (let i = 0; i < 16; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.skip(60); window.__cap.frames(2); window.__cap.bestiaire(10); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(2); window.__cap.refermer();
     window.__cap.start(11); window.__cap.skip(14); window.__cap.frames(3); window.__cap.skip(95); window.__cap.frames(3); window.__cap.patron(); for (let i = 0; i < 16; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.skip(60); window.__cap.frames(2); window.__cap.bestiaire(11); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(2); window.__cap.refermer();
-    window.__cap.debloque(11); window.__cap.pages({ 1: { w: 2, t: 200 } }); window.__cap.bureau(); window.__cap.frames(3); for (let i = 0; i < 12; i++) { window.__cap.choisir(1); window.__cap.frames(2); } window.__cap.bureau(5); window.__cap.commencer(); window.__cap.skip(5); window.__cap.frames(2); window.__cap.debloque(1); window.__cap.bureau(4); window.__cap.commencer(); window.__cap.frames(2); window.__cap.bureau(); window.__cap.choisir(-1); window.__cap.commencer(); window.__cap.skip(5); window.__cap.frames(2);
-    for (const [chapter, consigne, pouce] of [[1, 'miroir', 'pluie'], [1, 'sansPate', 'propre'], [4, 'courant', 'pluie'], [2, 'brouillard', 'souffle'], [6, 'double', 'aimant'], [3, 'presse', 'souffle'], [5, 'fragile', 'propre'], [7, 'courant', 'aimant'], [8, 'miroir', 'pluie'], [9, 'double', 'souffle'], [10, 'sansPate', 'aimant'], [11, 'courant', 'pluie']]) {
+    window.__cap.start(12); window.__cap.skip(12); window.__cap.frames(3); window.__cap.sonnerie(); window.__cap.skip(20); window.__cap.frames(3); window.__cap.sonnerie(); window.__cap.skip(70); window.__cap.frames(3); window.__cap.patron(); for (let i = 0; i < 20; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.skip(60); window.__cap.frames(2); window.__cap.bestiaire(12); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(2); window.__cap.refermer();
+    window.__cap.debloque(12); window.__cap.pages({ 1: { w: 2, t: 200 } }); window.__cap.bureau(); window.__cap.frames(3); for (let i = 0; i < 12; i++) { window.__cap.choisir(1); window.__cap.frames(2); } window.__cap.bureau(5); window.__cap.commencer(); window.__cap.skip(5); window.__cap.frames(2); window.__cap.debloque(1); window.__cap.bureau(4); window.__cap.commencer(); window.__cap.frames(2); window.__cap.bureau(); window.__cap.choisir(-1); window.__cap.commencer(); window.__cap.skip(5); window.__cap.frames(2);
+    for (const [chapter, consigne, pouce] of [[1, 'miroir', 'pluie'], [1, 'sansPate', 'propre'], [4, 'courant', 'pluie'], [2, 'brouillard', 'souffle'], [6, 'double', 'aimant'], [3, 'presse', 'souffle'], [5, 'fragile', 'propre'], [7, 'courant', 'aimant'], [8, 'miroir', 'pluie'], [9, 'double', 'souffle'], [10, 'sansPate', 'aimant'], [11, 'courant', 'pluie'], [12, 'presse', 'propre']]) {
       window.__cap.devoir({ chapter, consigne, pouce, seed: chapter }); window.__cap.skip(25); window.__cap.frames(2);
     }
     window.__cap.jour(null); window.__cap.devoir(); for (let i = 0; i < 300 && !['victory', 'gameover'].includes(window.__cap.state().state); i++) window.__cap.skip(1);
@@ -148,20 +154,20 @@ while (st.state !== 'gameover' && st.state !== 'victory' && st.t < BOSS_AT - 4) 
   st = await state();
 }
 if (st.state !== 'gameover' && st.state !== 'victory') {
-  await cap('… à 3:00, le Grand Alexandrin entre en scène, sur ses douze pieds !', 2.6);
-  await cap('Douze pieds, rimes croisées… et la césure qui coupe la page', 4);
+  await cap('… 16 h 30 : la Grande Horloge sonne la fin de la journée !', 2.6);
+  await cap('Ses aiguilles balaient la page, ses douze heures se referment…', 4);
   for (let i = 0; i < BOSS_FILM && st.state !== 'victory' && st.state !== 'gameover'; i++) { await grab(1); st = await state(); }
   if (st.state !== 'victory' && st.state !== 'gameover') {   // la fin du combat est sautée, pour que la vidéo reste courte
     await page.evaluate(() => { for (let i = 0; i < 300; i++) { const s = window.__cap.state(); if (s.state === 'victory' || s.state === 'gameover') break; window.__cap.skip(0.5); } });
     st = await state();
-    if (st.state === 'victory') await cap('Quelques strophes plus tard…', 3);
+    if (st.state === 'victory') await cap('Quelques heures plus tard…', 3);
   }
 }
 // l'écran de fin compte les poèmes, puis la nouvelle page du bestiaire
 if (st.state === 'victory' || st.state === 'gameover') await grab(6.5);
 else await grab(1);
-await page.evaluate(() => window.__cap.bestiaire(11));
-await cap('Au bestiaire : la page du cahier de poésie', 3);
+await page.evaluate(() => window.__cap.bestiaire(12));
+await cap('Au bestiaire : la page du cahier de textes', 3);
 await grab(3.4);
 await page.evaluate(() => window.__cap.refermer());
 // retour à l'écran titre

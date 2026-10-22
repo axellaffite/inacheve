@@ -212,7 +212,7 @@ function stepUnDeuxTrois(dt) {
   }
 }
 function stepRecreFx(dt) {
-  if (CH().paper !== 'recre') return;
+  if (CH().paper !== 'recre' && CH().paper !== 'textes') return;   // et la récré du cahier de textes
   stepUnDeuxTrois(dt);
   if (G.freeze) return;   // tout le monde s'est figé
   const p = G.p, safe = p.inv > 0 || p.dashT > 0;

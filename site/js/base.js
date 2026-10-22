@@ -459,6 +459,22 @@ const AU = {
         this.noise(0.8, { f: 4500, q: 0.7, vol: 0.04, sweep: 1.8, when: 0.4 }); break;
       }
       case 'boss11': [220, 277.18, 329.63, 440].forEach((f, i) => this.tone(f, 1.2, { type: 'triangle', vol: 0.09, when: i * 0.22 })); for (let i = 0; i < 12; i++) this.tone(98 + (i % 2) * 12, 0.1, { vol: 0.12, slide: 0.7, when: 1 + i * 0.12 }); this.tone(55, 2.4, { type: 'sawtooth', vol: 0.06, attack: 0.6 }); break;
+      // chapitre XII : le cahier de textes
+      case 'cloche': for (let i = 0; i < 22; i++) this.tone(i % 2 ? 1318.5 : 1567.98, 0.06, { type: 'triangle', vol: 0.05, when: i * 0.045 }); this.noise(1, { f: 3400, q: 5, vol: 0.04, sweep: 0.9 }); break;
+      case 'tic': if (this.throttle('tic', 120)) this.noise(0.03, { f: k % 2 ? 1500 : 2300, q: 10, vol: 0.12 }); break;
+      case 'reveilWarn': if (this.throttle('reveilWarn', 150)) for (let i = 0; i < 4; i++) this.noise(0.025, { f: 2600, q: 10, vol: 0.06, when: i * 0.16 }); break;
+      case 'reveil': if (this.throttle('reveil', 120)) for (let i = 0; i < 10; i++) this.tone(i % 2 ? 2093 : 1975.5, 0.04, { type: 'square', vol: 0.02, when: i * 0.03 }); break;
+      case 'cocotteOpen': if (this.throttle('cocotteOpen', 150)) this.noise(0.18, { f: 1600, q: 2, vol: 0.06, sweep: 1.6 }); break;
+      case 'cocotte': if (this.throttle('cocotte', 100)) { this.noise(0.05, { f: 1100, q: 1.5, vol: 0.16 }); this.tone(330, 0.06, { type: 'square', vol: 0.03, slide: 0.6 }); } break;
+      case 'horlogeWarn': [196, 0, 196, 0].forEach((f, i) => this.noise(0.04, { f: i % 2 ? 1200 : 1800, q: 9, vol: 0.12, when: i * 0.22 })); this.tone(98, 0.9, { vol: 0.12, attack: 0.2 }); break;
+      case 'heures': for (let i = 0; i < 12; i++) this.tone([523.25, 587.33, 659.25, 698.46, 783.99, 880, 987.77, 1046.5, 1174.66, 1318.5, 1396.9, 1567.98][i], 0.12, { type: 'triangle', vol: 0.05, when: i * 0.1 }); break;
+      case 'caseNew': if (k === 2) [659.25, 783.99, 1046.5].forEach((f, i) => this.tone(f, 0.25, { type: 'triangle', vol: 0.09, when: i * 0.08 })); else { this.noise(0.25, { f: 3800, q: 3, vol: 0.05, sweep: 0.7 }); this.tone(783.99, 0.2, { type: 'triangle', vol: 0.06, when: 0.15 }); } break;
+      case 'coche': {   // un coup de stylo rouge, puis l'accord de la sortie
+        this.noise(0.18, { f: 2400, q: 2, vol: 0.12, sweep: 1.8 });
+        [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => this.tone(f, 0.45, { type: 'triangle', vol: 0.1, when: 0.12 + i * 0.06 }));
+        [523.25, 659.25, 783.99].forEach(f => this.tone(f * 2, 1.2, { vol: 0.05, when: 0.45 })); break;
+      }
+      case 'boss12': [659.25, 587.33, 523.25, 392].forEach((f, i) => { this.tone(f, 1.1, { type: 'sine', vol: 0.12, when: i * 0.42 }); this.tone(f * 2.76, 0.6, { type: 'sine', vol: 0.025, when: i * 0.42 }); }); for (let i = 0; i < 4; i++) this.tone(65.41, 1.4, { type: 'sine', vol: 0.2, when: 1.8 + i * 0.7 }); break;
       case 'lose': [6, 4, 2, 0].forEach((n, i) => this.tone(PENTA[n], 0.8, { type: 'triangle', vol: 0.15, when: i * 0.18 })); break;
     }
   },
@@ -487,6 +503,9 @@ const AU = {
           587.33, 0, 739.99, 0, 880, 987.77, 880, 739.99, 659.25, 739.99, 659.25, 554.37, 587.33, 0, 0, 0],
   // la berceuse du cahier de poésie (un air original en la majeur, à trois temps), un temps par case ; 0 = silence
   POESIE: [659.25, 0, 554.37, 587.33, 659.25, 739.99, 659.25, 0, 0, 554.37, 0, 493.88, 440, 493.88, 554.37, 587.33, 0, 659.25, 554.37, 0, 493.88, 440, 0, 0],
+  // le carillon de la Grande Horloge (un air original en do majeur), un temps par case ; 0 = silence
+  CARILLON: [659.25, 587.33, 523.25, 392, 0, 0, 523.25, 587.33, 659.25, 0, 523.25, 0, 0, 0, 0, 0,
+             783.99, 659.25, 587.33, 523.25, 0, 0, 587.33, 659.25, 523.25, 0, 392, 0, 0, 0, 0, 0],
   // la mélodie d'« au clair de la lune » (traditionnelle), un temps par case ; 0 = la note précédente continue
   LUNE: [[523.25, 523.25, 523.25, 587.33, 659.25, 0, 587.33, 0, 523.25, 659.25, 587.33, 587.33, 523.25, 0, 0, 0],
          [587.33, 587.33, 587.33, 587.33, 440, 0, 440, 0, 587.33, 523.25, 493.88, 440, 392, 0, 0, 0]],
@@ -594,6 +613,16 @@ const AU = {
       if (s % 48 === 0) this.noise(0.5, { f: 3000, q: 0.6, vol: 0.025, when, sweep: 0.5 });   // une page qui tourne
       const n = this.POESIE[s % 24];
       if (n && (s >= 12 || intensity > 0.15)) { this.tone(n, beat * 1.3, { type: 'sine', vol: 0.1, when, dest: this.mus, attack: 0.004 }); this.tone(n * 2, beat * 0.5, { vol: 0.012, when, dest: this.mus, attack: 0.004 }); }
+      if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
+      return;
+    }
+    if (chap === 12) {   // le carillon de la Grande Horloge : tic-tac, cloches, et un grand « bong » toutes les huit mesures
+      const bar = s % 8, root = [130.81, 98, 110, 87.31][Math.floor(s / 8) % 4];
+      if (bar % 4 === 0) this.tone(root, beat * 3.6, { type: 'sine', vol: 0.2, when, dest: this.mus, attack: 0.03 });
+      this.noise(0.025, { f: s % 2 ? 1500 : 2300, q: 10, vol: 0.05, when });   // tic, tac
+      if (s % 32 === 0) this.tone(65.41, beat * 6, { type: 'sine', vol: 0.14, when, dest: this.mus, attack: 0.01 });
+      const n = this.CARILLON[s % 32];
+      if (n && (s >= 8 || intensity > 0.15)) { this.tone(n, beat * 1.8, { type: 'sine', vol: 0.1, when, dest: this.mus, attack: 0.002 }); this.tone(n * 2.76, beat * 0.8, { type: 'sine', vol: 0.02, when, dest: this.mus, attack: 0.002 }); }
       if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
       return;
     }

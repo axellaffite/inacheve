@@ -9,7 +9,8 @@ const CAHIERS = [
   { name: 'Brouillon', sub: 'page VII', pages: [7], cover: '#9aa58a', dark: '#66705a', doodle: 'cafe' },
   { name: 'Vacances', sub: 'page VIII', pages: [8], cover: '#f0a238', dark: '#b8711a', doodle: 'soleil' },
   { name: 'Cahier neuf', sub: 'pages IX et X', pages: [9, 10], cover: '#c8423f', dark: '#8e2a28', doodle: 'tables' },
-  { name: 'Poésie', sub: 'page XI', pages: [11], cover: '#7b5ea7', dark: '#523c78', doodle: 'lune' }
+  { name: 'Poésie', sub: 'page XI', pages: [11], cover: '#7b5ea7', dark: '#523c78', doodle: 'lune' },
+  { name: 'Cahier de textes', sub: 'page XII', pages: [12], cover: '#2a8f83', dark: '#1b6058', doodle: 'horloge' }
 ];
 // L'histoire du cahier : une phrase par page, qu'on ne lit qu'une fois la page débloquée
 const HISTOIRE = [null,
@@ -23,9 +24,10 @@ const HISTOIRE = [null,
   'En vacances, elle se perdit exprès dans les labyrinthes, pour le plaisir de ressortir.',
   'À la rentrée, dans un cahier tout neuf, elle apprit que les tables ne servent pas qu’à manger.',
   'À la récré, elle sauta jusqu’au Ciel sans toucher le caillou, et ne bougea plus quand on cria « soleil ! ».',
-  'Dans le cahier de poésie, elle apprit que deux mots qui riment se tiennent la main, même de loin.'
+  'Dans le cahier de poésie, elle apprit que deux mots qui riment se tiennent la main, même de loin.',
+  'Dans le cahier de textes, elle apprit l’heure : celle de la cloche, et celle où l’on rentre à la maison.'
 ];
-const TAB_COLORS = [null, '#f6e75e', '#ff9ec4', '#9be59b', '#8fd3f0', '#f7b267', '#c9a7f0', '#dcd6bc', '#ffd36b', '#b5e3d0', '#ffc4d6', '#d9c2ff'];
+const TAB_COLORS = [null, '#f6e75e', '#ff9ec4', '#9be59b', '#8fd3f0', '#f7b267', '#c9a7f0', '#dcd6bc', '#ffd36b', '#b5e3d0', '#ffc4d6', '#d9c2ff', '#a8e6dc'];
 const BUREAU = { hop: 0.24, key: 'inacheve.pages' };
 
 /* ----- les records de chaque page : { chapitre: { w: victoires, t: meilleur temps } } ----- */
@@ -67,7 +69,7 @@ function bureauChapter() { const it = bureauItems()[G.bureauSel]; return !it ? 1
 function musicChapter() {
   if (G.state === 'title') return 1;
   if (G.state === 'bureau' || (G.state === 'bestiaire' && G.bestFrom === 'bureau')) return bureauChapter();
-  return G.chapter || 1;
+  return CH().paper === 'textes' && G.state !== 'title' ? textesMusic() : G.chapter || 1;   // au cahier de textes : la musique de la matière de l'heure
 }
 
 /* ----- ouvrir, choisir, commencer ----- */
@@ -275,6 +277,11 @@ function drawDoodle(kind, x, y, r, open) {
     ctx.fillStyle = '#f6e7a8'; ctx.beginPath(); ctx.arc(0, 0, r * 0.6, 0.9, TAU - 0.9); ctx.arc(r * 0.18, -r * 0.16, r * 0.5, TAU - 1.1, 1.1, true); ctx.closePath(); ctx.fill();
     for (const [sx, sy, k] of [[r * 0.7, -r * 0.6, 0.16], [r * 0.85, r * 0.35, 0.1]]) { ctx.beginPath(); for (let i = 0; i <= 10; i++) { const an = -Math.PI / 2 + i * Math.PI / 5, rr = (i % 2 ? 0.45 : 1) * r * k; ctx.lineTo(sx + Math.cos(an) * rr, sy + Math.sin(an) * rr); } ctx.fill(); }
   }
+  else if (kind === 'horloge') {   // une horloge d'école, à la craie, avec sa petite cloche
+    ctx.strokeStyle = '#fffdf4'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, r * 0.62, 0, TAU); ctx.stroke();
+    ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -r * 0.45); ctx.moveTo(0, 0); ctx.lineTo(r * 0.3, r * 0.1); ctx.stroke();
+    ctx.fillStyle = '#f8c83c'; ctx.beginPath(); ctx.arc(0, -r * 0.86, r * 0.18, Math.PI, 0); ctx.closePath(); ctx.fill();
+  }
   else if (kind === 'tables') {   // « 7 × 8 », à la craie, et une perle de boulier
     ctx.font = '700 ' + (r * 0.8) + 'px ' + FONT_MAIN; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fffdf4';
     ctx.fillText('7 × 8', 0, -r * 0.1);
@@ -305,7 +312,7 @@ function drawDevoirSheet(d, me, k) {
   ctx.strokeStyle = C.margin; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-w / 2 + 18 * s, -h / 2); ctx.lineTo(-w / 2 + 18 * s, h / 2); ctx.stroke();
   if (me) { ctx.strokeStyle = C.ink; ctx.lineWidth = 2.2; ctx.strokeRect(-w / 2, -h / 2, w, h); }
   ctx.fillStyle = C.red; ctx.beginPath(); ctx.arc(0, -h / 2 + 8 * s, 6 * s, 0, TAU); ctx.fill();   // la punaise
-  const fz = Math.min(20 * s, w / 8);
+  const fz = Math.min(20 * s, w / 9.5);   // six cahiers : la feuille rétrécit, le titre aussi
   txt('Devoir du jour', 6 * s, -h / 2 + h * 0.3, fz, { font: FONT_CURSIVE, weight: 400, color: C.ink });
   txt('Chapitre ' + CHAPTERS[dv.chapter].num, 6 * s, -h / 2 + h * 0.58, fz * 0.85, { color: C.graphite });
   if (note !== null) txt(fmtNote(note) + '/20', 6 * s, -h / 2 + h * 0.82, fz * 0.95, { color: C.red, rot: -0.06 });

@@ -67,13 +67,14 @@ function newGame(demo, start = 1, devoir = null) {
     sifflets: [], balles: [], soleil: null, freeze: 0, bouges: 0, immobiles: 0, siffletSeen: false, balleSeen: false, soleilSeen: false, cordeSeen: false,
     marelle: null, marelles: 0, nextMarelle: MARELLE.first, marelleFx: [], marelleSeen: false,
     pieds: [], cesures: [], fromages: [], miams: 0, piedSeen: false, croisSeen: false, cesureSeen: false, fromageSeen: false,
-    rimes: null, poemes: 0, nextRimes: RIMES.first, rimesFx: [], rimesSeen: false
+    rimes: null, poemes: 0, nextRimes: RIMES.first, rimesFx: [], rimesSeen: false,
+    hour: 0, nextBell: HEURE.len, bell: 0, agenda: null, agendas: 0, nextAgenda: AGENDA.first, agendaFx: [], agendaSeen: false, aiguilleSeen: false, heuresSeen: false
   });
   const hp = demo ? 7 : 6;
   G.p = { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, r: 13, hp, maxHp: hp, inv: 1.2, dashCd: 0, dashT: 0, dx: 1, dy: 0, face: 0, fireCd: 0.5, look: 0, puddleT: 0, squash: 0, hidden: 0, gx: 0, gy: 0, pin: 0, moving: false };
   G.cam.x = G.p.x; G.cam.y = G.p.y;
   computeStats(); clearStains();
-  if (start > 1) draft([0, 0, 19, 28, 37, 46, 52, 52, 52, 52, 52, 52][start]);
+  if (start > 1) draft([0, 0, 19, 28, 37, 46, 52, 52, 52, 52, 52, 52, 52][start]);
   if (devoir) setupDevoir();
   else {
     caption(CH().intro, 4);
@@ -111,7 +112,8 @@ function turnPage() {
     lobs: [], rays: [], tides: [], dusk: null, laby: null, nextLaby: LABY.first, labyFx: [],
     tables: [], billes: [], calc: null, nextCalc: CALC.first, calcFx: [],
     sifflets: [], balles: [], soleil: null, freeze: 0, marelle: null, nextMarelle: MARELLE.first, marelleFx: [],
-    pieds: [], cesures: [], fromages: [], rimes: null, nextRimes: RIMES.first, rimesFx: []
+    pieds: [], cesures: [], fromages: [], rimes: null, nextRimes: RIMES.first, rimesFx: [],
+    hour: 0, nextBell: HEURE.len, bell: 0, agenda: null, nextAgenda: AGENDA.first, agendaFx: []
   });
   G.dicteeWord = CH().dictees[0];
   const p = G.p; Object.assign(p, { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, hp: p.maxHp, inv: 2.5, dashT: 0, hidden: 0, pin: 0 });
@@ -202,6 +204,7 @@ function director(dt) {
 
 function hurtEnemy(e, dmg, src, kx = 0, ky = 0) {
   if (e.dead) return;
+  if (G.agenda && e.type === G.agenda.type && !G.agenda.box) dmg *= AGENDA.fragile;   // surlignée pour le devoir : plus fragile
   e.hp -= dmg; e.flash = 0.09;
   if (src === 'shot' && G.S.burn) { e.burn = 2.6; e.burnDps = 0.9 + 0.75 * G.S.burn; }
   if (G.S.knock && src === 'shot' && !e.isBoss) { const k = 70 + 60 * G.S.knock; e.vx += kx * k; e.vy += ky * k; }
@@ -224,7 +227,8 @@ function killEnemy(e) {
     return;
   }
   const paper = CH().paper;
-  if (paper === 'portee') AU.play('noteKill', staffPitch(e.y)); else if (paper === 'milli') AU.play('mmKill'); else if (paper === 'carte') AU.play('carteKill'); else if (paper === 'calli') AU.play('calliKill'); else if (paper === 'garde') AU.play('gardeKill'); else if (paper === 'brouillon') AU.play('brouKill'); else if (paper === 'vacances') AU.play('vacKill'); else if (paper === 'tables') AU.play('tablesKill', e.type === 'chiffre' ? 1 + e.id % 9 : 5); else if (paper === 'recre') AU.play('recreKill', e.id); else if (paper === 'poesie') AU.play('poesieKill', e.id); else AU.play('kill');
+  if (paper === 'portee') AU.play('noteKill', staffPitch(e.y)); else if (paper === 'milli') AU.play('mmKill'); else if (paper === 'carte') AU.play('carteKill'); else if (paper === 'calli') AU.play('calliKill'); else if (paper === 'garde') AU.play('gardeKill'); else if (paper === 'brouillon') AU.play('brouKill'); else if (paper === 'vacances') AU.play('vacKill'); else if (paper === 'tables') AU.play('tablesKill', e.type === 'chiffre' ? 1 + e.id % 9 : 5); else if (paper === 'recre') AU.play('recreKill', e.id); else if (paper === 'poesie') AU.play('poesieKill', e.id); else if (paper === 'textes') textesKill(e); else AU.play('kill');
+  if (G.agenda) agendaKill(e);   // le devoir du cahier de textes
   if (BROU_TYPES.has(e.type)) brouillonDeath(e);   // le café se renverse, le taille-crayon rend ses lettres
   if (e.type === 'photocopieuse') photoDeath(e);   // bourrage papier : ses copies s'effacent
   if (e.type === 'agrafeuse') agrafDeath(e);   // sa dernière rafale cloue les ratures voisines
@@ -264,9 +268,9 @@ function botInput() {
   const need = G.dicteeWord[G.dicteeProg];
   for (const it of G.items) { const d = Math.hypot(it.x - p.x, it.y - p.y) - (it.ch === need ? 160 : 0) - (it.rare ? 80 : 0); if (d < gd && d < 520) { gd = d; goal = it; } }
   if (soleilFreezeBot()) return { x: 0, y: 0, dash: false };   // « soleil ! » : on ne bouge plus
-  const rn = photoTarget() || agrafTarget() || (G.refrain && G.refrain.notes[G.refrain.prog]) || figureTarget() || tresorTarget() || enluTarget() || sceauTarget() || lignesTarget() || morpionTarget() || labyTarget() || calcTarget() || marelleTarget() || rimesTarget();   // machines égarées, refrain, figure, trésor, lettrine, sceau, lignes, morpion, labyrinthe, calcul, marelle et rimes passent avant les lettres
+  const rn = photoTarget() || agrafTarget() || (G.refrain && G.refrain.notes[G.refrain.prog]) || figureTarget() || tresorTarget() || enluTarget() || sceauTarget() || lignesTarget() || morpionTarget() || labyTarget() || calcTarget() || marelleTarget() || rimesTarget() || agendaTarget();   // machines égarées, refrain, figure, trésor, lettrine, sceau, lignes, morpion, labyrinthe, calcul, marelle, rimes et case à cocher passent avant les lettres
   const toSong = rn && Math.hypot(rn.x - p.x, rn.y - p.y) < 1600;
-  const pull = toSong ? ((G.laby && !G.laby.end && rn === G.labyGoal) || rn === calcTarget() || (G.marelle && !G.marelle.end) || (G.rimes && !G.rimes.end) ? 5 : 3) : 1.5;   // le labyrinthe, la bonne réponse, la marelle et les rimes attirent plus fort : il faut traverser la foule
+  const pull = toSong ? ((G.laby && !G.laby.end && rn === G.labyGoal) || rn === calcTarget() || (G.marelle && !G.marelle.end) || (G.rimes && !G.rimes.end) || rn === agendaTarget() ? 5 : 3) : 1.5;   // le labyrinthe, la bonne réponse, la marelle, les rimes et la case à cocher attirent plus fort : il faut traverser la foule
   if (toSong) goal = rn;
   if (!goal) goal = { x: WORLD.w / 2 + Math.cos(G.t * 0.21) * 700, y: WORLD.h / 2 + Math.sin(G.t * 0.17) * 420 };
   const gdx = goal.x - p.x, gdy = goal.y - p.y, gl = Math.hypot(gdx, gdy) || 1;
@@ -277,9 +281,10 @@ function botInput() {
   const garde = CH().paper === 'garde';   // rubans tendus, ombres des tampons et du Cartable
   const brou = CH().paper === 'brouillon';   // café, ruban blanc, fautes, traits barrés, zéro pointé
   const vac = CH().paper === 'vacances';   // boules de glace, rayons, marée, pointillés, ballons
-  const tab = CH().paper === 'tables';   // tables de Pythagore, billes, croix du signe fois, mauvaises réponses
-  const rec = CH().paper === 'recre';   // ondes du sifflet, ballons, cordes, avions, caillou de la marelle
-  const poe = CH().paper === 'poesie';   // pieds, césures, fromages, exclamations, rimes jumelles, fiches à ne pas retourner
+  const mix = CH().paper === 'textes';   // le cahier de textes : les ratures (et les coups) de toutes les matières
+  const tab = CH().paper === 'tables' || mix;   // tables de Pythagore, billes, croix du signe fois, mauvaises réponses
+  const rec = CH().paper === 'recre' || mix;   // ondes du sifflet, ballons, cordes, avions, caillou de la marelle
+  const poe = CH().paper === 'poesie' || mix;   // pieds, césures, fromages, exclamations, rimes jumelles, fiches à ne pas retourner
   const agr = G.enemies.some(e => e.type === 'agrafeuse');   // l'axe des agrafes
   for (let i = 0; i < 16; i++) {
     const a = i / 16 * TAU, dx = Math.cos(a), dy = Math.sin(a);
@@ -306,6 +311,7 @@ function botInput() {
       if (tab) sc -= w * tablesDanger(x, y);
       if (rec) sc -= w * recreDanger(x, y);
       if (poe) sc -= w * poesieDanger(x, y);
+      if (mix) sc -= w * textesDanger(x, y);
       if (agr) sc -= w * agrafDanger(x, y);
       const wm = Math.min(x, y, WORLD.w - x, WORLD.h - y);
       if (wm < 220) sc -= (220 - wm) * 0.03 * w;
@@ -351,7 +357,7 @@ function stepPlayer(dt) {
   p.fireCd -= dt;
   if (p.fireCd <= 0) {
     let tgt = null, bd = 600 * 600;
-    for (const e of G.enemies) { let d = (e.x - p.x) ** 2 + (e.y - p.y) ** 2; if (e.ghost) continue; if ((e.isBoss || ERRANTES.has(e.type)) && d < 480 * 480) d *= 0.15; if (d < bd) { bd = d; tgt = e; } }
+    for (const e of G.enemies) { let d = (e.x - p.x) ** 2 + (e.y - p.y) ** 2; if (e.ghost) continue; if ((e.isBoss || ERRANTES.has(e.type)) && d < 480 * 480) d *= 0.15; else if (G.agenda && e.type === G.agenda.type && !G.agenda.box && d < 520 * 520) d *= 0.15; if (d < bd) { bd = d; tgt = e; } }
     if (tgt) {
       p.fireCd = 1 / S.rate;
       const lead = Math.sqrt(bd) / S.pspeed;
@@ -468,6 +474,8 @@ function stepPlay(dt) {
       stepSifflet(e, dt, dx, dy, d, slow); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else if (e.type === 'alexandrin') {
       stepAlexandrin(e, dt, dx, dy, d, slow); tx = MV.x; ty = MV.y; agil = MV.agil;
+    } else if (e.type === 'horloge') {
+      stepHorloge(e, dt, dx, dy, d, slow); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else if (e.isBoss) {
       if (e.type === 'boss') stepBoss(e, dt, dx, dy, d); else stepFausse(e, dt, dx, dy, d);
       tx = e.phase === 'charge' ? e.cx * 520 : (e.phase === 'aim' ? 0 : dx / d * e.speed * slow);
@@ -494,6 +502,8 @@ function stepPlay(dt) {
       stepRecre(e, dt, dx, dy, d, slow, hid); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else if (POESIE_TYPES.has(e.type)) {
       stepPoesie(e, dt, dx, dy, d, slow, hid); tx = MV.x; ty = MV.y; agil = MV.agil;
+    } else if (TEXTES_TYPES.has(e.type)) {
+      stepTextes(e, dt, dx, dy, d, slow, hid); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else if (e.type === 'photocopieuse') {
       stepPhotocopieuse(e, dt, dx, dy, d, slow, hid); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else if (e.type === 'agrafeuse') {
@@ -631,6 +641,7 @@ function stepPlay(dt) {
   stepCalc(dt);
   stepMarelle(dt);
   stepRimes(dt);
+  stepEmploi(dt);   // la cloche, l'emploi du temps et le cahier de textes
   stepPhoto(dt);   // la photocopieuse égarée, et la copie de la goutte
   stepAgraf(dt);   // l'agrafeuse égarée
   for (const c of G.coins) c.t += dt;
@@ -746,6 +757,7 @@ function phrase(win) {
   const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
   if (!ws.length) return 'Une page presque blanche.';
   if (ws.length === 1) return win ? cap(ws[0]) + ' tint bon, jusqu’au point final.' : 'Il ne restait que ' + ws[0] + '.';
+  if (win && G.chapter === 12) return pick(['Grâce à ' + ws[0] + ', la Grande Horloge sonna enfin la sortie.', cap(ws[0]) + ' et ' + ws[1] + ' firent tous leurs devoirs, et même en avance.']);
   if (win && G.chapter === 11) return pick(['Grâce à ' + ws[0] + ', le Grand Alexandrin perdit enfin un pied.', cap(ws[0]) + ' et ' + ws[1] + ' rimaient si bien qu’on les apprit par cœur.']);
   if (win && G.chapter === 10) return pick(['Grâce à ' + ws[0] + ', le Grand Sifflet siffla la fin de la récré.', cap(ws[0]) + ' et ' + ws[1] + ' sautèrent jusqu’au Ciel sans toucher le caillou.']);
   if (win && G.chapter === 9) return pick(['Grâce à ' + ws[0] + ', le Boulier perdit enfin le compte.', cap(ws[0]) + ' et ' + ws[1] + ' savaient leurs tables sur le bout des doigts.']);
