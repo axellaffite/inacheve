@@ -135,6 +135,7 @@ if (!CAPTURE) {
   } catch (e) { G.unions = {}; }
 }
 const unionPage = () => CHAPTERS.length + 1;   // après la page des rares
+const imagesPage = () => CHAPTERS.length + 2;   // la toute dernière : les images (images.js)
 const unionCount = () => UNIONS.filter(k => G.unions[k]).length;
 function saveUnions() {
   if (CAPTURE) return;

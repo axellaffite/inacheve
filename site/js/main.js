@@ -16,6 +16,7 @@ function initTitle() {
 function update(dt) {
   G.time += dt; G.stateT += dt;
   if (G.state !== 'levelup') { for (const c of G.captions) c.t += dt; G.captions = G.captions.filter(c => c.t < c.dur); }
+  stepBonsPoints(dt);
   if (G.state === 'bureau') { stepBureau(dt); return; }
   if (G.state === 'title') {
     for (const d of G.deco) { d.x += d.vx * dt; d.y += d.vy * dt; d.rot += d.spin * dt; if (Math.abs(d.x - WORLD.w / 2) > 950) d.vx *= -1; if (Math.abs(d.y - WORLD.h / 2) > 560) d.vy *= -1; }
@@ -117,6 +118,7 @@ if (!CAPTURE) {
       else if (e.code === 'Enter' || e.code === 'Space') bureauGo();
       else if (e.code === 'Escape' || e.code === 'Backspace' || e.code === 'Tab') closeBureau();
       else if (e.code === 'KeyB') openBestiaire();
+      else if (e.code === 'KeyI') openBestiaire(imagesPage());
       else if (e.code === 'KeyJ') startDevoir(false);
       else if (e.code === 'KeyM') toggleMute();
       else if (e.code === 'KeyC') toggleCalm();
@@ -126,6 +128,7 @@ if (!CAPTURE) {
     }
     if (e.code === 'Tab' && G.state === 'title') { openBureau(); return; }
     if (e.code === 'KeyB' && ['title', 'play', 'pause', 'gameover', 'victory'].includes(G.state)) { openBestiaire(); return; }
+    if (e.code === 'KeyI' && ['title', 'pause', 'gameover', 'victory'].includes(G.state)) { openBestiaire(imagesPage()); return; }
     if (e.code === 'KeyM') toggleMute();
     if (e.code === 'KeyC') toggleCalm();
     if (e.code === 'KeyV') toggleSpeed();
@@ -260,8 +263,11 @@ window.__cap = {
   devoir(over) { if (over) devoirOver = over; startDevoir(true); },
   start(chapter) { newGame(true, chapter || 1); },
   caption(t, d) { caption(t, d); },
-  state() { return { state: G.state, chapter: G.chapter || 1, t: G.t, boss: !!G.boss, bossDefeated: !!G.bossDefeated, level: G.level, hp: G.p ? G.p.hp : 0, enemies: G.enemies ? G.enemies.length : 0, kills: G.kills, mots: G.mots, refrains: G.refrains || 0, refrain: G.refrain ? G.refrain.prog : -1, figures: G.figures || 0, tresors: G.tresors || 0, tresor: G.tresor ? G.tresor.shown : -1, enlus: G.enlus || 0, enlu: G.enlu ? Math.round(100 * G.enlu.painted / G.enlu.cells.length) : -1, croquis: bestCount(), page: G.bestPage, unions: unionCount(), quotes: G.quotes ? G.quotes.length : 0, sceaux: G.sceaux || 0, sceau: G.sceau ? (G.sceau.carried ? 1 : 0) : -1, devoir: !!G.devoir, note: G.note ? G.note.n : -1, lignes: G.lignes || 0, ligne: G.ligne ? Math.round(100 * G.ligne.prog / G.ligne.len) : -1, morpions: G.morpions || 0, morpion: G.morpion ? G.morpion.cells.filter(c => c).length : -1, labys: G.labys || 0, laby: G.laby ? (G.laby.inEnt ? G.laby.trail.length : 0) : -1, calculs: G.calculs || 0, calcul: G.calc && !G.calc.end ? G.calc.wrong : -1, marelles: G.marelles || 0, marelle: G.marelle && !G.marelle.end ? G.marelle.prog : -1, ratees: G.marelle ? G.marelle.ratees : 0, soleil: G.soleil ? G.soleil.phase : '', bouges: G.bouges || 0, immobiles: G.immobiles || 0, poemes: G.poemes || 0, rimes: G.rimes && !G.rimes.end ? G.rimes.found : -1, rimesFaux: G.rimes ? G.rimes.wrong : 0, miams: G.miams || 0, agendas: G.agendas || 0, heure: G.hour || 0, agenda: G.agenda && !G.agenda.done ? (G.agenda.box ? G.agenda.need : G.agenda.got) : -1, photos: G.photos || 0, copies: G.copies || 0, photoKills: G.photoKills || 0, double: G.double ? 1 : 0, agrafees: G.agrafees || 0, agrafPins: G.agrafPins || 0, agrafKills: G.agrafKills || 0, perfos: G.perfos || 0, tombees: G.tombees || 0, trous: G.trous ? G.trous.length : 0, perfoKills: G.perfoKills || 0, pin: G.p && G.p.pin > 0 ? 1 : 0, bureau: G.state === 'bureau' ? bureauChapter() : -1, records: Object.keys(G.pages).length }; },
+  state() { return { state: G.state, chapter: G.chapter || 1, t: G.t, boss: !!G.boss, bossDefeated: !!G.bossDefeated, level: G.level, hp: G.p ? G.p.hp : 0, enemies: G.enemies ? G.enemies.length : 0, kills: G.kills, mots: G.mots, refrains: G.refrains || 0, refrain: G.refrain ? G.refrain.prog : -1, figures: G.figures || 0, tresors: G.tresors || 0, tresor: G.tresor ? G.tresor.shown : -1, enlus: G.enlus || 0, enlu: G.enlu ? Math.round(100 * G.enlu.painted / G.enlu.cells.length) : -1, croquis: bestCount(), page: G.bestPage, unions: unionCount(), quotes: G.quotes ? G.quotes.length : 0, sceaux: G.sceaux || 0, sceau: G.sceau ? (G.sceau.carried ? 1 : 0) : -1, devoir: !!G.devoir, note: G.note ? G.note.n : -1, lignes: G.lignes || 0, ligne: G.ligne ? Math.round(100 * G.ligne.prog / G.ligne.len) : -1, morpions: G.morpions || 0, morpion: G.morpion ? G.morpion.cells.filter(c => c).length : -1, labys: G.labys || 0, laby: G.laby ? (G.laby.inEnt ? G.laby.trail.length : 0) : -1, calculs: G.calculs || 0, calcul: G.calc && !G.calc.end ? G.calc.wrong : -1, marelles: G.marelles || 0, marelle: G.marelle && !G.marelle.end ? G.marelle.prog : -1, ratees: G.marelle ? G.marelle.ratees : 0, soleil: G.soleil ? G.soleil.phase : '', bouges: G.bouges || 0, immobiles: G.immobiles || 0, poemes: G.poemes || 0, rimes: G.rimes && !G.rimes.end ? G.rimes.found : -1, rimesFaux: G.rimes ? G.rimes.wrong : 0, miams: G.miams || 0, agendas: G.agendas || 0, heure: G.hour || 0, agenda: G.agenda && !G.agenda.done ? (G.agenda.box ? G.agenda.need : G.agenda.got) : -1, photos: G.photos || 0, copies: G.copies || 0, photoKills: G.photoKills || 0, double: G.double ? 1 : 0, agrafees: G.agrafees || 0, agrafPins: G.agrafPins || 0, agrafKills: G.agrafKills || 0, perfos: G.perfos || 0, tombees: G.tombees || 0, trous: G.trous ? G.trous.length : 0, perfoKills: G.perfoKills || 0, pin: G.p && G.p.pin > 0 ? 1 : 0, bureau: G.state === 'bureau' ? bureauChapter() : -1, records: Object.keys(G.pages).length, bonsPoints: G.bonsPoints, bpRun: G.bpRun || 0, images: imageCount() }; },
   bestiaire(page) { openBestiaire(page); },
+  // les bons points : en donner sans toast (préparer le montage), puis ouvrir la page des images
+  bonspoints(n) { G.bonsPoints = Math.max(0, n); },
+  images() { openBestiaire(imagesPage()); },
   croque(types) { types.forEach((k, i) => { if (BEST_TYPES.has(k)) G.bestiary[k] = (G.bestiary[k] || 0) + 4 + (i * 37) % 90; }); },
   unir(keys) { keys.forEach(k => { if (UNIONS.includes(k)) G.unions[k] = 1; }); },
   feuilleter(d) { flipBestiaire(d); },

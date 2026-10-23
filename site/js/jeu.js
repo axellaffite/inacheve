@@ -53,7 +53,7 @@ function newGame(demo, start = 1, devoir = null) {
     lines: [], figure: null, figures: 0, nextFigure: FIGURE.first, fills: [], figureSeen: false,
     tents: [], drops: [], tresor: null, tresors: 0, nextTresor: TRESOR.first, chests: [], coins: [], tresorSeen: false, pullX: 0, pullY: 0,
     strokes: [], strokeN: 0, sigs: [], sigSeen: false, enlu: null, enlus: 0, nextEnlu: ENLU.first, glows: [], enluSeen: false,
-    newCroquis: 0, bestToasts: [], trail: [], quotes: [], quoteCd: 1.5, newUnions: 0,
+    newCroquis: 0, bestToasts: [], trail: [], quotes: [], quoteCd: 1.5, newUnions: 0, bpRun: 0, bpToasts: [], imgToasts: [],
     ribbons: [], sceau: null, sceaux: 0, nextSceau: SCEAU.first, stamps: [], sceauSeen: false, jumpSeen: false,
     ligne: null, lignes: 0, nextLigne: LIGNES.first, sweeps: [], ligneSeen: false,
     cafes: [], tapes: [], tapeN: 0, fautes: [], bars: [], zeros: [], fauteSeen: false, zeroSeen: false,

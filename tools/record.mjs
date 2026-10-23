@@ -62,18 +62,18 @@ async function load(seed) {
 // Montage (itération 22, « La perforatrice ») : la page des rares a une case vide, puis le devoir du jour au brouillon avec la
 // consigne « Feuille perforée » : la perforatrice arrive à 0:20, saute, troue la page, les ratures tombent dans les trous ;
 // biffée, sa dernière perforation en fait tomber toute une foule. Elle revient vers 1:20, puis le Stylo Rouge à 3:00.
+// Montage (itération 23, « Les bons points ») : la page des images est encore vide au bout du bestiaire. On ouvre le chapitre IX
+// avec neuf bons points en poche : chaque calcul juste, chaque croquis en rapporte un, et le dixième fait gagner une image.
+// Puis le Boulier à 3:00 (trois bons points d'un coup), et la page des images qui se remplit.
 const STEPS = [
-  { act: () => { const c = window.__cap; c.debloque(12); c.croque(['boss', 'fausse', 'regle', 'pieuvre', 'paraphe', 'cartable', 'stylo', 'soleil', 'boulier', 'sifflet', 'alexandrin', 'photocopieuse', 'agrafeuse', 'gribouillis', 'croche', 'segment', 'mouette', 'delie', 'marbrure', 'trombone', 'cafe', 'coquillage', 'chiffre', 'fois', 'calot', 'toupie', 'ver', 'rime']); c.bestiaire(13); },
-    cap: ['Au bestiaire, la page des rares a encore une case vide…'], play: 3 },
-  { act: s => { window.__cap.refermer(); window.__cap.devoir({ chapter: 7, consigne: 'perfore', pouce: 'pluie', seed: s }); }, arg: s => s,
-    cap: ['Le devoir du jour, au brouillon. Consigne : « Feuille perforée »'], play: 4 },
-  { skip: 15, play: 5 },
-  { cap: ['La perforatrice saute sur la goutte… et troue la page !'], play: 7 },
-  { cap: ['Par les trous, on voit le pupitre. Les ratures qui marchent dessus tombent à travers !'], play: 9, need: r => r.tombees >= 3 },
-  { cap: ['Biffe-la : sa dernière perforation fait tomber toutes les ratures autour d’elle'], play: 12, need: r => r.perfoKills >= 1 },
-  { skip: 30, cap: ['Feuille perforée : elle revient toujours…'], play: 6 }
+  { act: () => { const c = window.__cap; c.debloque(12); c.bonspoints(0); c.images(); },
+    cap: ['Nouveau : au bout du bestiaire, une page d’images à collectionner'], play: 3.5 },
+  { act: () => { window.__cap.refermer(); window.__cap.bonspoints(9); window.__cap.start(9); },
+    cap: ['Chapitre IX. Chaque exploit rapporte un bon point…'], play: 6 },
+  { cap: ['… et dix bons points font une image !'], play: 8, need: r => r.images >= 1 },
+  { skip: 30, cap: ['Calculs, dictées, croquis, refrains, trésors : tout exploit compte'], play: 6, need: r => r.bpRun >= 4 }
 ];
-const BOSS_AT = 180, BOSS_FILM = 18;   // le Stylo Rouge arrive à 3:00 ; secondes de combat filmées au plus (la suite est sautée)
+const BOSS_AT = 180, BOSS_FILM = 18;   // le Boulier arrive à 3:00 ; secondes de combat filmées au plus (la suite est sautée)
 const argOf = (st, s) => st.arg ? st.arg(s) : undefined;
 // Joue tout le montage en accéléré (sans filmer) pour savoir comment se termine la partie avec la graine s
 async function simulate(s) {
@@ -87,13 +87,13 @@ async function simulate(s) {
   return { ...r, ok };
 }
 // une bonne graine : un devoir coché à l'écran, puis la Grande Horloge tombe avant la fin du tournage
-const good = r => r.ok && r.state === 'victory' && r.chapter === 7 && r.t <= BOSS_AT + 75;
+const good = r => r.ok && r.state === 'victory' && r.chapter === 9 && r.t <= BOSS_AT + 75;
 let SEED = SEED_ARG ? parseInt(SEED_ARG, 10) : null;
 if (SEED === null && !SMOKE) {
   let best = null;
   for (const s of [42, 7, 5, 99, 3, 11, 23, 64, 1, 8, 13, 21]) {
     const r = await simulate(s);
-    console.log(`graine ${s} : ${r.state} à ${r.t.toFixed(0)} s (chapitre ${r.chapter}, niveau ${r.level}, ${r.hp} cœur(s), ${r.perfos} perforation(s), ${r.tombees} rature(s) tombée(s), ${r.perfoKills} perforatrice(s) biffée(s))`);
+    console.log(`graine ${s} : ${r.state} à ${r.t.toFixed(0)} s (chapitre ${r.chapter}, niveau ${r.level}, ${r.hp} cœur(s), ${r.bpRun} bon(s) point(s), ${r.images} image(s))`);
     const score = x => (good(x) ? 1e6 : 0) + (x.ok ? 1e5 : 0) + (x.state === 'victory' ? 5e4 - x.t : x.t);
     if (!best || score(r) > score(best.r)) best = { s, r };
     if (good(r)) break;
@@ -113,6 +113,7 @@ if (SMOKE) {
     for (const [chapter, consigne, pouce] of [[1, 'miroir', 'pluie'], [1, 'sansPate', 'propre'], [4, 'courant', 'pluie'], [2, 'brouillard', 'souffle'], [6, 'double', 'aimant'], [3, 'presse', 'souffle'], [5, 'fragile', 'propre'], [7, 'courant', 'aimant'], [8, 'miroir', 'pluie'], [9, 'double', 'souffle'], [10, 'sansPate', 'aimant'], [11, 'courant', 'pluie'], [12, 'presse', 'propre'], [3, 'perfore', 'pluie'], [11, 'perfore', 'souffle']]) {
       window.__cap.devoir({ chapter, consigne, pouce, seed: chapter }); window.__cap.skip(25); window.__cap.frames(2);
     }
+    window.__cap.bonspoints(9); window.__cap.start(9); window.__cap.skip(40); window.__cap.frames(3); window.__cap.images(); window.__cap.frames(2); window.__cap.feuilleter(-1); window.__cap.frames(2); window.__cap.bonspoints(500); window.__cap.feuilleter(1); window.__cap.frames(2); window.__cap.refermer();
     window.__cap.jour(null); window.__cap.devoir(); for (let i = 0; i < 300 && !['victory', 'gameover'].includes(window.__cap.state().state); i++) window.__cap.skip(1);
     window.__cap.skip(3); window.__cap.frames(2); window.__cap.title(); window.__cap.frames(2); });
   const st = await page.evaluate(() => window.__cap.state());
@@ -158,20 +159,20 @@ while (st.state !== 'gameover' && st.state !== 'victory' && st.t < BOSS_AT - 4) 
   st = await state();
 }
 if (st.state !== 'gameover' && st.state !== 'victory') {
-  await cap('… 3:00 : le Stylo Rouge vient corriger la copie !', 2.6);
-  await cap('Les trous de la perforatrice, eux, sont toujours là…', 4);
+  await cap('… 3:00 : le Boulier vient compter les points !', 2.6);
+  await cap('Biffe le patron : trois bons points d’un coup', 4);
   for (let i = 0; i < BOSS_FILM && st.state !== 'victory' && st.state !== 'gameover'; i++) { await grab(1); st = await state(); }
   if (st.state !== 'victory' && st.state !== 'gameover') {   // la fin du combat est sautée, pour que la vidéo reste courte
     await page.evaluate(() => { for (let i = 0; i < 300; i++) { const s = window.__cap.state(); if (s.state === 'victory' || s.state === 'gameover') break; window.__cap.skip(0.5); } });
     st = await state();
   }
 }
-// la copie notée compte les ratures tombées, puis la page des rares du bestiaire
+// la copie notée compte les bons points de la partie, puis la page des images, bien remplie
 if (st.state === 'victory' || st.state === 'gameover') await grab(6.5);
 else await grab(1);
-await page.evaluate(() => window.__cap.bestiaire(13));
-await cap('Au bestiaire : la page des rares est complète', 3);
-await grab(3.4);
+await page.evaluate(() => { window.__cap.bonspoints(76); window.__cap.images(); });
+await cap('Douze images à gagner : le hibou, le phare, la baleine…', 3.4);
+await grab(4);
 await page.evaluate(() => window.__cap.refermer());
 // retour à l'écran titre
 await page.evaluate(() => window.__cap.title());

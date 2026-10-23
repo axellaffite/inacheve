@@ -471,6 +471,17 @@ Tenu depuis la note de marge « le cahier de textes ? » du chapitre XI (qui ré
 - Le devoir du jour peut tomber sur les douze chapitres, et les devoirs cochés comptent comme exploits. Cela a de nouveau changé la correspondance entre les dates et les devoirs à partir du 22 octobre 2026 (deuxième fois ce jour-là).
 - Au bureau, six cahiers serrent la ligne : la feuille du devoir du jour rétrécit, et son titre aussi (il débordait).
 
+## Les bons points et les images (itération 23)
+
+Une récompense transversale, comme à l'école : les exploits rapportent des **bons points**, et **dix bons points font une image**. Tout est dans `images.js` (chargé après `unions.js`).
+
+- **Sources** (`BON_SOURCES`) : des compteurs déjà tenus par le jeu, relus à chaque image du jeu (`stepBonsPoints`, appelé en tête d'`update`) ; une hausse pendant `play` ou `levelup` rapporte des bons points. Lignes, refrain, figure, trésor, lettrine, ex-libris, morpion, labyrinthe, calcul, marelle, poème, devoir coché : 1 chacun. Trois dictées complètes : 1. Trois cents ratures biffées dans la partie : 1 (réglé pour qu'une partie rapporte une image ou deux, le pilote automatique en gagne une vingtaine de bons points). Nouveau croquis au bestiaire : 1. Nouvelle union : 2. Patron biffé : 3. Les baisses (nouvelle partie, page tournée) sont ignorées, et les sauts de plus de 50 aussi (préparations du montage). Rien n'est compté en démo hors capture.
+- **Toasts** : une carte « + 1 bon point » glisse depuis le bord droit (en face du polaroïd des croquis, à gauche), avec sous elle la jauge des dix étoiles (`drawBonsGauge`). Quand une dizaine est atteinte, la carte de l'image elle-même arrive, entourée de rayons dorés (« Une image ! », `drawBonsToast`), avec un sous-titre et un arpège (`AU.play('image')`). Les toasts avancent aussi pendant l'écran de fin (le patron rapporte ses trois bons points juste avant).
+- **Les douze images** (`IMAGES`) : des vignettes peintes à la gouache, chacune une petite fonction qui dessine dans un carré de 100 × 100, avec un peu de mouvement (le hibou cligne, le moulin tourne, le faisceau du phare balaie, la baleine souffle…). On les gagne dans l'ordre. Au-delà de 120 bons points, on continue simplement de les compter.
+- **La page des images** : la toute dernière page du bestiaire (`imagesPage()`, après le carnet des unions), « Mes images », 6 colonnes sur deux rangées (3 colonnes en étroit). La prochaine image dit « encore N bons points » au surligneur ; la jauge des dix étoiles est en haut à gauche. Touche **I** depuis le titre, la pause ou la fin de partie (et au bureau).
+- **Ailleurs** : l'écran titre annonce la nouveauté puis affiche le total ; la copie de fin compte les « bons points » de la partie (`G.bpRun`).
+- **Capture** : `__cap.bonspoints(n)` fixe le total sans toast, `__cap.images()` ouvre la page ; `state()` renvoie `bonsPoints`, `bpRun`, `images`.
+
 ## Vitesse du jeu (itération 11)
 
 - Bouton « Vitesse » ou touche V : 100 %, 80 % ou 60 % (`G.speed`, appliqué au pas de temps dans `frame`, jamais en capture). Gardé dans `inacheve.vitesse`.
@@ -486,6 +497,7 @@ Tenu depuis la note de marge « le cahier de textes ? » du chapitre XI (qui ré
 - `inacheve.vitesse` : vitesse du jeu (1, 0,8 ou 0,6).
 - `inacheve.unions` : le carnet des unions, la liste des mots composés déjà choisis (validée au chargement, enregistrée à chaque nouvelle union).
 - `inacheve.pages` : les records de chaque page (victoires et meilleur temps contre son patron), montrés au bureau.
+- `inacheve.images` : le total des bons points gagnés (un entier, validé au chargement, enregistré à chaque bon point) ; les images en découlent (une tous les dix).
 
 ## Déterminisme
 
@@ -554,7 +566,7 @@ Itération 22 (la perforatrice, pilote) : premiers réglages (trous de 15 s, 9 s
 - ~~**Refrain**~~ : fait à l'itération 4 (notes à toucher dans l'ordre). Pour plus tard : un refrain « en canon » que deux mélodies se partagent ; un refrain caché que seul l'écho d'une ligne traversée révèle ; ~~une version du chapitre I (une phrase à recopier mot à mot, la « copie »)~~ : faite à l'itération 12 (les lignes).
 - **Les paroles** (TODO dans la marge, et nouvelle promesse « les paroles ? » à côté du refrain) : des syllabes sous les notes du refrain, qui forment un mot ; les dictées du chapitre II écrites sous la portée, comme des paroles de chanson.
 - **Les lignes, la suite** : des lignes en deux couleurs (un mot au stylo rouge à repasser), une ligne qui se recopie en miroir, une rature « pâté » qui fait des taches sur la ligne en cours, la phrase de fin écrite comme une ligne au bas de la page, des lignes à copier aussi sur les autres pages (une portée à recopier note à note ?).
-- **Bons points** : de petites cartes illustrées à collectionner, gagnées par des exploits ; une page « collection » dans le carnet de bord. (Le bestiaire donne déjà un bon point doré par page complète : on pourrait les compter sur l'écran titre.)
+- ~~**Bons points**~~ : faits à l'itération 23 (dix bons points font une image, douze images au bout du bestiaire). Pour plus tard : des images rares (dorées, brillantes) tirées au hasard, une deuxième série de douze sur un thème (les métiers ? les saisons ?), échanger ses images en double contre une autre (un « code » à recopier, sans serveur), une image qu'on colle soi-même dans un album, un bon point « sans faute » quand on finit une page sans perdre de cœur, une image géante (le puzzle des douze) quand la collection est complète.
 - ~~**Bestiaire**~~ : fait à l'itération 7. Pour plus tard : un croquis qui montre l'attaque de la rature quand on le touche ; des ratures « rares » (une gomme dorée, un gribouillis à l'envers) qui n'ont qu'une case en pointillés ; une page de patrons à part, avec leurs phrases de fin.
 - ~~**Page du jour**~~ : faite à l'itération 11 (le devoir du jour), avec la consigne « écrire en miroir » à l'itération 12. Pour plus tard : d'autres consignes (« dictée à l'envers », « une seule lettre compte »), un devoir du week-end plus long (deux pages d'affilée), un carnet de notes qui garde les sept derniers jours, un code du jour à recopier pour comparer sa note avec un ami (sans aucun serveur).
 - ~~**Combinaisons de mots**~~ : fait à l'itération 2 (cinq mots composés), puis trois de plus à l'itération 9 (CITATION, CALLIGRAPHIE, LUNE ROUSSE). Pour plus tard : CLAIR DE LUNE (SOUFFLE + LUNE, les lunes soignent ?), VENT + VIRGULE, un mot composé à trois mots très rare (une « phrase » ?), des unions propres à un chapitre (une union qui n'existe que sur la portée).

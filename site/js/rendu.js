@@ -471,17 +471,17 @@ function drawTitle() {
   const a = clamp((t - 1.2) * 2, 0, 1);
   txt('un jeu qui s’écrit tout seul, toutes les douze heures', W / 2, ty + 128 * s, Math.min(32 * s, W / 22), { color: C.graphite, weight: 400, alpha: a });
   txt(G.input.touch ? 'Touche l’écran pour commencer' : 'Appuie sur Entrée pour commencer', W / 2, ty + 196 * s, Math.min(38 * s, W / 18), { color: C.ink, alpha: a * (0.6 + 0.4 * Math.sin(G.time * 3)), hl: C.hl });
-  if (!G.input.touch) txt('ZQSD, WASD ou flèches : bouger    Espace : pâté d’encre    Échap : pause    Tab : le bureau    J : devoir du jour    B : bestiaire    M : son', W / 2, ty + 252 * s, Math.min(22 * s, W / 40), { color: C.pencil, weight: 400, alpha: a });
+  if (!G.input.touch) txt('ZQSD, WASD ou flèches : bouger    Espace : pâté d’encre    Échap : pause    Tab : le bureau    J : devoir du jour    B : bestiaire    I : images    M : son', W / 2, ty + 252 * s, Math.min(22 * s, W / 40), { color: C.pencil, weight: 400, alpha: a });
   else txt('Glisse pour bouger, bouton « pâté » pour foncer', W / 2, ty + 252 * s, 22 * s, { color: C.pencil, weight: 400, alpha: a });
   const nb = n => ['zéro', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix', 'onze', 'douze'][n] || String(n), pages = CHAPTERS.length - 1;
   const news = G.input.touch ? 'Nouveau : le bureau (bouton en bas). ' + nb(CAHIERS.length).replace(/^./, c => c.toUpperCase()) + ' cahiers, ' + nb(pages) + ' pages : choisis la tienne.'
     : G.unlocked >= 2 ? 'Nouveau : touche Tab, le bureau. Choisis ta page parmi les ' + nb(pages) + (G.unlocked > 2 ? ', ou touches 2 à ' + Math.min(9, G.unlocked) + (G.unlocked >= 12 ? ', 0 et les deux touches à sa droite' : G.unlocked >= 11 ? ', 0 et la touche à sa droite' : G.unlocked >= 10 ? ' et 0' : '') : ', ou touche 2') + '.'
     : 'Nouveau : touche Tab, le bureau. ' + nb(CAHIERS.length).replace(/^./, c => c.toUpperCase()) + ' cahiers, ' + nb(pages) + ' pages à écrire… et une histoire à lire.';
   txt(news, W / 2, ty + (G.best ? 322 : 290) * s, Math.min(22 * s, W / 30), { color: C.ink, weight: 400, alpha: a * 0.85 });
-  const bn = bestCount(), un = unionCount(), keyB = G.input.touch ? '' : ' (touche B)';
-  const bnews = !(bn || un) ? 'Nouveau : le carnet des unions, au bout du bestiaire' + keyB
-    : W < 760 ? 'Bestiaire : ' + bn + ' / ' + BEST_TYPES.size + ' · unions : ' + un + ' / ' + UNIONS.length
-    : 'Bestiaire : ' + bn + ' / ' + BEST_TYPES.size + ' ratures croquées · carnet des unions : ' + un + ' / ' + UNIONS.length + keyB;
+  const bn = bestCount(), un = unionCount(), keyI = G.input.touch ? ' (au bout du bestiaire)' : ' (touche I)';
+  const bnews = !G.bonsPoints ? 'Nouveau : les bons points ! Chaque exploit en rapporte, et dix bons points font une image' + keyI + '.'
+    : W < 760 ? 'Bestiaire : ' + bn + ' / ' + BEST_TYPES.size + ' · images : ' + imageCount() + ' / ' + IMAGES.length
+    : 'Bestiaire : ' + bn + ' / ' + BEST_TYPES.size + ' · unions : ' + un + ' / ' + UNIONS.length + ' · ' + G.bonsPoints + ' bon' + (G.bonsPoints > 1 ? 's' : '') + ' point' + (G.bonsPoints > 1 ? 's' : '') + ', ' + imageCount() + ' image' + (imageCount() > 1 ? 's' : '') + ' sur ' + IMAGES.length + keyI;
   txt(bnews, W / 2, ty + (G.best ? 354 : 322) * s, Math.min(22 * s, W / 30), { color: C.margin, weight: 400, alpha: a * 0.9 });
   if (G.best) txt('meilleur score : ' + G.best, W / 2, ty + 290 * s, 22 * s, { color: C.margin, weight: 400, alpha: a });
   drawDevoirSlip(a);
@@ -523,13 +523,15 @@ function drawEnd() {
   txt('« ' + G.endPhrase + ' »', W / 2, y0 + 82 * s, Math.min(32 * s, W / 26), { color: C.graphite, weight: 400, alpha: a });
   const rows = [['temps', mmss((G.totalT || 0) + G.t)], ['ratures biffées', G.kills], ['lettres ramassées', G.letters], endTally(), ['niveau', G.level], ['score', G.score]];
   if (G.newCroquis) rows.splice(4, 0, ['nouveaux croquis', G.newCroquis]);
+  if (G.bpRun) rows.splice(rows.length - 2, 0, ['bons points', G.bpRun + (imageCount() ? ' · ' + imageCount() + ' / ' + IMAGES.length + ' images' : '')]);
   if (G.newUnions) rows.splice(4, 0, ['nouvelles unions', G.newUnions]);
+  const rs = (rows.length > 7 ? 32 : 38) * s;   // un peu plus serré quand la partie a beaucoup à raconter
   rows.forEach(([k, v], i) => {
-    const y = y0 + 150 * s + i * 38 * s, aa = clamp(t * 3 - 1 - i * 0.25, 0, 1);
+    const y = y0 + 150 * s + i * rs, aa = clamp(t * 3 - 1 - i * 0.25, 0, 1);
     txt(k, W / 2 - 14 * s, y, 26 * s, { align: 'right', color: C.pencil, weight: 400, alpha: aa });
     txt(String(v), W / 2 + 14 * s, y, 30 * s, { align: 'left', color: C.ink, alpha: aa, hl: k === 'score' && G.newBest ? C.hl : null });
   });
-  const by = y0 + 150 * s + rows.length * 38 * s + 26 * s, ab = clamp(t * 2 - 2.2, 0, 1);
+  const by = y0 + 150 * s + rows.length * rs + 26 * s, ab = clamp(t * 2 - 2.2, 0, 1);
   if (G.newBest) txt('nouveau record !', W / 2, by, 26 * s, { color: C.margin, alpha: ab });
   const hint = G.devoir ? (G.input.touch ? 'Touche pour refaire le devoir' : 'Entrée : refaire le devoir    T : retour au titre') : win && !last ? (G.input.touch ? 'Touche pour tourner la page' : 'Entrée : tourner la page    R : recommencer')
     : win ? (G.input.touch ? 'Touche pour continuer en page libre' : 'Entrée : continuer en page libre    R : recommencer') : (G.input.touch ? 'Touche pour recommencer' : 'Entrée : recommencer');
@@ -568,9 +570,10 @@ function render() {
     drawSoleilScreen();
     if (G.state === 'play') drawBestToast();
     if (G.state === 'levelup') drawLevelUp();
-    else if (G.state === 'pause') { dimPage(0.7); txt('Pause', W / 2, H / 2 - 40 * U, 80 * U, { font: FONT_CURSIVE, weight: 400 }); txt(G.input.touch ? 'Touche pour reprendre' : 'Échap ou Entrée pour reprendre', W / 2, H / 2 + 40 * U, 30 * U, { hl: C.hl }); if (!G.input.touch) txt('B : ouvrir le bestiaire', W / 2, H / 2 + 92 * U, 22 * U, { color: C.pencil, weight: 400 }); }
+    else if (G.state === 'pause') { dimPage(0.7); txt('Pause', W / 2, H / 2 - 40 * U, 80 * U, { font: FONT_CURSIVE, weight: 400 }); txt(G.input.touch ? 'Touche pour reprendre' : 'Échap ou Entrée pour reprendre', W / 2, H / 2 + 40 * U, 30 * U, { hl: C.hl }); if (!G.input.touch) txt('B : ouvrir le bestiaire    I : mes images', W / 2, H / 2 + 92 * U, 22 * U, { color: C.pencil, weight: 400 }); }
     else if (G.state === 'gameover' || G.state === 'victory') drawEnd();
     else if (G.state === 'turn') drawTurn();
+    if (G.state === 'play' || G.state === 'victory' || G.state === 'gameover') drawBonsToast();
   }
   if (G.state !== 'levelup') drawCaptions();
   // vignette douce

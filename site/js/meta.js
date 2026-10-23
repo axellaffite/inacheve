@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 22, date: '2026-10-23', title: 'La perforatrice', chapter: 'XII', chapterName: 'Le cahier de textes' };
+const GAME_META = { iteration: 23, date: '2026-10-23', title: 'Les bons points', chapter: 'XII', chapterName: 'Le cahier de textes' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -186,6 +186,13 @@ const JOURNAL = [
       "Par les trous, on voit le bois du pupitre. La goutte s’arrête au bord (un pâté saute par-dessus), mais les ratures qui marchent dessus tombent à travers la page ! À toi de les attirer.",
       "Biffe-la, et sa dernière perforation troue la page sous toutes les ratures autour d’elle : elles tombent d’un coup. Au bout d’un moment, une rustine vient reboucher chaque trou.",
       "Le devoir du jour a une nouvelle consigne, « Feuille perforée » : la perforatrice arrive dès 0:20, et revient toujours. La page des rares du bestiaire a son troisième croquis."
+    ] },
+  { iteration: 23, date: '2026-10-23', title: 'Les bons points', notes: [
+      "Comme à l’école : chaque exploit rapporte maintenant des bons points. Un refrain chanté, un trésor déterré, un calcul juste, trois dictées complètes, un nouveau croquis… et trois d’un coup quand un patron tombe.",
+      "Dix bons points font une image ! Douze vignettes peintes à la gouache sont à gagner : le hibou savant, la montgolfière, le phare, la baleine, le moulin… Chacune bouge un peu, si on la regarde bien.",
+      "Les images se rangent à la toute dernière page du bestiaire, « Mes images ». Touche I pour y aller directement, depuis l’écran titre ou la pause.",
+      "Une petite étoile dorée glisse sur le bord de la page à chaque bon point gagné, avec dix étoiles pour savoir où tu en es. Les bons points sont gardés d’une partie à l’autre.",
+      "La copie de fin de partie compte aussi les bons points gagnés pendant la partie."
     ] }
 ];
 window.GAME_META = GAME_META;

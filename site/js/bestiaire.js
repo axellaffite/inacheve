@@ -140,7 +140,7 @@ function openBestiaire(page) {
   if (G.state === 'play') { G.state = 'pause'; }
   G.bestFrom = G.state; G.bestFromT = G.stateT;
   G.state = 'bestiaire'; G.stateT = 0;
-  G.bestPage = clamp(page || (G.bestFrom === 'bureau' ? bureauChapter() : G.p ? G.chapter || 1 : 1), 1, unionPage()); G.bestFlip = 9;
+  G.bestPage = clamp(page || (G.bestFrom === 'bureau' ? bureauChapter() : G.p ? G.chapter || 1 : 1), 1, imagesPage()); G.bestFlip = 9;
   AU.play('turn');
   setUI();
 }
@@ -150,7 +150,7 @@ function closeBestiaire() {
   setUI();
 }
 function flipBestiaire(d) {
-  const n = clamp(G.bestPage + d, 1, unionPage());   // la dernière page : le carnet des unions
+  const n = clamp(G.bestPage + d, 1, imagesPage());   // les deux dernières pages : le carnet des unions, puis les images
   if (n === G.bestPage) return;
   G.bestPage = n; G.bestDir = d; G.bestFlip = 0;
   AU.play('feuille');
@@ -160,7 +160,7 @@ function flipBestiaire(d) {
 function bestLayout() {
   const s = U, x = SAFE.l + 14 * s, y = SAFE.t + 12 * s, w = W - SAFE.l - SAFE.r - 28 * s, h = H - SAFE.t - SAFE.b - 24 * s;
   const narrow = w < 640, ml = narrow ? 34 * s : 70 * s;
-  const uni = G.bestPage === unionPage(), n = uni ? UNIONS.length : bestList(G.bestPage).length, cols = narrow ? 2 : uni ? 4 : 3, rows = Math.ceil(n / cols);
+  const uni = G.bestPage === unionPage(), img = G.bestPage === imagesPage(), n = img ? IMAGES.length : uni ? UNIONS.length : bestList(G.bestPage).length, cols = img ? (narrow ? 3 : 6) : narrow ? 2 : uni ? 4 : 3, rows = Math.ceil(n / cols);
   const gx = x + ml + 8 * s, gy = y + (narrow ? 112 : 124) * s, gw = w - ml - 22 * s, gh = h - (narrow ? 112 : 124) * s - 74 * s;
   const cells = [];
   for (let i = 0; i < n; i++) {
@@ -274,7 +274,7 @@ function drawBestCell(b, i, c, a) {
   ctx.restore();
 }
 function drawBestiaire() {
-  const s = U, L = bestLayout(), uni = G.bestPage === unionPage(), rare = G.bestPage === rarePage(), page = bestList(G.bestPage), ch = CHAPTERS[G.bestPage];
+  const s = U, L = bestLayout(), uni = G.bestPage === unionPage(), img = G.bestPage === imagesPage(), rare = G.bestPage === rarePage(), page = img ? [] : bestList(G.bestPage), ch = CHAPTERS[G.bestPage];
   dimPage(0.55);
   const open = ease(clamp(G.stateT * 4, 0, 1));
   ctx.save(); ctx.globalAlpha = open; ctx.translate(0, (1 - open) * 30 * s);
@@ -288,17 +288,19 @@ function drawBestiaire() {
   for (let k = 0; k < 3; k++) { ctx.fillStyle = C.unwritten; ctx.beginPath(); ctx.arc(L.x + L.ml * 0.42, L.y + L.h * (0.2 + k * 0.3), Math.min(9 * s, L.ml * 0.2), 0, TAU); ctx.fill(); }
   // en-tête
   const cxh = L.x + L.ml + (L.w - L.ml) / 2;
-  txt(uni ? 'Carnet des unions' : 'Bestiaire des ratures', L.narrow ? cxh - 22 * s : cxh, L.y + (L.narrow ? 36 : 44) * s, Math.min(44 * s, (L.w - L.ml - 110 * s) / 10), { font: FONT_CURSIVE, weight: 400, color: C.ink });
-  txt(uni ? 'Les mots qui se tiennent la main' : rare ? 'Les rares · machines égarées, d’aucune page' : 'Chapitre ' + ch.num + ' · ' + ch.name, cxh, L.y + (L.narrow ? 80 : 92) * s, Math.min(24 * s, L.w / 22), { color: C.graphite, weight: 400 });
-  if (!L.narrow) txt(uni ? unionCount() + ' / ' + UNIONS.length + ' unions' : bestCount() + ' / ' + BEST_TYPES.size + ' croquées', L.x + L.w - 70 * s, L.y + 92 * s, 21 * s, { color: C.margin, weight: 400, align: 'right' });
+  txt(img ? 'Mes images' : uni ? 'Carnet des unions' : 'Bestiaire des ratures', L.narrow ? cxh - 22 * s : cxh, L.y + (L.narrow ? 36 : 44) * s, Math.min(44 * s, (L.w - L.ml - 110 * s) / 10), { font: FONT_CURSIVE, weight: 400, color: C.ink });
+  txt(img ? 'Dix bons points font une image · ' + G.bonsPoints + ' bon' + (G.bonsPoints > 1 ? 's' : '') + ' point' + (G.bonsPoints > 1 ? 's' : '') + ' gagné' + (G.bonsPoints > 1 ? 's' : '') : uni ? 'Les mots qui se tiennent la main' : rare ? 'Les rares · machines égarées, d’aucune page' : 'Chapitre ' + ch.num + ' · ' + ch.name, cxh, L.y + (L.narrow ? 80 : 92) * s, Math.min(24 * s, L.w / 22), { color: C.graphite, weight: 400 });
+  if (!L.narrow) txt(img ? imageCount() + ' / ' + IMAGES.length + ' images' : uni ? unionCount() + ' / ' + UNIONS.length + ' unions' : bestCount() + ' / ' + BEST_TYPES.size + ' croquées', L.x + L.w - 70 * s, L.y + 92 * s, 21 * s, { color: C.margin, weight: 400, align: 'right' });
   // les cases (glissent un peu quand on tourne la page)
   const fk = ease(clamp(G.bestFlip / 0.35, 0, 1)), dx = (1 - fk) * 60 * s * G.bestDir;
   ctx.save(); ctx.translate(dx, 0);
-  if (uni) UNIONS.forEach((k, i) => drawUnionCell(k, i, L.cells[i], fk));
+  if (img) drawImagesPage(L, fk);
+  else if (uni) UNIONS.forEach((k, i) => drawUnionCell(k, i, L.cells[i], fk));
   else page.forEach((b, i) => drawBestCell(b, i, L.cells[i], fk));
   ctx.restore();
   // un bon point quand la page est complète
-  if (uni ? unionCount() === UNIONS.length : bestPageDone(G.bestPage)) {
+  if (img) { if (!L.narrow && imageCount() < IMAGES.length) drawBonsGauge(L.x + L.ml + 110 * s, L.y + 56 * s, 1); }
+  else if (uni ? unionCount() === UNIONS.length : bestPageDone(G.bestPage)) {
     ctx.save(); ctx.translate(L.narrow ? L.x + L.w - 48 * s : L.x + L.ml + 80 * s, L.narrow ? L.fy - 64 * s : L.y + 56 * s); ctx.rotate(0.14); ctx.globalAlpha = 0.85 * fk;
     ctx.strokeStyle = C.gold; ctx.fillStyle = 'rgba(240,200,90,0.25)'; ctx.lineWidth = 2.5 * s;
     ctx.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, r = (k % 2 ? 17 : 34) * s * (L.narrow ? 0.75 : 1); ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); } ctx.closePath(); ctx.fill(); ctx.stroke();
@@ -306,7 +308,7 @@ function drawBestiaire() {
     ctx.restore();
   }
   // pied de page : feuilleter, refermer
-  const last = unionPage();
+  const last = imagesPage();
   const btn = (b, label, on) => { ctx.save(); ctx.globalAlpha = on ? 1 : 0.25; ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, TAU); ctx.stroke(); ctx.restore(); txt(label, b.x, b.y - 2 * s, 32 * s, { color: C.ink, alpha: on ? 1 : 0.25 }); };
   btn(L.prev, '‹', G.bestPage > 1); btn(L.next, '›', G.bestPage < last); btn(L.close, '×', true);
   txt('page ' + G.bestPage + ' / ' + last, cxh, L.fy, 22 * s, { color: C.graphite, weight: 400 });
