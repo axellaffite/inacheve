@@ -11,7 +11,8 @@ const CONSIGNES = {
   fragile:    { label: 'Écrire sans trembler', desc: 'tu commences avec quatre cœurs seulement', bonus: 2 },
   courant:    { label: 'Courant d’air', desc: 'le vent pousse la goutte et les lettres', bonus: 1 },
   brouillard: { label: 'Brouillard de gomme', desc: 'on n’y voit pas plus loin que le bout de sa plume', bonus: 1.5 },
-  miroir:     { label: 'Écrire en miroir', desc: 'la gauche et la droite sont inversées', bonus: 2 }
+  miroir:     { label: 'Écrire en miroir', desc: 'la gauche et la droite sont inversées', bonus: 2 },
+  perfore:    { label: 'Feuille perforée', desc: 'la perforatrice arrive dès 0:20, et revient toujours', bonus: 1 }
 };
 const COUPS_DE_POUCE = {
   pluie:   { label: 'Pluie de lettrines', desc: 'les lettres dorées tombent dix fois plus souvent' },

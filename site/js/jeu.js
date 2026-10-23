@@ -60,6 +60,7 @@ function newGame(demo, start = 1, devoir = null) {
     morpion: null, morpions: 0, nextMorpion: MORPION.first, morpionFx: [], morpionSeen: false, morpionLost: false,
     photoDone: false, double: null, photos: 0, copies: 0, photoKills: 0, photoSeen: false,
     agrafDone: false, agrafes: [], agrafees: 0, agrafPins: 0, agrafKills: 0, agrafSeen: false, agrafPinSeen: false,
+    perfoDone: false, perfoAt: 0, trous: [], confettis: [], perfos: 0, tombees: 0, perfoKills: 0, perfoSeen: false, perfoFallSeen: false, perfoEdgeSeen: false,
     lobs: [], rays: [], tides: [], dusk: null, raySeen: false, tideSeen: false, duskSeen: false,
     laby: null, labys: 0, nextLaby: LABY.first, labyFx: [], labySeen: false,
     tables: [], billes: [], beadSeen: false, tableSeen: false, plusSeen: false,
@@ -108,7 +109,7 @@ function turnPage() {
     tents: [], drops: [], tresor: null, nextTresor: TRESOR.first, chests: [], coins: [],
     strokes: [], strokeN: 0, sigs: [], enlu: null, nextEnlu: ENLU.first, glows: [], trail: [], quotes: [],
     ribbons: [], sceau: null, nextSceau: SCEAU.first, stamps: [], ligne: null, nextLigne: LIGNES.first, sweeps: [],
-    cafes: [], tapes: [], tapeN: 0, fautes: [], bars: [], zeros: [], morpion: null, nextMorpion: MORPION.first, morpionFx: [], photoDone: false, double: null, agrafDone: false, agrafes: [],
+    cafes: [], tapes: [], tapeN: 0, fautes: [], bars: [], zeros: [], morpion: null, nextMorpion: MORPION.first, morpionFx: [], photoDone: false, double: null, agrafDone: false, agrafes: [], perfoDone: false, perfoAt: 0, trous: [], confettis: [],
     lobs: [], rays: [], tides: [], dusk: null, laby: null, nextLaby: LABY.first, labyFx: [],
     tables: [], billes: [], calc: null, nextCalc: CALC.first, calcFx: [],
     sifflets: [], balles: [], soleil: null, freeze: 0, marelle: null, nextMarelle: MARELLE.first, marelleFx: [],
@@ -232,6 +233,7 @@ function killEnemy(e) {
   if (BROU_TYPES.has(e.type)) brouillonDeath(e);   // le café se renverse, le taille-crayon rend ses lettres
   if (e.type === 'photocopieuse') photoDeath(e);   // bourrage papier : ses copies s'effacent
   if (e.type === 'agrafeuse') agrafDeath(e);   // sa dernière rafale cloue les ratures voisines
+  if (e.type === 'perforatrice') perfoDeath(e);   // sa dernière perforation fait tomber les ratures voisines
   if (e.type === 'tache') { for (let i = 0; i < 2; i++) { const g = spawnEnemy('gouttelette', e.x + rnd(-10, 10), e.y + rnd(-10, 10)); g.vx = rnd(-150, 150); g.vy = rnd(-150, 150); } }
   let v = e.xp;
   const n = v <= 2 ? v : 2 + (v > 4 ? 1 : 0);
@@ -268,7 +270,7 @@ function botInput() {
   const need = G.dicteeWord[G.dicteeProg];
   for (const it of G.items) { const d = Math.hypot(it.x - p.x, it.y - p.y) - (it.ch === need ? 160 : 0) - (it.rare ? 80 : 0); if (d < gd && d < 520) { gd = d; goal = it; } }
   if (soleilFreezeBot()) return { x: 0, y: 0, dash: false };   // « soleil ! » : on ne bouge plus
-  const rn = photoTarget() || agrafTarget() || (G.refrain && G.refrain.notes[G.refrain.prog]) || figureTarget() || tresorTarget() || enluTarget() || sceauTarget() || lignesTarget() || morpionTarget() || labyTarget() || calcTarget() || marelleTarget() || rimesTarget() || agendaTarget();   // machines égarées, refrain, figure, trésor, lettrine, sceau, lignes, morpion, labyrinthe, calcul, marelle, rimes et case à cocher passent avant les lettres
+  const rn = photoTarget() || agrafTarget() || perfoTarget() || (G.refrain && G.refrain.notes[G.refrain.prog]) || figureTarget() || tresorTarget() || enluTarget() || sceauTarget() || lignesTarget() || morpionTarget() || labyTarget() || calcTarget() || marelleTarget() || rimesTarget() || agendaTarget();   // machines égarées, refrain, figure, trésor, lettrine, sceau, lignes, morpion, labyrinthe, calcul, marelle, rimes et case à cocher passent avant les lettres
   const toSong = rn && Math.hypot(rn.x - p.x, rn.y - p.y) < 1600;
   const pull = toSong ? ((G.laby && !G.laby.end && rn === G.labyGoal) || rn === calcTarget() || (G.marelle && !G.marelle.end) || (G.rimes && !G.rimes.end) || rn === agendaTarget() ? 5 : 3) : 1.5;   // le labyrinthe, la bonne réponse, la marelle, les rimes et la case à cocher attirent plus fort : il faut traverser la foule
   if (toSong) goal = rn;
@@ -286,6 +288,7 @@ function botInput() {
   const rec = CH().paper === 'recre' || mix;   // ondes du sifflet, ballons, cordes, avions, caillou de la marelle
   const poe = CH().paper === 'poesie' || mix;   // pieds, césures, fromages, exclamations, rimes jumelles, fiches à ne pas retourner
   const agr = G.enemies.some(e => e.type === 'agrafeuse');   // l'axe des agrafes
+  const perf = G.trous.length > 0 || G.enemies.some(e => e.type === 'perforatrice');   // les trous, et là où la perforatrice va retomber
   for (let i = 0; i < 16; i++) {
     const a = i / 16 * TAU, dx = Math.cos(a), dy = Math.sin(a);
     let sc = 0;
@@ -313,6 +316,7 @@ function botInput() {
       if (poe) sc -= w * poesieDanger(x, y);
       if (mix) sc -= w * textesDanger(x, y);
       if (agr) sc -= w * agrafDanger(x, y);
+      if (perf) sc -= w * perfoDanger(x, y);
       const wm = Math.min(x, y, WORLD.w - x, WORLD.h - y);
       if (wm < 220) sc -= (220 - wm) * 0.03 * w;
     }
@@ -347,6 +351,7 @@ function stepPlayer(dt) {
   }
   const oy = p.y;
   labyMove(p, clamp(p.x + p.vx * dt, p.r, WORLD.w - p.r), clamp(p.y + p.vy * dt, p.r, WORLD.h - p.r));   // les murs du labyrinthe arrêtent la goutte
+  trouPush(p);   // et les trous de la perforatrice aussi (sauf pendant un pâté)
   if (CH().paper === 'portee') staffCross(oy, p.y);   // les lignes de la portée chantent quand on les traverse
   const sp = Math.hypot(p.vx, p.vy);
   if (sp > 20) { const f = Math.atan2(p.vy, p.vx); let df = f - p.face; while (df > Math.PI) df -= TAU; while (df < -Math.PI) df += TAU; p.face += df * Math.min(1, dt * 12); }
@@ -429,6 +434,7 @@ function stepPlay(dt) {
     if (e.dead) continue;
     e.flash = Math.max(0, e.flash - dt); e.orbCd -= dt; e.punchCd -= dt;
     if (e.burn > 0) { e.burn -= dt; hurtEnemy(e, e.burnDps * dt, 'burn'); if (rand() < dt * 12) G.parts.push({ x: e.x + rnd(-e.r, e.r) * 0.6, y: e.y + rnd(-e.r, e.r) * 0.6, vx: 0, vy: rnd(-60, -20), life: 0.4, max: 0.4, size: rnd(2, 4), color: C.fire, drag: 1 }); if (e.dead) continue; }
+    if (e.fall > 0) { stepFall(e, dt); continue; }   // elle tombe dans un trou de la perforatrice
     if (e.pin > 0) {   // agrafée à la page : elle ne bouge plus, mais elle mord encore
       e.pin -= dt; e.vx = 0; e.vy = 0;
       if (!e.ghost && (p.x - e.x) ** 2 + (p.y - e.y) ** 2 < (e.r + p.r - 3) ** 2) hurtPlayer(e.dmg, e.x, e.y);
@@ -508,6 +514,8 @@ function stepPlay(dt) {
       stepPhotocopieuse(e, dt, dx, dy, d, slow, hid); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else if (e.type === 'agrafeuse') {
       stepAgrafeuse(e, dt, dx, dy, d, slow, hid); tx = MV.x; ty = MV.y; agil = MV.agil;
+    } else if (e.type === 'perforatrice') {
+      stepPerforatrice(e, dt, dx, dy, d, slow, hid); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else e.rot += e.spin * dt;
     const k = 1 - Math.exp(-dt * agil);
     e.vx = lerp(e.vx, tx, k); e.vy = lerp(e.vy, ty, k);
@@ -570,6 +578,7 @@ function stepPlay(dt) {
   stepRecreFx(dt);   // ondes du sifflet, ballons, « un, deux, trois… soleil ! »
   stepPoesieFx(dt);   // douze pieds, césures, fromages du corbeau
   stepAgrafFx(dt);   // les agrafes qui se plantent, et celles qui clouent les ratures
+  stepPerfoFx(dt);   // les trous de la perforatrice, et les ratures qui tombent dedans
   stepUnions(dt);   // CALLIGRAPHIE, CITATION, LUNE ROUSSE
   // ---- lunes en orbite
   if (S.moons) {
@@ -644,6 +653,7 @@ function stepPlay(dt) {
   stepEmploi(dt);   // la cloche, l'emploi du temps et le cahier de textes
   stepPhoto(dt);   // la photocopieuse égarée, et la copie de la goutte
   stepAgraf(dt);   // l'agrafeuse égarée
+  stepPerfo(dt);   // la perforatrice égarée
   for (const c of G.coins) c.t += dt;
   G.coins = G.coins.filter(c => c.t < c.dur);
   for (const sg of G.songs) sg.t += dt;

@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 21, date: '2026-10-22', title: 'Le cahier de textes', chapter: 'XII', chapterName: 'Le cahier de textes' };
+const GAME_META = { iteration: 22, date: '2026-10-23', title: 'La perforatrice', chapter: 'XII', chapterName: 'Le cahier de textes' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -179,6 +179,13 @@ const JOURNAL = [
       "Deux ratures à soi : le réveil qui tremble puis sonne, et la cocotte en papier qui s’ouvre en quatre… et pince.",
       "À 16 h 30 t’attend la Grande Horloge : ses aiguilles qui balaient la page, ses douze heures qui se referment sur toi (sors par celle qui manque !), et sa sonnerie qui fait venir la matière suivante.",
       "Sur le bureau, la touche « = » (deux à droite du 0) ouvre directement la page XII, et la feuille du devoir du jour a retrouvé son titre en entier."
+    ] },
+  { iteration: 22, date: '2026-10-23', title: 'La perforatrice', notes: [
+      "Clac ! Une troisième machine s’est échappée du bureau : la perforatrice. Vers 1:00, elle débarque sur chaque page, au brouillon comme dans le devoir du jour.",
+      "Elle lève son levier, vise la goutte (un cercle de pointillés rouges)… puis saute et retombe dessus en perçant deux trous dans la page. Le rond de papier s’envole en confetti.",
+      "Par les trous, on voit le bois du pupitre. La goutte s’arrête au bord (un pâté saute par-dessus), mais les ratures qui marchent dessus tombent à travers la page ! À toi de les attirer.",
+      "Biffe-la, et sa dernière perforation troue la page sous toutes les ratures autour d’elle : elles tombent d’un coup. Au bout d’un moment, une rustine vient reboucher chaque trou.",
+      "Le devoir du jour a une nouvelle consigne, « Feuille perforée » : la perforatrice arrive dès 0:20, et revient toujours. La page des rares du bestiaire a son troisième croquis."
     ] }
 ];
 window.GAME_META = GAME_META;

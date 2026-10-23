@@ -275,6 +275,13 @@ const AU = {
       case 'agrafClac': if (this.throttle('agrafClac', 60)) { this.noise(0.05, { f: 4200, q: 2, vol: 0.2 }); this.tone(190, 0.07, { type: 'square', vol: 0.05, slide: 0.6 }); } break;
       case 'agrafPin': this.noise(0.05, { f: 5200, q: 2.5, vol: 0.16 }); this.tone(1046.5, 0.18, { type: 'triangle', vol: 0.06, slide: 0.94 }); break;
       case 'agrafTear': this.noise(0.18, { f: 2400, q: 0.8, vol: 0.12, sweep: 2 }); this.tone(660, 0.12, { type: 'triangle', vol: 0.05, slide: 1.5 }); break;
+      // la perforatrice égarée
+      case 'perfoArrive': this.tone(180, 0.1, { type: 'square', vol: 0.05, slide: 1.4 }); this.noise(0.07, { f: 2600, q: 2, vol: 0.18, when: 0.12 }); this.tone(120, 0.14, { type: 'square', vol: 0.05, slide: 0.6, when: 0.12 }); break;
+      case 'perfoWarn': this.tone(260, 0.6, { type: 'triangle', vol: 0.05, slide: 2 }); this.noise(0.45, { f: 1100, q: 3, vol: 0.05, sweep: 1.8 }); break;
+      case 'perfoHop': this.tone(330, 0.3, { type: 'sine', vol: 0.08, slide: 1.8 }); break;
+      case 'perfoClac': if (this.throttle('perfoClac', 80)) { this.noise(0.08, { f: 2200, q: 1.5, vol: 0.24 }); this.tone(92, 0.16, { type: 'square', vol: 0.07, slide: 0.5 }); this.noise(0.05, { f: 5200, q: 3, vol: 0.1, when: 0.06 }); } break;
+      case 'perfoFall': if (this.throttle('perfoFall', 70)) { this.tone(900 + Math.random() * 200, 0.4, { type: 'sine', vol: 0.06, slide: 0.3 }); this.noise(0.05, { f: 700, q: 1, vol: 0.06, when: 0.36 }); } break;
+      case 'perfoJam': [0, 1, 2].forEach(i => { this.noise(0.07, { f: 2200, q: 1.5, vol: 0.18, when: i * 0.12 }); this.tone(120 - i * 20, 0.1, { type: 'square', vol: 0.05, when: i * 0.12 }); }); this.tone(80, 0.5, { type: 'square', vol: 0.05, slide: 0.6, when: 0.38 }); break;
       case 'agrafJam': [0, 1, 2].forEach(i => { this.noise(0.05, { f: 4200, q: 2, vol: 0.16, when: i * 0.1 }); this.tone(190 - i * 30, 0.08, { type: 'square', vol: 0.05, when: i * 0.1 }); }); this.tone(98, 0.5, { type: 'square', vol: 0.05, slide: 0.6, when: 0.32 }); break;
       case 'lignesNew': [392, 493.88, 587.33].forEach((f, i) => this.tone(f * 2, 0.3, { type: 'triangle', vol: 0.07, when: i * 0.09 })); this.noise(0.4, { f: 3600, q: 3, vol: 0.05, sweep: 0.7, when: 0.25 }); break;
       case 'ligneMot': { const F = [587.33, 659.25, 739.99, 783.99, 880, 987.77, 1108.73, 1174.66]; this.tone(F[k % 8], 0.35, { type: 'triangle', vol: 0.12 }); break; }

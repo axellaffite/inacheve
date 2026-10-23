@@ -61,6 +61,7 @@ function drawEnemy(e) {
   ctx.save(); ctx.translate(e.x, e.y);
   const fl = e.flash > 0;
   if (e.copie) ctx.globalAlpha = 0.55;   // une photocopie : plus pâle
+  if (e.fall > 0) { const k = e.fall / PERFO.fallT; ctx.scale(k, k); ctx.rotate((1 - k) * 2.5); }   // elle tombe dans un trou
   if (e.type === 'gribouillis' || e.type === 'gouttelette') {
     ctx.rotate(e.rot);
     ctx.strokeStyle = fl ? C.red : C.graphite; ctx.lineWidth = e.type === 'gouttelette' ? 2 : 2.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
@@ -131,6 +132,8 @@ function drawEnemy(e) {
     drawPhotocopieuse(e, fr, fl);
   } else if (e.type === 'agrafeuse') {
     drawAgrafeuse(e, fr, fl);
+  } else if (e.type === 'perforatrice') {
+    drawPerforatrice(e, fr, fl);
   } else if (e.type === 'boss') {
     if (e.phase === 'aim') { ctx.save(); ctx.strokeStyle = C.red; ctx.globalAlpha = 0.4; ctx.setLineDash([16, 10]); ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(e.cx * 420, e.cy * 420); ctx.stroke(); ctx.restore(); }
     const pulse = 1 + Math.sin(G.time * 5) * 0.03;
@@ -192,6 +195,7 @@ function drawWorld() {
   drawPage(v);
   const inView = (x, y, m = 80) => x > v.x0 - m && x < v.x1 + m && y > v.y0 - m && y < v.y1 + m;
   if (G.state === 'title' || (G.state === 'bestiaire' && G.bestFrom === 'title')) { for (const d of G.deco) if (inView(d.x, d.y)) drawEnemy(d); ctx.restore(); return; }
+  if (G.trous) drawTrous(inView);   // les trous de la perforatrice : on y voit le pupitre
   // flaques
   for (const pd of G.puddles) { ctx.globalAlpha = 0.28 * Math.min(1, pd.life / pd.max * 2); ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(pd.x, pd.y, pd.r * (0.85 + 0.15 * Math.sin(pd.life * 6)), 0, TAU); ctx.fill(); }
   ctx.globalAlpha = 1;
@@ -273,6 +277,7 @@ function drawWorld() {
   if (G.agendaFx) drawTextesFx();   // aiguilles, douze heures, réveils et cocottes
   if (G.enemies) drawPhotoFx();   // vitre, lumière et feuilles de la photocopieuse
   if (G.agrafes) drawAgrafFx();   // agrafes en vol, plantées, et ratures clouées
+  if (G.confettis) drawPerfoFx();   // là où la perforatrice va retomber, et ses confettis
   for (const e of G.enemies) if (e.type === 'soupir' && e.phase === 'fade') {   // là où le soupir va se poser
     ctx.save(); ctx.strokeStyle = C.pencil; ctx.globalAlpha = 0.7; ctx.setLineDash([5, 6]); ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(e.bx, e.by, 14 + 8 * (e.pt / 0.65), 0, TAU); ctx.stroke(); ctx.restore();
@@ -501,6 +506,7 @@ function endTally() {
   if (G.agendas) parts.push(['devoirs cochés', G.agendas]);
   if (G.photos) parts.push(['photocopies', G.photos]);
   if (G.agrafPins) parts.push(['ratures agrafées', G.agrafPins]);
+  if (G.tombees) parts.push(['ratures tombées', G.tombees]);
   return parts.length > 1 ? [parts.map(q => q[0]).join(' · '), parts.map(q => q[1]).join(' · ')] : ['dictées réussies', G.dictees];
 }
 function drawEnd() {
