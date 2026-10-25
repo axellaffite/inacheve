@@ -10,7 +10,8 @@ const CAHIERS = [
   { name: 'Vacances', sub: 'page VIII', pages: [8], cover: '#f0a238', dark: '#b8711a', doodle: 'soleil' },
   { name: 'Cahier neuf', sub: 'pages IX et X', pages: [9, 10], cover: '#c8423f', dark: '#8e2a28', doodle: 'tables' },
   { name: 'Poésie', sub: 'page XI', pages: [11], cover: '#7b5ea7', dark: '#523c78', doodle: 'lune' },
-  { name: 'Cahier de textes', sub: 'page XII', pages: [12], cover: '#2a8f83', dark: '#1b6058', doodle: 'horloge' }
+  { name: 'Cahier de textes', sub: 'page XII', pages: [12], cover: '#2a8f83', dark: '#1b6058', doodle: 'horloge' },
+  { name: 'Correspondance', sub: 'page XIII', pages: [13], cover: '#c9853a', dark: '#8c5a22', doodle: 'enveloppe' }
 ];
 // L'histoire du cahier : une phrase par page, qu'on ne lit qu'une fois la page débloquée
 const HISTOIRE = [null,
@@ -25,9 +26,10 @@ const HISTOIRE = [null,
   'À la rentrée, dans un cahier tout neuf, elle apprit que les tables ne servent pas qu’à manger.',
   'À la récré, elle sauta jusqu’au Ciel sans toucher le caillou, et ne bougea plus quand on cria « soleil ! ».',
   'Dans le cahier de poésie, elle apprit que deux mots qui riment se tiennent la main, même de loin.',
-  'Dans le cahier de textes, elle apprit l’heure : celle de la cloche, et celle où l’on rentre à la maison.'
+  'Dans le cahier de textes, elle apprit l’heure : celle de la cloche, et celle où l’on rentre à la maison.',
+  'Dans le carnet de correspondance, elle écrivit enfin à la maison : « Tout va bien, je finis la page. »'
 ];
-const TAB_COLORS = [null, '#f6e75e', '#ff9ec4', '#9be59b', '#8fd3f0', '#f7b267', '#c9a7f0', '#dcd6bc', '#ffd36b', '#b5e3d0', '#ffc4d6', '#d9c2ff', '#a8e6dc'];
+const TAB_COLORS = [null, '#f6e75e', '#ff9ec4', '#9be59b', '#8fd3f0', '#f7b267', '#c9a7f0', '#dcd6bc', '#ffd36b', '#b5e3d0', '#ffc4d6', '#d9c2ff', '#a8e6dc', '#f5c98a'];
 const BUREAU = { hop: 0.24, key: 'inacheve.pages' };
 
 /* ----- les records de chaque page : { chapitre: { w: victoires, t: meilleur temps } } ----- */
@@ -282,6 +284,11 @@ function drawDoodle(kind, x, y, r, open) {
     ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -r * 0.45); ctx.moveTo(0, 0); ctx.lineTo(r * 0.3, r * 0.1); ctx.stroke();
     ctx.fillStyle = '#f8c83c'; ctx.beginPath(); ctx.arc(0, -r * 0.86, r * 0.18, Math.PI, 0); ctx.closePath(); ctx.fill();
   }
+  else if (kind === 'enveloppe') {   // une enveloppe à la craie, son timbre, et un « VU » rouge
+    ctx.strokeStyle = '#fffdf4'; ctx.lineWidth = 3; ctx.strokeRect(-r * 0.7, -r * 0.45, r * 1.4, r * 0.9);
+    ctx.beginPath(); ctx.moveTo(-r * 0.7, -r * 0.45); ctx.lineTo(0, r * 0.12); ctx.lineTo(r * 0.7, -r * 0.45); ctx.stroke();
+    ctx.fillStyle = '#e85a5f'; ctx.fillRect(r * 0.38, -r * 0.36, r * 0.22, r * 0.26);
+  }
   else if (kind === 'tables') {   // « 7 × 8 », à la craie, et une perle de boulier
     ctx.font = '700 ' + (r * 0.8) + 'px ' + FONT_MAIN; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fffdf4';
     ctx.fillText('7 × 8', 0, -r * 0.1);
@@ -298,7 +305,7 @@ function drawGhost(g, k) {
   roundRect(g.x, g.y, g.w, g.h, 6 * s); ctx.stroke(); ctx.setLineDash([]);
   const fz = Math.min(19 * s, g.w / 9);
   txt('ici, plus tard :', g.x + g.w / 2, g.y + g.h / 2 - fz * 0.8, fz, { color: '#fff3d8', weight: 400, rot: -0.05 });
-  txt('un ' + ['premier', 'deuxième', 'troisième', 'quatrième', 'cinquième', 'sixième', 'septième'][CAHIERS.length] + ' cahier ?', g.x + g.w / 2, g.y + g.h / 2 + fz * 0.6, fz, { color: '#fff3d8', weight: 400, rot: -0.05 });
+  txt('un ' + ['premier', 'deuxième', 'troisième', 'quatrième', 'cinquième', 'sixième', 'septième', 'huitième'][CAHIERS.length] + ' cahier ?', g.x + g.w / 2, g.y + g.h / 2 + fz * 0.6, fz, { color: '#fff3d8', weight: 400, rot: -0.05 });
   ctx.restore();
 }
 function drawDevoirSheet(d, me, k) {

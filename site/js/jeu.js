@@ -69,13 +69,14 @@ function newGame(demo, start = 1, devoir = null) {
     marelle: null, marelles: 0, nextMarelle: MARELLE.first, marelleFx: [], marelleSeen: false,
     pieds: [], cesures: [], fromages: [], miams: 0, piedSeen: false, croisSeen: false, cesureSeen: false, fromageSeen: false,
     rimes: null, poemes: 0, nextRimes: RIMES.first, rimesFx: [], rimesSeen: false,
-    hour: 0, nextBell: HEURE.len, bell: 0, agenda: null, agendas: 0, nextAgenda: AGENDA.first, agendaFx: [], agendaSeen: false, aiguilleSeen: false, heuresSeen: false
+    hour: 0, nextBell: HEURE.len, bell: 0, agenda: null, agendas: 0, nextAgenda: AGENDA.first, agendaFx: [], agendaSeen: false, aiguilleSeen: false, heuresSeen: false,
+    colles: [], mot: null, motN: 0, signatures: 0, pates: 0, nextMot: MOT.first, motFx: [], motSeen: false, pateSeen: false, tamponSeen: false, dateSeen: false
   });
   const hp = demo ? 7 : 6;
   G.p = { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, r: 13, hp, maxHp: hp, inv: 1.2, dashCd: 0, dashT: 0, dx: 1, dy: 0, face: 0, fireCd: 0.5, look: 0, puddleT: 0, squash: 0, hidden: 0, gx: 0, gy: 0, pin: 0, moving: false };
   G.cam.x = G.p.x; G.cam.y = G.p.y;
   computeStats(); clearStains();
-  if (start > 1) draft([0, 0, 19, 28, 37, 46, 52, 52, 52, 52, 52, 52, 52][start]);
+  if (start > 1) draft([0, 0, 19, 28, 37, 46, 52, 52, 52, 52, 52, 52, 52, 52][start]);
   if (devoir) setupDevoir();
   else {
     caption(CH().intro, 4);
@@ -114,7 +115,8 @@ function turnPage() {
     tables: [], billes: [], calc: null, nextCalc: CALC.first, calcFx: [],
     sifflets: [], balles: [], soleil: null, freeze: 0, marelle: null, nextMarelle: MARELLE.first, marelleFx: [],
     pieds: [], cesures: [], fromages: [], rimes: null, nextRimes: RIMES.first, rimesFx: [],
-    hour: 0, nextBell: HEURE.len, bell: 0, agenda: null, nextAgenda: AGENDA.first, agendaFx: []
+    hour: 0, nextBell: HEURE.len, bell: 0, agenda: null, nextAgenda: AGENDA.first, agendaFx: [],
+    colles: [], mot: null, nextMot: MOT.first, motFx: []
   });
   G.dicteeWord = CH().dictees[0];
   const p = G.p; Object.assign(p, { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, hp: p.maxHp, inv: 2.5, dashT: 0, hidden: 0, pin: 0 });
@@ -228,7 +230,7 @@ function killEnemy(e) {
     return;
   }
   const paper = CH().paper;
-  if (paper === 'portee') AU.play('noteKill', staffPitch(e.y)); else if (paper === 'milli') AU.play('mmKill'); else if (paper === 'carte') AU.play('carteKill'); else if (paper === 'calli') AU.play('calliKill'); else if (paper === 'garde') AU.play('gardeKill'); else if (paper === 'brouillon') AU.play('brouKill'); else if (paper === 'vacances') AU.play('vacKill'); else if (paper === 'tables') AU.play('tablesKill', e.type === 'chiffre' ? 1 + e.id % 9 : 5); else if (paper === 'recre') AU.play('recreKill', e.id); else if (paper === 'poesie') AU.play('poesieKill', e.id); else if (paper === 'textes') textesKill(e); else AU.play('kill');
+  if (paper === 'portee') AU.play('noteKill', staffPitch(e.y)); else if (paper === 'milli') AU.play('mmKill'); else if (paper === 'carte') AU.play('carteKill'); else if (paper === 'calli') AU.play('calliKill'); else if (paper === 'garde') AU.play('gardeKill'); else if (paper === 'brouillon') AU.play('brouKill'); else if (paper === 'vacances') AU.play('vacKill'); else if (paper === 'tables') AU.play('tablesKill', e.type === 'chiffre' ? 1 + e.id % 9 : 5); else if (paper === 'recre') AU.play('recreKill', e.id); else if (paper === 'poesie') AU.play('poesieKill', e.id); else if (paper === 'textes') textesKill(e); else if (paper === 'carnet') AU.play('carnetKill', e.id); else AU.play('kill');
   if (G.agenda) agendaKill(e);   // le devoir du cahier de textes
   if (BROU_TYPES.has(e.type)) brouillonDeath(e);   // le café se renverse, le taille-crayon rend ses lettres
   if (e.type === 'photocopieuse') photoDeath(e);   // bourrage papier : ses copies s'effacent
@@ -270,9 +272,9 @@ function botInput() {
   const need = G.dicteeWord[G.dicteeProg];
   for (const it of G.items) { const d = Math.hypot(it.x - p.x, it.y - p.y) - (it.ch === need ? 160 : 0) - (it.rare ? 80 : 0); if (d < gd && d < 520) { gd = d; goal = it; } }
   if (soleilFreezeBot()) return { x: 0, y: 0, dash: false };   // « soleil ! » : on ne bouge plus
-  const rn = photoTarget() || agrafTarget() || perfoTarget() || (G.refrain && G.refrain.notes[G.refrain.prog]) || figureTarget() || tresorTarget() || enluTarget() || sceauTarget() || lignesTarget() || morpionTarget() || labyTarget() || calcTarget() || marelleTarget() || rimesTarget() || agendaTarget();   // machines égarées, refrain, figure, trésor, lettrine, sceau, lignes, morpion, labyrinthe, calcul, marelle, rimes et case à cocher passent avant les lettres
+  const rn = photoTarget() || agrafTarget() || perfoTarget() || (G.refrain && G.refrain.notes[G.refrain.prog]) || figureTarget() || tresorTarget() || enluTarget() || sceauTarget() || lignesTarget() || morpionTarget() || labyTarget() || calcTarget() || marelleTarget() || rimesTarget() || agendaTarget() || motTarget();   // machines égarées, refrain, figure, trésor, lettrine, sceau, lignes, morpion, labyrinthe, calcul, marelle, rimes, case à cocher et mot à signer passent avant les lettres
   const toSong = rn && Math.hypot(rn.x - p.x, rn.y - p.y) < 1600;
-  const pull = toSong ? ((G.laby && !G.laby.end && rn === G.labyGoal) || rn === calcTarget() || (G.marelle && !G.marelle.end) || (G.rimes && !G.rimes.end) || rn === agendaTarget() ? 5 : 3) : 1.5;   // le labyrinthe, la bonne réponse, la marelle, les rimes et la case à cocher attirent plus fort : il faut traverser la foule
+  const pull = toSong ? ((G.laby && !G.laby.end && rn === G.labyGoal) || rn === calcTarget() || (G.marelle && !G.marelle.end) || (G.rimes && !G.rimes.end) || rn === agendaTarget() || rn === motTarget() ? 5 : 3) : 1.5;   // le labyrinthe, la bonne réponse, la marelle, les rimes, la case à cocher et le mot attirent plus fort : il faut traverser la foule
   if (toSong) goal = rn;
   if (!goal) goal = { x: WORLD.w / 2 + Math.cos(G.t * 0.21) * 700, y: WORLD.h / 2 + Math.sin(G.t * 0.17) * 420 };
   const gdx = goal.x - p.x, gdy = goal.y - p.y, gl = Math.hypot(gdx, gdy) || 1;
@@ -287,6 +289,7 @@ function botInput() {
   const tab = CH().paper === 'tables' || mix;   // tables de Pythagore, billes, croix du signe fois, mauvaises réponses
   const rec = CH().paper === 'recre' || mix;   // ondes du sifflet, ballons, cordes, avions, caillou de la marelle
   const poe = CH().paper === 'poesie' || mix;   // pieds, césures, fromages, exclamations, rimes jumelles, fiches à ne pas retourner
+  const car = CH().paper === 'carnet';   // coups de tampon, enveloppes ouvertes, flaques de colle
   const agr = G.enemies.some(e => e.type === 'agrafeuse');   // l'axe des agrafes
   const perf = G.trous.length > 0 || G.enemies.some(e => e.type === 'perforatrice');   // les trous, et là où la perforatrice va retomber
   for (let i = 0; i < 16; i++) {
@@ -315,6 +318,7 @@ function botInput() {
       if (rec) sc -= w * recreDanger(x, y);
       if (poe) sc -= w * poesieDanger(x, y);
       if (mix) sc -= w * textesDanger(x, y);
+      if (car) sc -= w * carnetDanger(x, y);
       if (agr) sc -= w * agrafDanger(x, y);
       if (perf) sc -= w * perfoDanger(x, y);
       const wm = Math.min(x, y, WORLD.w - x, WORLD.h - y);
@@ -327,6 +331,7 @@ function botInput() {
   G.botDir = best;
   if (tresorDigging() && !close && bestS > -6) { const X = tresorTarget(); return { x: (X.x - p.x) / 80, y: (X.y - p.y) / 80, dash: false }; }   // on reste sur le X pour creuser
   if (labyGuiding()) { const X = labyTarget(), dx = X.x - p.x, dy = X.y - p.y, dd = Math.hypot(dx, dy) || 1; return { x: dx / dd, y: dy / dd, dash: close && p.dashCd <= 0 }; }   // dans le labyrinthe, on suit le chemin
+  if (motHolding() && !close && bestS > -6) { const X = motTarget(); return { x: (X.x - p.x) / 70, y: (X.y - p.y) / 70, dash: false }; }   // on reste près du mot pendant qu'il se signe
   if (morpionHolding() && !close && bestS > -6) { const X = morpionTarget(); return { x: (X.x - p.x) / 60, y: (X.y - p.y) / 60, dash: false }; }   // on reste dans la case pour poser son O
   return { x: best.x, y: best.y, dash: close && p.dashCd <= 0 };
 }
@@ -345,7 +350,7 @@ function stepPlayer(dt) {
     if (p.puddleT <= 0) { p.puddleT = 0.045; G.puddles.push({ x: p.x, y: p.y, r: 30, life: 2.6, max: 2.6 }); splat(p.x, p.y, 16, C.ink, 0.07, 3); }
     if (p.dashT <= 0) endDash(p);
   } else if (!pinned) {
-    const sl = G.cafes.length ? cafeSlow(p.x, p.y) : 1;   // une flaque de café colle aux pattes
+    const sl = (G.cafes.length ? cafeSlow(p.x, p.y) : 1) * (G.colles.length ? colleSlow(p.x, p.y) : 1);   // une flaque de café (ou de colle) colle aux pattes
     const tx = inp.x * S.speed * sl, ty = inp.y * S.speed * sl, k = 1 - Math.exp(-dt * 14);
     p.vx = lerp(p.vx, tx, k); p.vy = lerp(p.vy, ty, k);
   }
@@ -448,7 +453,9 @@ function stepPlay(dt) {
     let slow = 1;
     for (const pd of G.puddles) if ((e.x - pd.x) ** 2 + (e.y - pd.y) ** 2 < (pd.r + e.r * 0.5) ** 2) { slow = 0.55; break; }
     // invisible (encre sympathique) : les ratures foncent vers l'endroit où tu as disparu, puis tournent en rond
-    const hid = p.hidden > 0, aimX = hid ? p.gx + Math.cos(G.t * 1.3 + e.id) * 90 : p.x, aimY = hid ? p.gy + Math.sin(G.t * 1.1 + e.id) * 90 : p.y;
+    // au carnet, une rature sur quatre fonce sur le mot à signer plutôt que sur toi
+    const hid = p.hidden > 0, lure = G.mot ? motLure(e) : null;
+    const aimX = lure ? lure.x : hid ? p.gx + Math.cos(G.t * 1.3 + e.id) * 90 : p.x, aimY = lure ? lure.y : hid ? p.gy + Math.sin(G.t * 1.1 + e.id) * 90 : p.y;
     const dx = aimX - e.x, dy = aimY - e.y, d = Math.hypot(dx, dy) || 1;
     let tx = dx / d * e.speed * slow, ty = dy / d * e.speed * slow, agil = e.agil;
     if (e.type === 'gribouillis' || e.type === 'gouttelette') { const w = Math.sin(G.t * 3 + e.id) * 0.5; tx += -dy / d * e.speed * w; ty += dx / d * e.speed * w; }
@@ -482,6 +489,8 @@ function stepPlay(dt) {
       stepAlexandrin(e, dt, dx, dy, d, slow); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else if (e.type === 'horloge') {
       stepHorloge(e, dt, dx, dy, d, slow); tx = MV.x; ty = MV.y; agil = MV.agil;
+    } else if (e.type === 'grandtampon') {
+      stepGrandTampon(e, dt, dx, dy, d, slow); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else if (e.isBoss) {
       if (e.type === 'boss') stepBoss(e, dt, dx, dy, d); else stepFausse(e, dt, dx, dy, d);
       tx = e.phase === 'charge' ? e.cx * 520 : (e.phase === 'aim' ? 0 : dx / d * e.speed * slow);
@@ -510,6 +519,8 @@ function stepPlay(dt) {
       stepPoesie(e, dt, dx, dy, d, slow, hid); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else if (TEXTES_TYPES.has(e.type)) {
       stepTextes(e, dt, dx, dy, d, slow, hid); tx = MV.x; ty = MV.y; agil = MV.agil;
+    } else if (CARNET_TYPES.has(e.type)) {
+      stepCarnet(e, dt, dx, dy, d, slow, hid); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else if (e.type === 'photocopieuse') {
       stepPhotocopieuse(e, dt, dx, dy, d, slow, hid); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else if (e.type === 'agrafeuse') {
@@ -577,6 +588,7 @@ function stepPlay(dt) {
   stepTablesFx(dt);   // tables de Pythagore et billes du Boulier
   stepRecreFx(dt);   // ondes du sifflet, ballons, « un, deux, trois… soleil ! »
   stepPoesieFx(dt);   // douze pieds, césures, fromages du corbeau
+  stepCarnetFx(dt);   // les flaques de colle
   stepAgrafFx(dt);   // les agrafes qui se plantent, et celles qui clouent les ratures
   stepPerfoFx(dt);   // les trous de la perforatrice, et les ratures qui tombent dedans
   stepUnions(dt);   // CALLIGRAPHIE, CITATION, LUNE ROUSSE
@@ -651,6 +663,7 @@ function stepPlay(dt) {
   stepMarelle(dt);
   stepRimes(dt);
   stepEmploi(dt);   // la cloche, l'emploi du temps et le cahier de textes
+  stepMot(dt);   // le mot à faire signer
   stepPhoto(dt);   // la photocopieuse égarée, et la copie de la goutte
   stepAgraf(dt);   // l'agrafeuse égarée
   stepPerfo(dt);   // la perforatrice égarée
@@ -767,6 +780,7 @@ function phrase(win) {
   const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
   if (!ws.length) return 'Une page presque blanche.';
   if (ws.length === 1) return win ? cap(ws[0]) + ' tint bon, jusqu’au point final.' : 'Il ne restait que ' + ws[0] + '.';
+  if (win && G.chapter === 13) return pick(['Grâce à ' + ws[0] + ', le Grand Tampon posa enfin son « VU ».', cap(ws[0]) + ' et ' + ws[1] + ' rapportèrent le carnet, lu et signé.']);
   if (win && G.chapter === 12) return pick(['Grâce à ' + ws[0] + ', la Grande Horloge sonna enfin la sortie.', cap(ws[0]) + ' et ' + ws[1] + ' firent tous leurs devoirs, et même en avance.']);
   if (win && G.chapter === 11) return pick(['Grâce à ' + ws[0] + ', le Grand Alexandrin perdit enfin un pied.', cap(ws[0]) + ' et ' + ws[1] + ' rimaient si bien qu’on les apprit par cœur.']);
   if (win && G.chapter === 10) return pick(['Grâce à ' + ws[0] + ', le Grand Sifflet siffla la fin de la récré.', cap(ws[0]) + ' et ' + ws[1] + ' sautèrent jusqu’au Ciel sans toucher le caillou.']);

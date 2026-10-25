@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 23, date: '2026-10-23', title: 'Les bons points', chapter: 'XII', chapterName: 'Le cahier de textes' };
+const GAME_META = { iteration: 24, date: '2026-10-25', title: 'Le carnet de correspondance', chapter: 'XIII', chapterName: 'Le carnet de correspondance' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -193,6 +193,14 @@ const JOURNAL = [
       "Les images se rangent à la toute dernière page du bestiaire, « Mes images ». Touche I pour y aller directement, depuis l’écran titre ou la pause.",
       "Une petite étoile dorée glisse sur le bord de la page à chaque bon point gagné, avec dix étoiles pour savoir où tu en es. Les bons points sont gardés d’une partie à l’autre.",
       "La copie de fin de partie compte aussi les bons points gagnés pendant la partie."
+    ] },
+  { iteration: 24, date: '2026-10-25', title: 'Le carnet de correspondance', notes: [
+      "Un septième cahier arrive sur le bureau : le carnet de correspondance. Au chapitre XIII, ses cases imprimées (« Mot des parents », « Absences et retards »…) sont déjà remplies à la main.",
+      "Nouveau : des mots à faire signer ! Un mot de l’école se pose sur la page. Reste près de lui et la plume des parents le signe, trait après trait. Une fois signé, toute la page est frappée.",
+      "Mais les ratures ont vu le mot, elles aussi : chacune qui le touche y fait un pâté, et la signature recule. Défends-le ! Un mot signé sans un seul pâté frappe encore plus fort.",
+      "Deux nouvelles ratures : le bâton de colle, qui laisse des flaques où l’on avance deux fois moins vite, et l’enveloppe, qui s’ouvre et t’écrit trois lettres d’un coup.",
+      "À 3:00 t’attend le Grand Tampon du directeur : il saute et retombe là où tu es (sors de son ombre !), éclabousse la page d’encre violette et t’envoie « LU ET APPROUVÉ », lettre par lettre.",
+      "Le carnet a sa musique, une valse à l’accordéon, et sa page au bestiaire. Chaque mot signé rapporte un bon point."
     ] }
 ];
 window.GAME_META = GAME_META;

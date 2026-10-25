@@ -484,6 +484,25 @@ const AU = {
         [523.25, 659.25, 783.99].forEach(f => this.tone(f * 2, 1.2, { vol: 0.05, when: 0.45 })); break;
       }
       case 'boss12': [659.25, 587.33, 523.25, 392].forEach((f, i) => { this.tone(f, 1.1, { type: 'sine', vol: 0.12, when: i * 0.42 }); this.tone(f * 2.76, 0.6, { type: 'sine', vol: 0.025, when: i * 0.42 }); }); for (let i = 0; i < 4; i++) this.tone(65.41, 1.4, { type: 'sine', vol: 0.2, when: 1.8 + i * 0.7 }); break;
+      // chapitre XIII : le carnet de correspondance
+      case 'carnetKill': if (this.throttle('kill', 45)) { this.noise(0.08, { f: 2600 + (k % 5) * 350, q: 1.4, vol: 0.1, sweep: 1.4 }); this.tone([392, 493.88, 587.33, 659.25, 783.99][k % 5], 0.12, { type: 'triangle', vol: 0.06 }); } break;
+      case 'colle': if (this.throttle('colle', 160)) this.noise(0.09, { f: 420, q: 3, vol: 0.05, sweep: 0.6 }); break;
+      case 'enveloppeOpen': if (this.throttle('enveloppeOpen', 150)) this.noise(0.16, { f: 2400, q: 1.5, vol: 0.06, sweep: 1.6 }); break;
+      case 'lettre': if (this.throttle('lettre', 90)) { this.noise(0.06, { f: 3600, q: 2, vol: 0.08 }); this.tone(880, 0.08, { type: 'triangle', vol: 0.03, slide: 1.3 }); } break;
+      case 'motNew': [587.33, 783.99, 987.77].forEach((f, i) => this.tone(f, 0.3, { type: 'triangle', vol: 0.09, when: i * 0.09 })); this.noise(0.3, { f: 3000, q: 1, vol: 0.04, sweep: 0.6 }); break;
+      case 'signe': if (this.throttle('signe', 200)) this.noise(0.14, { f: 4300 + Math.random() * 800, q: 5, vol: 0.035, sweep: 1.3 }); break;
+      case 'pateMot': if (this.throttle('pateMot', 120)) { this.noise(0.14, { f: 380, q: 1, vol: 0.14, sweep: 0.5 }); this.tone(196, 0.18, { vol: 0.1, slide: 0.55 }); } break;
+      case 'motSigne': {   // un grand paraphe à la plume, puis l'accord de la sortie
+        this.noise(0.45, { f: 4200, q: 3, vol: 0.08, sweep: 1.6 });
+        [392, 493.88, 587.33, 783.99, 987.77, 1174.66].forEach((f, i) => this.tone(f, 0.45, { type: 'triangle', vol: 0.1, when: 0.3 + i * 0.06 }));
+        [392, 493.88, 587.33].forEach(f => this.tone(f * 2, 1.2, { vol: 0.05, when: 0.65 })); break;
+      }
+      case 'motPerdu': [392, 349.23, 293.66].forEach((f, i) => this.tone(f, 0.3, { type: 'triangle', vol: 0.09, when: i * 0.14 })); this.noise(0.5, { f: 2000, q: 0.6, vol: 0.04, sweep: 2 }); break;
+      case 'slamWarn': this.noise(0.75, { f: 260, q: 1, vol: 0.06, sweep: 3.5 }); this.tone(110, 0.7, { type: 'triangle', vol: 0.05, slide: 1.8, attack: 0.3 }); break;
+      case 'slam': if (this.throttle('slam', 90)) { this.tone(55, 0.55, { vol: 0.32, slide: 0.6 }); this.noise(0.25, { f: 220, q: 0.7, vol: 0.24, type: 'lowpass' }); } break;
+      case 'encreur': for (let i = 0; i < 4; i++) this.noise(0.12, { f: 700 + i * 90, q: 2, vol: 0.06, when: i * 0.16 }); break;
+      case 'date': for (let i = 0; i < 12; i++) this.noise(0.02, { f: 2500, q: 8, vol: 0.08, when: i * 0.05 }); break;
+      case 'boss13': [392, 523.25, 392, 523.25, 659.25].forEach((f, i) => this.tone(f, 0.35, { type: 'square', vol: 0.03, when: i * 0.3 })); for (let i = 0; i < 4; i++) this.tone(55, 0.5, { vol: 0.25, slide: 0.6, when: 0.2 + i * 0.6 }); break;
       case 'lose': [6, 4, 2, 0].forEach((n, i) => this.tone(PENTA[n], 0.8, { type: 'triangle', vol: 0.15, when: i * 0.18 })); break;
     }
   },
@@ -512,6 +531,11 @@ const AU = {
           587.33, 0, 739.99, 0, 880, 987.77, 880, 739.99, 659.25, 739.99, 659.25, 554.37, 587.33, 0, 0, 0],
   // la berceuse du cahier de poésie (un air original en la majeur, à trois temps), un temps par case ; 0 = silence
   POESIE: [659.25, 0, 554.37, 587.33, 659.25, 739.99, 659.25, 0, 0, 554.37, 0, 493.88, 440, 493.88, 554.37, 587.33, 0, 659.25, 554.37, 0, 493.88, 440, 0, 0],
+  // la valse du facteur (un air original en sol majeur, à trois temps), un temps par case ; 0 = la note précédente continue
+  VALSE: [587.33, 0, 493.88, 523.25, 0, 440, 493.88, 523.25, 587.33, 392, 0, 0,
+          659.25, 0, 523.25, 587.33, 0, 493.88, 440, 493.88, 523.25, 587.33, 0, 0,
+          783.99, 0, 739.99, 659.25, 0, 587.33, 523.25, 587.33, 659.25, 587.33, 0, 493.88,
+          523.25, 0, 440, 493.88, 440, 392, 369.99, 440, 587.33, 392, 0, 0],
   // le carillon de la Grande Horloge (un air original en do majeur), un temps par case ; 0 = silence
   CARILLON: [659.25, 587.33, 523.25, 392, 0, 0, 523.25, 587.33, 659.25, 0, 523.25, 0, 0, 0, 0, 0,
              783.99, 659.25, 587.33, 523.25, 0, 0, 587.33, 659.25, 523.25, 0, 392, 0, 0, 0, 0, 0],
@@ -633,6 +657,21 @@ const AU = {
       const n = this.CARILLON[s % 32];
       if (n && (s >= 8 || intensity > 0.15)) { this.tone(n, beat * 1.8, { type: 'sine', vol: 0.1, when, dest: this.mus, attack: 0.002 }); this.tone(n * 2.76, beat * 0.8, { type: 'sine', vol: 0.02, when, dest: this.mus, attack: 0.002 }); }
       if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
+      return;
+    }
+    if (chap === 13) {   // la valse du facteur : accordéon (deux voix un peu désaccordées), basse « boum-tchac-tchac », et un coup de tampon
+      const b3 = s % 3, root = [98, 73.42, 98, 98, 65.41, 98, 73.42, 98][Math.floor(s / 3) % 8];
+      if (b3 === 0) this.tone(root, beat * 0.9, { type: 'sine', vol: 0.22, when, dest: this.mus, attack: 0.02 });
+      else [2, 2.52, 3].forEach(m => this.tone(root * m, beat * 0.35, { type: 'triangle', vol: 0.025, when, dest: this.mus, attack: 0.004 }));
+      const i = s % 48, n = this.VALSE[i];
+      if (n && (s >= 24 || intensity > 0.15)) {
+        let len = 1; while (len < 4 && !this.VALSE[(i + len) % 48]) len++;
+        this.tone(n, beat * (len - 0.1), { type: 'triangle', vol: 0.05, when, dest: this.mus, attack: 0.02 });
+        this.tone(n * 1.005, beat * (len - 0.1), { type: 'triangle', vol: 0.04, when, dest: this.mus, attack: 0.02 });
+        if (intensity > 0.5) this.tone(n / 2, beat * (len - 0.2), { type: 'sine', vol: 0.03, when, dest: this.mus, attack: 0.02 });
+      }
+      if (s % 24 === 23) this.noise(0.06, { f: 300, q: 0.8, vol: 0.06, type: 'lowpass', when });   // un coup de tampon, au loin
+      if (bossOn && s % 3 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
       return;
     }
     const scale = two ? [261.63, 293.66, 329.63, 369.99, 392, 440, 493.88, 523.25, 587.33] : [146.83, 174.61, 196, 220, 261.63, 293.66, 349.23, 392, 440];

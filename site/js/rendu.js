@@ -31,7 +31,7 @@ function drawPage(v) {
   ctx.restore();
   ctx.fillStyle = paperPattern; ctx.fillRect(Math.max(0, v.x0), Math.max(0, v.y0), Math.min(WORLD.w, v.x1) - Math.max(0, v.x0), Math.min(WORLD.h, v.y1) - Math.max(0, v.y0));
   const paper = CH().paper;
-  if (paper === 'portee') drawPortee(v); else if (paper === 'milli') drawMilli(v); else if (paper === 'carte') drawCarte(v); else if (paper === 'calli') drawCalli(v); else if (paper === 'garde') drawGarde(v); else if (paper === 'brouillon') drawBrouillon(v); else if (paper === 'vacances') drawVacances(v); else if (paper === 'tables') drawTables(v); else if (paper === 'recre') drawRecre(v); else if (paper === 'poesie') drawPoesie(v); else if (paper === 'textes') drawTextes(v); else drawSeyes(v);
+  if (paper === 'portee') drawPortee(v); else if (paper === 'milli') drawMilli(v); else if (paper === 'carte') drawCarte(v); else if (paper === 'calli') drawCalli(v); else if (paper === 'garde') drawGarde(v); else if (paper === 'brouillon') drawBrouillon(v); else if (paper === 'vacances') drawVacances(v); else if (paper === 'tables') drawTables(v); else if (paper === 'recre') drawRecre(v); else if (paper === 'poesie') drawPoesie(v); else if (paper === 'textes') drawTextes(v); else if (paper === 'carnet') drawCarnet(v); else drawSeyes(v);
   // bord crayonné
   ctx.save(); ctx.strokeStyle = C.pencil; ctx.globalAlpha = 0.55; ctx.lineWidth = 1.6; ctx.setLineDash([14, 9]);
   ctx.strokeRect(-6, -6, WORLD.w + 12, WORLD.h + 12); ctx.restore();
@@ -128,6 +128,10 @@ function drawEnemy(e) {
     drawTextesEnemy(e, fr, fl);
   } else if (e.type === 'horloge') {
     drawHorloge(e, fr, fl);
+  } else if (CARNET_TYPES.has(e.type)) {
+    drawCarnetEnemy(e, fr, fl);
+  } else if (e.type === 'grandtampon') {
+    drawGrandTampon(e, fr, fl);
   } else if (e.type === 'photocopieuse') {
     drawPhotocopieuse(e, fr, fl);
   } else if (e.type === 'agrafeuse') {
@@ -222,6 +226,8 @@ function drawWorld() {
   if (G.marelleFx) drawMarelle(v);
   if (G.rimesFx) drawRimes(v);
   if (G.agendaFx) drawAgenda(v);
+  if (G.colles) drawColles(v);
+  if (G.motFx) drawMot(v);
   // lettres
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for (const it of G.items) {
@@ -261,7 +267,7 @@ function drawWorld() {
   if (G.quotes) drawCitations();
   // traits rouges du boss
   ctx.strokeStyle = C.red; ctx.lineWidth = 4;
-  for (const b of G.ebul) { if (b.note || b.deg || b.cork || b.blot || b.ink || b.fleur || b.crayon || b.copeau || b.sheet || b.sun || b.bead || b.eq || b.agrafe || b.vers || b.heure) continue; const n = Math.hypot(b.vx, b.vy) || 1; ctx.beginPath(); ctx.moveTo(b.x - b.vx / n * 9, b.y - b.vy / n * 9); ctx.lineTo(b.x + b.vx / n * 9, b.y + b.vy / n * 9); ctx.stroke(); }
+  for (const b of G.ebul) { if (b.note || b.deg || b.cork || b.blot || b.ink || b.fleur || b.crayon || b.copeau || b.sheet || b.sun || b.bead || b.eq || b.agrafe || b.vers || b.heure || b.lettre || b.tampon || b.lettreT) continue; const n = Math.hypot(b.vx, b.vy) || 1; ctx.beginPath(); ctx.moveTo(b.x - b.vx / n * 9, b.y - b.vy / n * 9); ctx.lineTo(b.x + b.vx / n * 9, b.y + b.vy / n * 9); ctx.stroke(); }
   drawNoteBullets();
   drawDegBullets();
   if (G.waves) drawWaves();
@@ -275,6 +281,7 @@ function drawWorld() {
   if (G.sifflets) drawRecreFx();
   if (G.pieds) drawPoesieFx();
   if (G.agendaFx) drawTextesFx();   // aiguilles, douze heures, réveils et cocottes
+  if (G.motFx) drawCarnetFx();   // ombre du tampon, lettres, encre, enveloppes ouvertes
   if (G.enemies) drawPhotoFx();   // vitre, lumière et feuilles de la photocopieuse
   if (G.agrafes) drawAgrafFx();   // agrafes en vol, plantées, et ratures clouées
   if (G.confettis) drawPerfoFx();   // là où la perforatrice va retomber, et ses confettis
@@ -504,6 +511,7 @@ function endTally() {
   if (G.immobiles) parts.push(['« soleil ! » tenus', G.immobiles]);
   if (G.poemes) parts.push(['poèmes', G.poemes]);
   if (G.agendas) parts.push(['devoirs cochés', G.agendas]);
+  if (G.signatures) parts.push(['mots signés', G.signatures]);
   if (G.photos) parts.push(['photocopies', G.photos]);
   if (G.agrafPins) parts.push(['ratures agrafées', G.agrafPins]);
   if (G.tombees) parts.push(['ratures tombées', G.tombees]);
@@ -567,6 +575,7 @@ function render() {
     drawMarelleArrow();
     drawRimesArrow();
     drawAgendaArrow();
+    drawMotArrow();
     drawSoleilScreen();
     if (G.state === 'play') drawBestToast();
     if (G.state === 'levelup') drawLevelUp();
