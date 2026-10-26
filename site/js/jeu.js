@@ -70,7 +70,8 @@ function newGame(demo, start = 1, devoir = null) {
     pieds: [], cesures: [], fromages: [], miams: 0, piedSeen: false, croisSeen: false, cesureSeen: false, fromageSeen: false,
     rimes: null, poemes: 0, nextRimes: RIMES.first, rimesFx: [], rimesSeen: false,
     hour: 0, nextBell: HEURE.len, bell: 0, agenda: null, agendas: 0, nextAgenda: AGENDA.first, agendaFx: [], agendaSeen: false, aiguilleSeen: false, heuresSeen: false,
-    colles: [], mot: null, motN: 0, signatures: 0, pates: 0, nextMot: MOT.first, motFx: [], motSeen: false, pateSeen: false, tamponSeen: false, dateSeen: false
+    colles: [], mot: null, motN: 0, signatures: 0, pates: 0, nextMot: MOT.first, motFx: [], motSeen: false, pateSeen: false, tamponSeen: false, dateSeen: false,
+    v: null, voisinKills: 0, voisinLends: 0, voisinStops: 0
   });
   const hp = demo ? 7 : 6;
   G.p = { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, r: 13, hp, maxHp: hp, inv: 1.2, dashCd: 0, dashT: 0, dx: 1, dy: 0, face: 0, fireCd: 0.5, look: 0, puddleT: 0, squash: 0, hidden: 0, gx: 0, gy: 0, pin: 0, moving: false };
@@ -121,6 +122,7 @@ function turnPage() {
   G.dicteeWord = CH().dictees[0];
   const p = G.p; Object.assign(p, { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, hp: p.maxHp, inv: 2.5, dashT: 0, hidden: 0, pin: 0 });
   G.cam.x = p.x; G.cam.y = p.y; clearStains();
+  if (G.v) Object.assign(G.v, { x: clamp(p.x - 90, 40, WORLD.w - 40), y: p.y + 50, vx: 0, vy: 0, dizzy: 0 });   // le voisin tourne la page avec toi
   while (G.xp >= G.xpNext) { G.xp -= G.xpNext; G.level++; G.xpNext = xpFor(G.level); G.pendingLv++; }
   AU.play('turn');
   caption(CH().intro, 4.5);
@@ -255,8 +257,9 @@ const keys = {};
 function moveInput() {
   if (G.demo) return botInput();
   let x = 0, y = 0;
-  if (keys.KeyA || keys.ArrowLeft) x -= 1; if (keys.KeyD || keys.ArrowRight) x += 1;
-  if (keys.KeyW || keys.ArrowUp) y -= 1; if (keys.KeyS || keys.ArrowDown) y += 1;
+  const ar = !(G.voisinMode === 2 && voisinOn());   // à deux, les flèches sont au voisin de table
+  if (keys.KeyA || (ar && keys.ArrowLeft)) x -= 1; if (keys.KeyD || (ar && keys.ArrowRight)) x += 1;
+  if (keys.KeyW || (ar && keys.ArrowUp)) y -= 1; if (keys.KeyS || (ar && keys.ArrowDown)) y += 1;
   const j = G.input.joy;
   if (j && j.active) { const dx = j.x - j.ox, dy = j.y - j.oy, d = Math.hypot(dx, dy); if (d > 6) { const m = Math.min(1, d / (55 * U)); x = dx / d * m; y = dy / d * m; } }
   if (devoirHas('miroir')) x = -x;   // consigne du devoir : écrire en miroir
@@ -431,6 +434,7 @@ function stepPlay(dt) {
   G.t += dt;
   const p = G.p, S = G.S;
   stepPlayer(dt);
+  stepVoisin(dt);   // le voisin de table
   director(dt);
   buildGrid();
   G.pullX = 0; G.pullY = 0;
@@ -554,6 +558,7 @@ function stepPlay(dt) {
       const rr = e.r + s.r; if ((e.x - s.x) ** 2 + (e.y - s.y) ** 2 > rr * rr) continue;
       const sp = Math.hypot(s.vx, s.vy) || 1;
       hurtEnemy(e, S.dmg * (s.k || 1), 'shot', s.vx / sp, s.vy / sp); s.hit.add(e.id);
+      if (s.voisin && e.dead) G.voisinKills++;
       G.parts.push({ x: s.x, y: s.y, vx: rnd(-80, 80), vy: rnd(-80, 80), life: 0.3, max: 0.3, size: rnd(1.5, 3), color: C.ink, drag: 5 });
       if (s.bounce > 0) {
         s.bounce--; let nt = null, nd = 340 * 340;

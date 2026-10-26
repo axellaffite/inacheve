@@ -511,6 +511,22 @@ Une récompense transversale, comme à l'école : les exploits rapportent des **
 - **Ailleurs** : l'écran titre annonce la nouveauté puis affiche le total ; la copie de fin compte les « bons points » de la partie (`G.bpRun`).
 - **Capture** : `__cap.bonspoints(n)` fixe le total sans toast, `__cap.images()` ouvre la page ; `state()` renvoie `bonsPoints`, `bpRun`, `images`.
 
+## Le voisin de table (itération 25)
+
+Un compagnon transversal, pour toutes les pages : une **goutte d'encre verte** (`VOISIN.ink`, un épi sur la tête) assise à côté de la goutte. C'est à la fois une aide (pour les plus jeunes, ou pour souffler) et un vrai **jeu à deux sur le même clavier**. Tout est dans `voisin.js` (chargé après `perforatrice.js`).
+
+- **Réglage** (`G.voisinMode`, touche **N** ou bouton « Voisin », gardé dans `inacheve.voisin`) : « non », « oui » (il joue tout seul) ou « à deux » (au tactile, « à deux » est sauté). Il n'est jamais là au devoir du jour (`voisinOn`), qui se fait seul pour que les notes restent comparables.
+- **À deux** : la goutte ne répond plus qu'à ZQSD/WASD (`moveInput`), les flèches dirigent le voisin. Sans flèche pendant 6 s (`VOISIN.idle`), il rejoue tout seul (« Je rêvasse un peu… ») jusqu'à la prochaine flèche. Le pilote des démos le laisse toujours en automatique.
+- **Tout seul** : il tourne autour de la goutte (orbite de 130 px, un peu aplatie) en s'écartant des ratures trop proches (90 px).
+- **Sa plume** : elle tire toute seule sur la rature la plus proche de lui (520 px), à 60 % de ta cadence et 60 % de tes dégâts, avec tes guillemets et ton italique (pas d'écho, pas de feu propre). Ses gouttes sont vertes (`s.voisin`) ; les ratures qu'il achève sont comptées (`G.voisinKills`).
+- **Il arrête les coups** : un projectile qui le touche disparaît, et une rature qui le bouscule aussi l'étourdit : 1,6 s sans bouger ni tirer, des étoiles autour de la tête (`voisinHit`, `G.voisinStops`). Il ne perd jamais de cœur.
+- **Le cœur prêté** : quand la goutte n'a plus que deux cœurs (ou moins), il vient se coller à elle et lui en prête un (`G.voisinLends`) ; puis il lui faut 75 s pour en avoir un autre à prêter (8 s au début de la partie).
+- **« Soleil ! »** : pendant que le Grand Sifflet regarde (`G.freeze`), il se fige et ne tire plus.
+- **Il papote** (`VOISIN_SAYS`, une bulle de BD au-dessus de lui) : en arrivant, quand il prête un cœur, quand il est étourdi, quand un patron arrive, et toutes les 17 s environ. Les phrases tournent dans l'ordre (aucun hasard).
+- Il tourne la page avec toi (`turnPage`). La copie de fin a une ligne « ton voisin de table » (ratures biffées, cœurs prêtés). Deux bruitages à lui (`voisinLend`, `voisinOuch`).
+- **Capture** : `__cap.voisin(mode)` (0, 1 ou 2) et `__cap.coeurs(n)` (te laisser n cœurs) ; `state()` renvoie `voisin`, `voisinKills`, `voisinStops`, `voisinLends`.
+- La copie de fin ne déborde plus : la ligne des exploits garde les dictées et les quatre derniers exploits de la partie.
+
 ## Vitesse du jeu (itération 11)
 
 - Bouton « Vitesse » ou touche V : 100 %, 80 % ou 60 % (`G.speed`, appliqué au pas de temps dans `frame`, jamais en capture). Gardé dans `inacheve.vitesse`.
@@ -527,6 +543,7 @@ Une récompense transversale, comme à l'école : les exploits rapportent des **
 - `inacheve.unions` : le carnet des unions, la liste des mots composés déjà choisis (validée au chargement, enregistrée à chaque nouvelle union).
 - `inacheve.pages` : les records de chaque page (victoires et meilleur temps contre son patron), montrés au bureau.
 - `inacheve.images` : le total des bons points gagnés (un entier, validé au chargement, enregistré à chaque bon point) ; les images en découlent (une tous les dix).
+- `inacheve.voisin` : le voisin de table (0 non, 1 oui, 2 à deux).
 
 ## Déterminisme
 
@@ -576,6 +593,8 @@ Itération 24 (chapitre XIII, brouillon de 52 mots, pilote) : premiers réglages
 
 Itération 22 (la perforatrice, pilote) : premiers réglages (trous de 15 s, 9 s pour ceux de la dernière perforation) : au devoir « Feuille perforée » du brouillon, 329 ratures tombées en une partie, la page entière servait de piège. Retenu : 12 s et 7 s, consigne à 1 point de bonus seulement (les trous aident autant qu'ils gênent) : 185 ratures tombées, Stylo Rouge battu à 3:38. En partie normale, la perforatrice tombe en 10 à 20 s aux chapitres I et IV, repart parfois au IX ; 7 à 30 ratures tombées aux chapitres I et IV, 150 à 180 au IX (les chiffres, petits et nombreux, foncent droit dans les trous). 5 graines sur 5 gagnent (chapitres I, IV, IX). Pour un humain, le saut est le vrai danger : si c'est trop dur, allonger `PERFO.warn` plutôt que de rétrécir le cercle.
 
+Itération 25 (le voisin de table, brouillons des chapitres I, X et XIII avec le voisin en automatique, pilote) : à 50 % de cadence et de dégâts, une seule goutte par tir, il n'achevait qu'une ou deux ratures par partie (les tiennes, au niveau 53, font tout le travail) : on ne le voyait pas servir. Retenu : 60 % et 60 %, avec tes guillemets : 29 à 39 ratures achevées par partie, une quarantaine de coups arrêtés, 3 graines sur 3 gagnent. C'est une aide assumée (comme la vitesse), donc pas de rééquilibrage des pages : sans voisin, rien ne change.
+
 ## Outils
 
 - `tools/check.mjs` : vérifications sans navigateur.
@@ -606,7 +625,8 @@ Itération 22 (la perforatrice, pilote) : premiers réglages (trous de 15 s, 9 s
 - **Patrons de chapitres** : ~~le Correcteur au stylo rouge~~ (le Stylo Rouge, itération 13), ~~le Cartable~~ (itération 10). ~~la Photocopieuse qui duplique tout (les ratures, et toi ?)~~ : faite à l'itération 14, en machine errante plutôt qu'en patron. Pour plus tard : une photocopieuse patron d'un cahier de bureau, qui copie aussi les attaques des patrons précédents.
 - **Le morpion, la suite** : une grille de 4 × 4 (« puissance 4 » au brouillon ?), des X qui trichent quand le Stylo Rouge est là, un morpion à jouer contre un ami sur le même clavier, un « morpion ultime » (neuf grilles) pour le cahier de vacances.
 - **Lisibilité** : quand la page est très tachée en fin de chapitre, les taches pourraient sécher plus vite (ou une option « page propre »).
-- **Accessibilité** : options de contraste, daltonisme (les secousses et la vitesse sont faites).
+- **Accessibilité** : options de contraste, daltonisme (les secousses et la vitesse sont faites ; le voisin de table, itération 25, sert aussi d'aide).
+- **Le voisin de table, la suite** : choisir sa couleur d'encre (verte, violette, turquoise), un « mot de passe » à se chuchoter (le voisin ramasse une lettre de la dictée pour toi ?), des unions à deux (vos deux pâtés en même temps font une explosion commune), le voisin qui se fait agrafer ou tomber dans les trous de la perforatrice (et qu'on va délivrer), un défi « à deux » au devoir du jour, un pâté à lui pour le deuxième joueur (touche Entrée du pavé ?), une manette, un voisin qui garde un souvenir des pages (il réclame la récré).
 - ~~**Histoire**~~ : une phrase par page, révélée au bureau (itération 16). Pour plus tard : la phrase écrite à la plume sur la page à la victoire, une dernière phrase quand toutes les pages sont gagnées, une histoire qui change selon les mots-pouvoirs les plus utilisés.
 - **Musique** : un thème par chapitre (fait à l'itération 3 pour le I et le II) ; reste une musique qui réagit aux mots choisis.
 - **Encre sympathique, la suite** : des lettres invisibles cachées dans la page, révélées seulement quand on est soi-même invisible.

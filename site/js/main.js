@@ -66,6 +66,7 @@ function setUI() {
   document.getElementById('btnSound').textContent = 'Son : ' + (AU.muted ? 'coupé' : 'activé');
   document.getElementById('btnCalm').textContent = 'Secousses : ' + (G.calm ? 'non' : 'oui');
   document.getElementById('btnSpeed').textContent = 'Vitesse : ' + speedLabel();
+  document.getElementById('btnVoisin').textContent = 'Voisin : ' + voisinLabel();
   document.getElementById('btnDevoir').classList.toggle('hidden', G.state !== 'title');
   document.getElementById('btnTitre').classList.toggle('hidden', !(G.state === 'pause' || G.state === 'gameover' || G.state === 'victory'));
   document.getElementById('btnBureau').classList.toggle('hidden', G.state !== 'title');
@@ -123,6 +124,7 @@ if (!CAPTURE) {
       else if (e.code === 'KeyM') toggleMute();
       else if (e.code === 'KeyC') toggleCalm();
       else if (e.code === 'KeyV') toggleSpeed();
+      else if (e.code === 'KeyN') toggleVoisin();
       else if (at >= 0) { bureauSelect(at); bureauGo(); }
       return;
     }
@@ -132,6 +134,7 @@ if (!CAPTURE) {
     if (e.code === 'KeyM') toggleMute();
     if (e.code === 'KeyC') toggleCalm();
     if (e.code === 'KeyV') toggleSpeed();
+    if (e.code === 'KeyN' && G.state !== 'levelup') toggleVoisin();
     if (e.code === 'KeyJ' && G.state === 'title') { startDevoir(false); return; }
     if (e.code === 'KeyT' && ['pause', 'gameover', 'victory'].includes(G.state)) { goTitle(); return; }
     if (G.state === 'levelup') {
@@ -200,6 +203,7 @@ if (!CAPTURE) {
   document.getElementById('btnSound').addEventListener('click', toggleMute);
   document.getElementById('btnCalm').addEventListener('click', toggleCalm);
   document.getElementById('btnSpeed').addEventListener('click', toggleSpeed);
+  document.getElementById('btnVoisin').addEventListener('click', () => { toggleVoisin(); cv.focus(); });
   document.getElementById('btnDevoir').addEventListener('click', () => { AU.init(); if (G.state === 'title') startDevoir(false); });
   document.getElementById('btnTitre').addEventListener('click', () => { AU.init(); if (['pause', 'gameover', 'victory'].includes(G.state)) goTitle(); cv.focus(); });
   document.getElementById('btnBureau').addEventListener('click', () => { AU.init(); if (G.state === 'title') openBureau(); cv.focus(); });
@@ -263,7 +267,7 @@ window.__cap = {
   devoir(over) { if (over) devoirOver = over; startDevoir(true); },
   start(chapter) { newGame(true, chapter || 1); },
   caption(t, d) { caption(t, d); },
-  state() { return { state: G.state, chapter: G.chapter || 1, t: G.t, boss: !!G.boss, bossDefeated: !!G.bossDefeated, level: G.level, hp: G.p ? G.p.hp : 0, enemies: G.enemies ? G.enemies.length : 0, kills: G.kills, mots: G.mots, refrains: G.refrains || 0, refrain: G.refrain ? G.refrain.prog : -1, figures: G.figures || 0, tresors: G.tresors || 0, tresor: G.tresor ? G.tresor.shown : -1, enlus: G.enlus || 0, enlu: G.enlu ? Math.round(100 * G.enlu.painted / G.enlu.cells.length) : -1, croquis: bestCount(), page: G.bestPage, unions: unionCount(), quotes: G.quotes ? G.quotes.length : 0, sceaux: G.sceaux || 0, sceau: G.sceau ? (G.sceau.carried ? 1 : 0) : -1, devoir: !!G.devoir, note: G.note ? G.note.n : -1, lignes: G.lignes || 0, ligne: G.ligne ? Math.round(100 * G.ligne.prog / G.ligne.len) : -1, morpions: G.morpions || 0, morpion: G.morpion ? G.morpion.cells.filter(c => c).length : -1, labys: G.labys || 0, laby: G.laby ? (G.laby.inEnt ? G.laby.trail.length : 0) : -1, calculs: G.calculs || 0, calcul: G.calc && !G.calc.end ? G.calc.wrong : -1, marelles: G.marelles || 0, marelle: G.marelle && !G.marelle.end ? G.marelle.prog : -1, ratees: G.marelle ? G.marelle.ratees : 0, soleil: G.soleil ? G.soleil.phase : '', bouges: G.bouges || 0, immobiles: G.immobiles || 0, poemes: G.poemes || 0, rimes: G.rimes && !G.rimes.end ? G.rimes.found : -1, rimesFaux: G.rimes ? G.rimes.wrong : 0, miams: G.miams || 0, agendas: G.agendas || 0, heure: G.hour || 0, agenda: G.agenda && !G.agenda.done ? (G.agenda.box ? G.agenda.need : G.agenda.got) : -1, signatures: G.signatures || 0, pates: G.pates || 0, mot: G.mot && !G.mot.done && !G.mot.lost ? Math.round(G.mot.prog * 100) : -1, colles: G.colles ? G.colles.length : 0, photos: G.photos || 0, copies: G.copies || 0, photoKills: G.photoKills || 0, double: G.double ? 1 : 0, agrafees: G.agrafees || 0, agrafPins: G.agrafPins || 0, agrafKills: G.agrafKills || 0, perfos: G.perfos || 0, tombees: G.tombees || 0, trous: G.trous ? G.trous.length : 0, perfoKills: G.perfoKills || 0, pin: G.p && G.p.pin > 0 ? 1 : 0, bureau: G.state === 'bureau' ? bureauChapter() : -1, records: Object.keys(G.pages).length, bonsPoints: G.bonsPoints, bpRun: G.bpRun || 0, images: imageCount() }; },
+  state() { return { state: G.state, chapter: G.chapter || 1, t: G.t, boss: !!G.boss, bossDefeated: !!G.bossDefeated, level: G.level, hp: G.p ? G.p.hp : 0, enemies: G.enemies ? G.enemies.length : 0, kills: G.kills, mots: G.mots, refrains: G.refrains || 0, refrain: G.refrain ? G.refrain.prog : -1, figures: G.figures || 0, tresors: G.tresors || 0, tresor: G.tresor ? G.tresor.shown : -1, enlus: G.enlus || 0, enlu: G.enlu ? Math.round(100 * G.enlu.painted / G.enlu.cells.length) : -1, croquis: bestCount(), page: G.bestPage, unions: unionCount(), quotes: G.quotes ? G.quotes.length : 0, sceaux: G.sceaux || 0, sceau: G.sceau ? (G.sceau.carried ? 1 : 0) : -1, devoir: !!G.devoir, note: G.note ? G.note.n : -1, lignes: G.lignes || 0, ligne: G.ligne ? Math.round(100 * G.ligne.prog / G.ligne.len) : -1, morpions: G.morpions || 0, morpion: G.morpion ? G.morpion.cells.filter(c => c).length : -1, labys: G.labys || 0, laby: G.laby ? (G.laby.inEnt ? G.laby.trail.length : 0) : -1, calculs: G.calculs || 0, calcul: G.calc && !G.calc.end ? G.calc.wrong : -1, marelles: G.marelles || 0, marelle: G.marelle && !G.marelle.end ? G.marelle.prog : -1, ratees: G.marelle ? G.marelle.ratees : 0, soleil: G.soleil ? G.soleil.phase : '', bouges: G.bouges || 0, immobiles: G.immobiles || 0, poemes: G.poemes || 0, rimes: G.rimes && !G.rimes.end ? G.rimes.found : -1, rimesFaux: G.rimes ? G.rimes.wrong : 0, miams: G.miams || 0, agendas: G.agendas || 0, heure: G.hour || 0, agenda: G.agenda && !G.agenda.done ? (G.agenda.box ? G.agenda.need : G.agenda.got) : -1, signatures: G.signatures || 0, pates: G.pates || 0, mot: G.mot && !G.mot.done && !G.mot.lost ? Math.round(G.mot.prog * 100) : -1, colles: G.colles ? G.colles.length : 0, photos: G.photos || 0, copies: G.copies || 0, photoKills: G.photoKills || 0, double: G.double ? 1 : 0, agrafees: G.agrafees || 0, agrafPins: G.agrafPins || 0, agrafKills: G.agrafKills || 0, perfos: G.perfos || 0, tombees: G.tombees || 0, trous: G.trous ? G.trous.length : 0, perfoKills: G.perfoKills || 0, pin: G.p && G.p.pin > 0 ? 1 : 0, bureau: G.state === 'bureau' ? bureauChapter() : -1, records: Object.keys(G.pages).length, bonsPoints: G.bonsPoints, bpRun: G.bpRun || 0, images: imageCount(), voisin: G.v ? G.voisinMode : 0, voisinKills: G.voisinKills || 0, voisinLends: G.voisinLends || 0, voisinStops: G.voisinStops || 0 }; },
   bestiaire(page) { openBestiaire(page); },
   // les bons points : en donner sans toast (préparer le montage), puis ouvrir la page des images
   bonspoints(n) { G.bonsPoints = Math.max(0, n); },
@@ -288,6 +292,9 @@ window.__cap = {
   mot() { if (G.state === 'play' && CH().paper === 'carnet' && !G.mot) writeMot(); },
   sonnerie() { if (G.state === 'play' && CH().paper === 'textes' && !G.boss) ringBell(false); },
   heal() { if (G.p) G.p.hp = G.p.maxHp; },
+  // le voisin de table : 0 non, 1 oui (il joue seul), 2 à deux ; coeurs(n) : te laisser n cœurs (pour qu'il t'en prête un)
+  voisin(mode) { G.voisinMode = clamp(mode | 0, 0, 2); },
+  coeurs(n) { if (G.p) G.p.hp = clamp(n, 1, G.p.maxHp); },
   // donne des mots d'un coup (montage) puis ouvre un choix : un mot composé prêt y est toujours proposé
   grant(mots) { for (const k in mots) { G.mots[k] = Math.max(lvl(k), mots[k]); if (!G.motOrder.includes(k)) G.motOrder.push(k); } computeStats(); G.pointCd = Math.min(G.pointCd, 1.5); },
   levelup() { if (G.state === 'play' || G.state === 'levelup') G.pendingLv++; },

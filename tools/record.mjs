@@ -68,15 +68,17 @@ async function load(seed) {
 // Montage (itération 24, « Le carnet de correspondance ») : un septième cahier arrive sur le bureau, on ouvre le chapitre XIII.
 // Le premier mot à faire signer se pose à 0:05 : le pilote reste près de lui et le défend pendant que la plume signe ;
 // le bâton de colle et l'enveloppe vers 1:20, puis le Grand Tampon à 3:00 (coups de tampon, encre, « lu et approuvé »).
+// Montage (itération 25, « Le voisin de table ») : l'écran titre annonce la touche N, puis la récré (chapitre X) avec le voisin.
+// Il tire, arrête des coups et en reste étourdi ; à deux cœurs, il vient en prêter un. Puis le Grand Sifflet à 3:00.
 const STEPS = [
-  { act: () => { const c = window.__cap; c.debloque(13); c.croque(['boss', 'fausse', 'regle', 'pieuvre', 'paraphe', 'cartable', 'stylo', 'soleil', 'boulier', 'sifflet', 'alexandrin', 'horloge', 'photocopieuse', 'agrafeuse', 'gribouillis', 'croche', 'segment', 'mouette', 'delie', 'marbrure', 'trombone', 'cafe', 'coquillage', 'chiffre', 'fois', 'calot', 'toupie', 'ver', 'rime', 'reveil', 'cocotte']); c.pages({ 1: { w: 3, t: 212 }, 2: { w: 2, t: 229 }, 3: { w: 1, t: 233 }, 4: { w: 1, t: 241 }, 5: { w: 1, t: 236 }, 6: { w: 1, t: 228 }, 7: { w: 1, t: 231 }, 8: { w: 1, t: 224 }, 9: { w: 1, t: 238 }, 10: { w: 1, t: 226 }, 11: { w: 1, t: 239 }, 12: { w: 1, t: 244 } }); c.bureau(12); },
-    cap: ['Un septième cahier sur le bureau…'], play: 2.2 },
-  { act: () => window.__cap.choisir(1), cap: ['… le carnet de correspondance !'], play: 2.4 },
-  { cap: ['Chapitre XIII : les cases du carnet, déjà remplies à la main'], act: () => window.__cap.commencer(), play: 4 },
-  { cap: ['Nouveau : un mot à faire signer ! Reste près de lui…', '… pendant que la plume signe, et protège-le des pâtés'], play: 13, need: r => r.signatures >= 1 },
-  { skip: 70, cap: ['Le bâton de colle et ses flaques, l’enveloppe qui t’écrit des lettres…'], play: 7 }
+  { act: () => { const c = window.__cap; c.debloque(13); c.croque(['boss', 'fausse', 'regle', 'pieuvre', 'paraphe', 'cartable', 'stylo', 'soleil', 'boulier', 'gribouillis', 'croche', 'segment', 'calot', 'toupie']); c.voisin(1); c.title(); },
+    cap: ['Nouveau : touche N, le voisin de table !'], play: 2.6 },
+  { act: () => window.__cap.start(10), cap: ['Chapitre X, la récré… à deux !', 'Une goutte d’encre verte s’assied à côté de toi'], play: 8 },
+  { cap: ['Sa plume tire toute seule…', '… et il arrête les coups qui te visent (ouille !)'], play: 10 },
+  { act: () => window.__cap.coeurs(2), cap: ['Plus que deux cœurs ? Il vient t’en prêter un'], play: 5.5, need: r => r.voisinLends >= 1 },
+  { skip: 60, cap: ['À deux sur le même clavier : ZQSD pour toi, les flèches pour lui'], play: 7 }
 ];
-const BOSS_AT = 180, BOSS_FILM = 22;   // le Grand Tampon arrive à 3:00 ; secondes de combat filmées au plus (la suite est sautée)
+const BOSS_AT = 180, BOSS_FILM = 22;   // le Grand Sifflet arrive à 3:00 ; secondes de combat filmées au plus (la suite est sautée)
 const argOf = (st, s) => st.arg ? st.arg(s) : undefined;
 // Joue tout le montage en accéléré (sans filmer) pour savoir comment se termine la partie avec la graine s
 async function simulate(s) {
@@ -89,14 +91,14 @@ async function simulate(s) {
   const r = await page.evaluate(() => { for (let i = 0; i < 320; i++) { window.__cap.skip(1); const r = window.__cap.state(); if (r.state === 'victory' || r.state === 'gameover') return r; } return window.__cap.state(); });
   return { ...r, ok };
 }
-// une bonne graine : un mot signé à l'écran, puis le Grand Tampon tombe avant la fin du tournage
-const good = r => r.ok && r.state === 'victory' && r.chapter === 13 && r.t <= BOSS_AT + 75;
+// une bonne graine : le voisin arrête un coup et prête un cœur à l'écran, puis le Grand Sifflet tombe avant la fin du tournage
+const good = r => r.ok && r.state === 'victory' && r.chapter === 10 && r.t <= BOSS_AT + 75;
 let SEED = SEED_ARG ? parseInt(SEED_ARG, 10) : null;
 if (SEED === null && !SMOKE) {
   let best = null;
   for (const s of [42, 7, 5, 99, 3, 11, 23, 64, 1, 8, 13, 21]) {
     const r = await simulate(s);
-    console.log(`graine ${s} : ${r.state} à ${r.t.toFixed(0)} s (chapitre ${r.chapter}, niveau ${r.level}, ${r.hp} cœur(s), ${r.signatures} mot(s) signé(s), ${r.pates} pâté(s))`);
+    console.log(`graine ${s} : ${r.state} à ${r.t.toFixed(0)} s (chapitre ${r.chapter}, niveau ${r.level}, ${r.hp} cœur(s), ${r.voisinKills} biffée(s) par le voisin, ${r.voisinStops} coup(s) arrêté(s), ${r.voisinLends} cœur(s) prêté(s))`);
     const score = x => (good(x) ? 1e6 : 0) + (x.ok ? 1e5 : 0) + (x.state === 'victory' ? 5e4 - x.t : x.t);
     if (!best || score(r) > score(best.r)) best = { s, r };
     if (good(r)) break;
@@ -118,6 +120,7 @@ if (SMOKE) {
       window.__cap.devoir({ chapter, consigne, pouce, seed: chapter }); window.__cap.skip(25); window.__cap.frames(2);
     }
     window.__cap.bonspoints(9); window.__cap.start(9); window.__cap.skip(40); window.__cap.frames(3); window.__cap.images(); window.__cap.frames(2); window.__cap.feuilleter(-1); window.__cap.frames(2); window.__cap.bonspoints(500); window.__cap.feuilleter(1); window.__cap.frames(2); window.__cap.refermer();
+    window.__cap.voisin(1); window.__cap.start(4); window.__cap.skip(20); window.__cap.coeurs(2); window.__cap.skip(4); window.__cap.frames(3); window.__cap.turn(); window.__cap.skip(5); window.__cap.frames(2); window.__cap.voisin(2); window.__cap.start(10); window.__cap.skip(190); window.__cap.frames(2); window.__cap.voisin(0); window.__cap.skip(2); window.__cap.frames(1);
     window.__cap.jour(null); window.__cap.devoir(); for (let i = 0; i < 300 && !['victory', 'gameover'].includes(window.__cap.state().state); i++) window.__cap.skip(1);
     window.__cap.skip(3); window.__cap.frames(2); window.__cap.title(); window.__cap.frames(2); });
   const st = await page.evaluate(() => window.__cap.state());
@@ -163,22 +166,18 @@ while (st.state !== 'gameover' && st.state !== 'victory' && st.t < BOSS_AT - 4) 
   st = await state();
 }
 if (st.state !== 'gameover' && st.state !== 'victory') {
-  await cap('… 3:00 : le Grand Tampon du directeur arrive !', 2.6);
-  await cap('Il saute, retombe, et met des « VU » partout : sors de son ombre !', 4);
+  await cap('… 3:00 : le Grand Sifflet arrive !', 2.6);
+  await cap('« Un, deux, trois… soleil ! » : le voisin se fige aussi', 4);
   for (let i = 0; i < BOSS_FILM && st.state !== 'victory' && st.state !== 'gameover'; i++) { await grab(1); st = await state(); }
   if (st.state !== 'victory' && st.state !== 'gameover') {   // la fin du combat est sautée, pour que la vidéo reste courte
     await page.evaluate(() => { for (let i = 0; i < 300; i++) { const s = window.__cap.state(); if (s.state === 'victory' || s.state === 'gameover') break; window.__cap.skip(0.5); } });
     st = await state();
-    if (st.state === 'victory') await cap('Quelques coups de tampon plus tard…', 3);
+    if (st.state === 'victory') await cap('Quelques coups de sifflet plus tard…', 3);
   }
 }
-// l'écran de fin compte les mots signés, puis la nouvelle page du bestiaire
+// l'écran de fin compte ce qu'a fait le voisin de table
 if (st.state === 'victory' || st.state === 'gameover') await grab(6.5);
 else await grab(1);
-await page.evaluate(() => window.__cap.bestiaire(13));
-await cap('Au bestiaire : la page du carnet de correspondance', 3);
-await grab(3.4);
-await page.evaluate(() => window.__cap.refermer());
 // retour à l'écran titre
 await page.evaluate(() => window.__cap.title());
 await cap('Le cahier continue : la suite s’écrit dans douze heures', 3.4);

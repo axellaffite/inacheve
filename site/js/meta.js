@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 24, date: '2026-10-25', title: 'Le carnet de correspondance', chapter: 'XIII', chapterName: 'Le carnet de correspondance' };
+const GAME_META = { iteration: 25, date: '2026-10-26', title: 'Le voisin de table', chapter: 'XIII', chapterName: 'Le carnet de correspondance' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -201,6 +201,13 @@ const JOURNAL = [
       "Deux nouvelles ratures : le bâton de colle, qui laisse des flaques où l’on avance deux fois moins vite, et l’enveloppe, qui s’ouvre et t’écrit trois lettres d’un coup.",
       "À 3:00 t’attend le Grand Tampon du directeur : il saute et retombe là où tu es (sors de son ombre !), éclabousse la page d’encre violette et t’envoie « LU ET APPROUVÉ », lettre par lettre.",
       "Le carnet a sa musique, une valse à l’accordéon, et sa page au bestiaire. Chaque mot signé rapporte un bon point."
+    ] },
+  { iteration: 25, date: '2026-10-26', title: 'Le voisin de table', notes: [
+      "Touche N (ou bouton « Voisin ») : un voisin de table s’assied à côté de toi. C’est une goutte d’encre verte, avec un épi sur la tête, et il te suit de page en page.",
+      "Sa plume tire toute seule sur les ratures. Il se met aussi en travers des coups qui te visent : il les arrête… et reste étourdi un moment, avec des étoiles autour de la tête.",
+      "Quand il ne te reste que deux cœurs, il vient t’en prêter un (une fois de temps en temps, il n’en a pas tant que ça).",
+      "Jouer à deux sur le même clavier : en mode « à deux », tu joues avec ZQSD et un ami dirige le voisin avec les flèches. S’il lâche les flèches un moment, le voisin rejoue tout seul.",
+      "Il papote, aussi : « Copie pas sur moi ! ». Le devoir du jour, lui, se fait toujours seul, et la copie de fin dit ce que ton voisin a biffé."
     ] }
 ];
 window.GAME_META = GAME_META;

@@ -157,7 +157,7 @@ function drawEnemy(e) {
 }
 function roundRect(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
 
-// copy : la copie grise imprimée par la photocopieuse
+// copy : la copie grise imprimée par la photocopieuse (true), ou une autre encre [remplissage, contour] (le voisin de table)
 function drawPlayer(p = G.p, copy = false) {
   if (!p) return;
   if (p.inv > 0 && G.state === 'play' && Math.floor(G.time * 16) % 2 === 0 && p.dashT <= 0) return;
@@ -175,8 +175,8 @@ function drawPlayer(p = G.p, copy = false) {
   ctx.bezierCurveTo(-r * 1.25, -r * 0.35, -r * 0.95, -r, 0, -r);
   ctx.arc(0, 0, r, -Math.PI / 2, Math.PI / 2);
   ctx.bezierCurveTo(-r * 0.95, r, -r * 1.25, r * 0.35, -r * 2.15, 0);
-  ctx.fillStyle = copy ? '#8b8b92' : C.ink; ctx.fill();
-  ctx.strokeStyle = copy ? '#55555c' : C.inkDeep; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = Array.isArray(copy) ? copy[0] : copy ? '#8b8b92' : C.ink; ctx.fill();
+  ctx.strokeStyle = Array.isArray(copy) ? copy[1] : copy ? '#55555c' : C.inkDeep; ctx.lineWidth = 1.5; ctx.stroke();
   ctx.restore();
   // reflet + yeux
   ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.beginPath(); ctx.ellipse(-r * 0.25, -r * 0.45, r * 0.32, r * 0.18, -0.5, 0, TAU); ctx.fill();
@@ -261,7 +261,7 @@ function drawWorld() {
   ctx.lineCap = 'round';
   for (const s of G.shots) {
     ctx.strokeStyle = 'rgba(29,58,138,0.35)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(s.x - s.vx * 0.03, s.y - s.vy * 0.03); ctx.lineTo(s.x, s.y); ctx.stroke();
-    ctx.fillStyle = s.copie ? '#8b8b92' : s.echo ? C.inkLight : G.S.burn ? '#2b4fb5' : C.ink; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, TAU); ctx.fill();
+    ctx.fillStyle = s.copie ? '#8b8b92' : s.voisin ? VOISIN.ink : s.echo ? C.inkLight : G.S.burn ? '#2b4fb5' : C.ink; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, TAU); ctx.fill();
     if (G.S.burn) { ctx.fillStyle = C.fire; ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 0.45, 0, TAU); ctx.fill(); }
   }
   if (G.quotes) drawCitations();
@@ -290,6 +290,7 @@ function drawWorld() {
     ctx.beginPath(); ctx.arc(e.bx, e.by, 14 + 8 * (e.pt / 0.65), 0, TAU); ctx.stroke(); ctx.restore();
   }
   drawDouble();
+  drawVoisin();
   drawPlayer();
   drawPlayerPin();
   for (const pt of G.points) {
@@ -478,12 +479,10 @@ function drawTitle() {
   const a = clamp((t - 1.2) * 2, 0, 1);
   txt('un jeu qui s’écrit tout seul, toutes les douze heures', W / 2, ty + 128 * s, Math.min(32 * s, W / 22), { color: C.graphite, weight: 400, alpha: a });
   txt(G.input.touch ? 'Touche l’écran pour commencer' : 'Appuie sur Entrée pour commencer', W / 2, ty + 196 * s, Math.min(38 * s, W / 18), { color: C.ink, alpha: a * (0.6 + 0.4 * Math.sin(G.time * 3)), hl: C.hl });
-  if (!G.input.touch) txt('ZQSD, WASD ou flèches : bouger    Espace : pâté d’encre    Échap : pause    Tab : le bureau    J : devoir du jour    B : bestiaire    I : images    M : son', W / 2, ty + 252 * s, Math.min(22 * s, W / 40), { color: C.pencil, weight: 400, alpha: a });
+  if (!G.input.touch) txt('ZQSD, WASD ou flèches : bouger    Espace : pâté d’encre    Échap : pause    Tab : le bureau    N : voisin    J : devoir du jour    B : bestiaire    I : images    M : son', W / 2, ty + 252 * s, Math.min(22 * s, W / 40), { color: C.pencil, weight: 400, alpha: a });
   else txt('Glisse pour bouger, bouton « pâté » pour foncer', W / 2, ty + 252 * s, 22 * s, { color: C.pencil, weight: 400, alpha: a });
-  const nb = n => ['zéro', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix', 'onze', 'douze'][n] || String(n), pages = CHAPTERS.length - 1;
-  const news = G.input.touch ? 'Nouveau : le bureau (bouton en bas). ' + nb(CAHIERS.length).replace(/^./, c => c.toUpperCase()) + ' cahiers, ' + nb(pages) + ' pages : choisis la tienne.'
-    : G.unlocked >= 2 ? 'Nouveau : touche Tab, le bureau. Choisis ta page parmi les ' + nb(pages) + (G.unlocked > 2 ? ', ou touches 2 à ' + Math.min(9, G.unlocked) + (G.unlocked >= 12 ? ', 0 et les deux touches à sa droite' : G.unlocked >= 11 ? ', 0 et la touche à sa droite' : G.unlocked >= 10 ? ' et 0' : '') : ', ou touche 2') + '.'
-    : 'Nouveau : touche Tab, le bureau. ' + nb(CAHIERS.length).replace(/^./, c => c.toUpperCase()) + ' cahiers, ' + nb(pages) + ' pages à écrire… et une histoire à lire.';
+  const news = G.input.touch ? 'Nouveau : le voisin de table (bouton en bas) s’assied à côté de toi et joue avec toi.'
+    : 'Nouveau : touche N, le voisin de table ! Il joue tout seul à côté de toi, ou un ami le dirige aux flèches.';
   txt(news, W / 2, ty + (G.best ? 322 : 290) * s, Math.min(22 * s, W / 30), { color: C.ink, weight: 400, alpha: a * 0.85 });
   const bn = bestCount(), un = unionCount(), keyI = G.input.touch ? ' (au bout du bestiaire)' : ' (touche I)';
   const bnews = !G.bonsPoints ? 'Nouveau : les bons points ! Chaque exploit en rapporte, et dix bons points font une image' + keyI + '.'
@@ -515,6 +514,7 @@ function endTally() {
   if (G.photos) parts.push(['photocopies', G.photos]);
   if (G.agrafPins) parts.push(['ratures agrafées', G.agrafPins]);
   if (G.tombees) parts.push(['ratures tombées', G.tombees]);
+  if (parts.length > 5) parts.splice(1, parts.length - 5);   // la copie ne déborde plus : les dictées et les quatre derniers exploits
   return parts.length > 1 ? [parts.map(q => q[0]).join(' · '), parts.map(q => q[1]).join(' · ')] : ['dictées réussies', G.dictees];
 }
 function drawEnd() {
@@ -533,6 +533,7 @@ function drawEnd() {
   if (G.newCroquis) rows.splice(4, 0, ['nouveaux croquis', G.newCroquis]);
   if (G.bpRun) rows.splice(rows.length - 2, 0, ['bons points', G.bpRun + (imageCount() ? ' · ' + imageCount() + ' / ' + IMAGES.length + ' images' : '')]);
   if (G.newUnions) rows.splice(4, 0, ['nouvelles unions', G.newUnions]);
+  if (G.v || G.voisinKills) rows.splice(2, 0, ['ton voisin de table', G.voisinKills + ' biffée' + (G.voisinKills > 1 ? 's' : '') + (G.voisinLends ? ' · ' + G.voisinLends + ' cœur' + (G.voisinLends > 1 ? 's' : '') + ' prêté' + (G.voisinLends > 1 ? 's' : '') : '')]);
   const rs = (rows.length > 7 ? 32 : 38) * s;   // un peu plus serré quand la partie a beaucoup à raconter
   rows.forEach(([k, v], i) => {
     const y = y0 + 150 * s + i * rs, aa = clamp(t * 3 - 1 - i * 0.25, 0, 1);
