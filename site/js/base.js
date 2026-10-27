@@ -505,6 +505,20 @@ const AU = {
       case 'encreur': for (let i = 0; i < 4; i++) this.noise(0.12, { f: 700 + i * 90, q: 2, vol: 0.06, when: i * 0.16 }); break;
       case 'date': for (let i = 0; i < 12; i++) this.noise(0.02, { f: 2500, q: 8, vol: 0.08, when: i * 0.05 }); break;
       case 'boss13': [392, 523.25, 392, 523.25, 659.25].forEach((f, i) => this.tone(f, 0.35, { type: 'square', vol: 0.03, when: i * 0.3 })); for (let i = 0; i < 4; i++) this.tone(55, 0.5, { vol: 0.25, slide: 0.6, when: 0.2 + i * 0.6 }); break;
+      // chapitre XIV : le bulletin
+      case 'bulletinKill': if (this.throttle('kill', 45)) { this.noise(0.06, { f: 3200, q: 3, vol: 0.08, sweep: 0.8 }); this.tone([523.25, 587.33, 659.25, 783.99, 880][k % 5], 0.1, { type: 'triangle', vol: 0.06 }); } break;
+      case 'zeroAim': if (this.throttle('zeroAim', 150)) this.tone(330, 0.5, { type: 'triangle', vol: 0.04, slide: 1.6, attack: 0.2 }); break;
+      case 'zeroRoll': if (this.throttle('zeroRoll', 120)) this.noise(0.5, { f: 500, q: 1.5, vol: 0.07, sweep: 0.5, type: 'lowpass' }); break;
+      case 'noteSplit': if (this.throttle('noteSplit', 90)) { this.noise(0.1, { f: 3800, q: 2, vol: 0.09, sweep: 0.5 }); this.tone(784, 0.08, { type: 'triangle', vol: 0.04, slide: 0.6 }); } break;
+      case 'bulOpen': this.noise(0.3, { f: 1800, q: 1, vol: 0.07, sweep: 1.8 }); break;
+      case 'bulNotes': for (let i = 0; i < 3; i++) this.tone(523.25 * (1 + i * 0.25), 0.08, { type: 'square', vol: 0.025, when: i * 0.05 }); break;
+      case 'bulWall': for (let i = 0; i < 10; i++) this.noise(0.03, { f: 2200 + i * 100, q: 6, vol: 0.07, when: i * 0.04 }); break;
+      case 'boss14': [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => this.tone(f, 0.3, { type: 'square', vol: 0.03, when: i * 0.16 })); for (let i = 0; i < 6; i++) this.noise(0.05, { f: 900, q: 1, vol: 0.12, when: 0.7 + i * 0.09 }); this.tone(65.41, 0.9, { vol: 0.25, when: 1.25 }); break;
+      case 'ctrlStart': for (let i = 0; i < 8; i++) this.tone(i % 2 ? 1568 : 1318.5, 0.07, { type: 'triangle', vol: 0.05, when: i * 0.07 }); this.noise(0.25, { f: 4000, q: 1, vol: 0.04, sweep: 0.5, when: 0.55 }); break;
+      case 'ctrlTick': if (this.throttle('ctrlTick', 60)) this.noise(0.035, { f: 5200 + (k % 4) * 300, q: 6, vol: 0.06 }); break;
+      case 'ctrlGood': [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => this.tone(f, 0.35, { type: 'triangle', vol: 0.1, when: i * 0.08 })); break;
+      case 'ctrlTop': [523.25, 659.25, 783.99, 1046.5, 1318.5, 1568].forEach((f, i) => this.tone(f, 0.45, { type: 'triangle', vol: 0.1, when: i * 0.07 })); [523.25, 659.25, 783.99].forEach(f => this.tone(f * 2, 1.2, { vol: 0.05, when: 0.45 })); break;
+      case 'ctrlBad': [392, 369.99, 349.23].forEach((f, i) => this.tone(f, 0.28, { type: 'triangle', vol: 0.08, when: i * 0.15 })); break;
       case 'lose': [6, 4, 2, 0].forEach((n, i) => this.tone(PENTA[n], 0.8, { type: 'triangle', vol: 0.15, when: i * 0.18 })); break;
     }
   },
@@ -533,6 +547,9 @@ const AU = {
           587.33, 0, 739.99, 0, 880, 987.77, 880, 739.99, 659.25, 739.99, 659.25, 554.37, 587.33, 0, 0, 0],
   // la berceuse du cahier de poésie (un air original en la majeur, à trois temps), un temps par case ; 0 = silence
   POESIE: [659.25, 0, 554.37, 587.33, 659.25, 739.99, 659.25, 0, 0, 554.37, 0, 493.88, 440, 493.88, 554.37, 587.33, 0, 659.25, 554.37, 0, 493.88, 440, 0, 0],
+  // la marche de la distribution des prix (un air original en do majeur, à deux temps), une croche par case ; 0 = la note précédente continue
+  MARCHE: [523.25, 659.25, 783.99, 659.25, 523.25, 0, 392, 0, 440, 523.25, 698.46, 523.25, 440, 0, 0, 0,
+           392, 493.88, 587.33, 698.46, 659.25, 587.33, 523.25, 493.88, 523.25, 659.25, 783.99, 0, 1046.5, 0, 0, 0],
   // la valse du facteur (un air original en sol majeur, à trois temps), un temps par case ; 0 = la note précédente continue
   VALSE: [587.33, 0, 493.88, 523.25, 0, 440, 493.88, 523.25, 587.33, 392, 0, 0,
           659.25, 0, 523.25, 587.33, 0, 493.88, 440, 493.88, 523.25, 587.33, 0, 0,
@@ -658,6 +675,21 @@ const AU = {
       if (s % 32 === 0) this.tone(65.41, beat * 6, { type: 'sine', vol: 0.14, when, dest: this.mus, attack: 0.01 });
       const n = this.CARILLON[s % 32];
       if (n && (s >= 8 || intensity > 0.15)) { this.tone(n, beat * 1.8, { type: 'sine', vol: 0.1, when, dest: this.mus, attack: 0.002 }); this.tone(n * 2.76, beat * 0.8, { type: 'sine', vol: 0.02, when, dest: this.mus, attack: 0.002 }); }
+      if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
+      return;
+    }
+    if (chap === 14) {   // la marche des prix : basse « oum-pa », caisse claire, et la mélodie au fifre
+      const root = [130.81, 98, 174.61, 130.81, 98, 123.47, 130.81, 98][Math.floor(s / 4) % 8];
+      if (s % 2 === 0) this.tone(root, beat * 0.8, { type: 'sine', vol: 0.22, when, dest: this.mus, attack: 0.01 });
+      else [2, 2.5, 3].forEach(m => this.tone(root * m, beat * 0.3, { type: 'triangle', vol: 0.022, when, dest: this.mus, attack: 0.004 }));
+      if (s % 4 === 2) this.noise(0.05, { f: 1800, q: 0.8, vol: 0.05, when });
+      if (s % 32 === 30) for (let i = 0; i < 4; i++) this.noise(0.03, { f: 1800, q: 0.8, vol: 0.035, when: when + i * beat / 4 });
+      const i = s % 32, n = this.MARCHE[i];
+      if (n && (s >= 16 || intensity > 0.15)) {
+        let len = 1; while (len < 4 && !this.MARCHE[(i + len) % 32]) len++;
+        this.tone(n, beat * (len - 0.15), { type: 'triangle', vol: 0.06, when, dest: this.mus, attack: 0.01 });
+        if (intensity > 0.5) this.tone(n / 2, beat * (len - 0.2), { type: 'square', vol: 0.01, when, dest: this.mus, attack: 0.01 });
+      }
       if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
       return;
     }

@@ -20,6 +20,7 @@ const BON_SOURCES = [
   [() => G.poemes || 0, 1, 'poème récité'],
   [() => G.agendas || 0, 1, 'devoir coché'],
   [() => G.signatures || 0, 1, 'mot signé'],
+  [() => G.controles || 0, 1, 'contrôle réussi'],
   [() => Math.floor((G.kills || 0) / 300), 1, 'trois cents ratures biffées'],
   [() => bestCount(), 1, 'nouveau croquis'],
   [() => unionCount(), 2, 'nouvelle union'],

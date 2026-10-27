@@ -71,14 +71,14 @@ async function load(seed) {
 // Montage (itération 25, « Le voisin de table ») : l'écran titre annonce la touche N, puis la récré (chapitre X) avec le voisin.
 // Il tire, arrête des coups et en reste étourdi ; à deux cœurs, il vient en prêter un. Puis le Grand Sifflet à 3:00.
 const STEPS = [
-  { act: () => { const c = window.__cap; c.debloque(13); c.croque(['boss', 'fausse', 'regle', 'pieuvre', 'paraphe', 'cartable', 'stylo', 'soleil', 'boulier', 'gribouillis', 'croche', 'segment', 'calot', 'toupie']); c.voisin(1); c.title(); },
-    cap: ['Nouveau : touche N, le voisin de table !'], play: 2.6 },
-  { act: () => window.__cap.start(10), cap: ['Chapitre X, la récré… à deux !', 'Une goutte d’encre verte s’assied à côté de toi'], play: 8 },
-  { cap: ['Sa plume tire toute seule…', '… et il arrête les coups qui te visent (ouille !)'], play: 10 },
-  { act: () => window.__cap.coeurs(2), cap: ['Plus que deux cœurs ? Il vient t’en prêter un'], play: 5.5, need: r => r.voisinLends >= 1 },
-  { skip: 60, cap: ['À deux sur le même clavier : ZQSD pour toi, les flèches pour lui'], play: 7 }
+  { act: () => { const c = window.__cap; c.debloque(14); c.croque(['boss', 'fausse', 'regle', 'pieuvre', 'paraphe', 'cartable', 'stylo', 'soleil', 'boulier', 'sifflet', 'alexandrin', 'horloge', 'grandtampon', 'gribouillis']); c.voisin(0); c.title(); },
+    cap: ['Nouveau : le chapitre XIV, le bulletin !'], play: 2.6 },
+  { act: () => window.__cap.start(14), cap: ['Chapitre XIV : le bulletin de fin d’année', 'Le tableau des notes est imprimé sur la page'], play: 7 },
+  { cap: ['Contrôle surprise ! Cinq questions entourées de rouge…', '… vingt secondes pour toutes les biffer'], play: 18 },
+  { cap: ['La note s’écrit au stylo rouge dans le bulletin'], play: 5, need: r => r.ctrlN >= 1 && r.controles >= 1 },
+  { skip: 50, cap: ['Le zéro pointé vise… puis il roule !', 'Biffée, la note sur vingt se coupe en deux'], play: 8 }
 ];
-const BOSS_AT = 180, BOSS_FILM = 22;   // le Grand Sifflet arrive à 3:00 ; secondes de combat filmées au plus (la suite est sautée)
+const BOSS_AT = 180, BOSS_FILM = 22;   // le Grand Bulletin arrive à 3:00 ; secondes de combat filmées au plus (la suite est sautée)
 const argOf = (st, s) => st.arg ? st.arg(s) : undefined;
 // Joue tout le montage en accéléré (sans filmer) pour savoir comment se termine la partie avec la graine s
 async function simulate(s) {
@@ -92,13 +92,13 @@ async function simulate(s) {
   return { ...r, ok };
 }
 // une bonne graine : le voisin arrête un coup et prête un cœur à l'écran, puis le Grand Sifflet tombe avant la fin du tournage
-const good = r => r.ok && r.state === 'victory' && r.chapter === 10 && r.t <= BOSS_AT + 75;
+const good = r => r.ok && r.state === 'victory' && r.chapter === 14 && r.t <= BOSS_AT + 75;
 let SEED = SEED_ARG ? parseInt(SEED_ARG, 10) : null;
 if (SEED === null && !SMOKE) {
   let best = null;
   for (const s of [42, 7, 5, 99, 3, 11, 23, 64, 1, 8, 13, 21]) {
     const r = await simulate(s);
-    console.log(`graine ${s} : ${r.state} à ${r.t.toFixed(0)} s (chapitre ${r.chapter}, niveau ${r.level}, ${r.hp} cœur(s), ${r.voisinKills} biffée(s) par le voisin, ${r.voisinStops} coup(s) arrêté(s), ${r.voisinLends} cœur(s) prêté(s))`);
+    console.log(`graine ${s} : ${r.state} à ${r.t.toFixed(0)} s (chapitre ${r.chapter}, niveau ${r.level}, ${r.hp} cœur(s), ${r.ctrlN} contrôle(s), ${r.controles} réussi(s), ${r.vingts} vingt sur vingt)`);
     const score = x => (good(x) ? 1e6 : 0) + (x.ok ? 1e5 : 0) + (x.state === 'victory' ? 5e4 - x.t : x.t);
     if (!best || score(r) > score(best.r)) best = { s, r };
     if (good(r)) break;
@@ -115,8 +115,9 @@ if (SMOKE) {
     window.__cap.start(11); window.__cap.skip(14); window.__cap.frames(3); window.__cap.skip(95); window.__cap.frames(3); window.__cap.patron(); for (let i = 0; i < 16; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.skip(60); window.__cap.frames(2); window.__cap.bestiaire(11); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(2); window.__cap.refermer();
     window.__cap.start(12); window.__cap.skip(12); window.__cap.frames(3); window.__cap.sonnerie(); window.__cap.skip(20); window.__cap.frames(3); window.__cap.sonnerie(); window.__cap.skip(70); window.__cap.frames(3); window.__cap.patron(); for (let i = 0; i < 20; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.skip(60); window.__cap.frames(2); window.__cap.bestiaire(12); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(2); window.__cap.refermer();
     window.__cap.start(13); window.__cap.skip(10); window.__cap.frames(3); window.__cap.skip(60); window.__cap.mot(); window.__cap.skip(4); window.__cap.frames(3); window.__cap.patron(); for (let i = 0; i < 20; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.skip(60); window.__cap.frames(2); window.__cap.bestiaire(13); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(2); window.__cap.refermer();
-    window.__cap.debloque(13); window.__cap.pages({ 1: { w: 2, t: 200 } }); window.__cap.bureau(); window.__cap.frames(3); for (let i = 0; i < 12; i++) { window.__cap.choisir(1); window.__cap.frames(2); } window.__cap.bureau(5); window.__cap.commencer(); window.__cap.skip(5); window.__cap.frames(2); window.__cap.debloque(1); window.__cap.bureau(4); window.__cap.commencer(); window.__cap.frames(2); window.__cap.bureau(); window.__cap.choisir(-1); window.__cap.commencer(); window.__cap.skip(5); window.__cap.frames(2);
-    for (const [chapter, consigne, pouce] of [[1, 'miroir', 'pluie'], [1, 'sansPate', 'propre'], [4, 'courant', 'pluie'], [2, 'brouillard', 'souffle'], [6, 'double', 'aimant'], [3, 'presse', 'souffle'], [5, 'fragile', 'propre'], [7, 'courant', 'aimant'], [8, 'miroir', 'pluie'], [9, 'double', 'souffle'], [10, 'sansPate', 'aimant'], [11, 'courant', 'pluie'], [12, 'presse', 'propre'], [13, 'courant', 'souffle'], [3, 'perfore', 'pluie'], [11, 'perfore', 'souffle']]) {
+    window.__cap.start(14); window.__cap.skip(9); window.__cap.frames(3); window.__cap.skip(4); window.__cap.frames(3); window.__cap.skip(20); window.__cap.frames(2); window.__cap.controle(); window.__cap.skip(3); window.__cap.frames(2); window.__cap.patron(); for (let i = 0; i < 20; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.skip(60); window.__cap.frames(2); window.__cap.bestiaire(14); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(2); window.__cap.refermer();
+    window.__cap.debloque(14); window.__cap.pages({ 1: { w: 2, t: 200 } }); window.__cap.bureau(); window.__cap.frames(3); for (let i = 0; i < 12; i++) { window.__cap.choisir(1); window.__cap.frames(2); } window.__cap.bureau(5); window.__cap.commencer(); window.__cap.skip(5); window.__cap.frames(2); window.__cap.debloque(1); window.__cap.bureau(4); window.__cap.commencer(); window.__cap.frames(2); window.__cap.bureau(); window.__cap.choisir(-1); window.__cap.commencer(); window.__cap.skip(5); window.__cap.frames(2);
+    for (const [chapter, consigne, pouce] of [[1, 'miroir', 'pluie'], [1, 'sansPate', 'propre'], [4, 'courant', 'pluie'], [2, 'brouillard', 'souffle'], [6, 'double', 'aimant'], [3, 'presse', 'souffle'], [5, 'fragile', 'propre'], [7, 'courant', 'aimant'], [8, 'miroir', 'pluie'], [9, 'double', 'souffle'], [10, 'sansPate', 'aimant'], [11, 'courant', 'pluie'], [12, 'presse', 'propre'], [13, 'courant', 'souffle'], [14, 'presse', 'aimant'], [3, 'perfore', 'pluie'], [11, 'perfore', 'souffle']]) {
       window.__cap.devoir({ chapter, consigne, pouce, seed: chapter }); window.__cap.skip(25); window.__cap.frames(2);
     }
     window.__cap.bonspoints(9); window.__cap.start(9); window.__cap.skip(40); window.__cap.frames(3); window.__cap.images(); window.__cap.frames(2); window.__cap.feuilleter(-1); window.__cap.frames(2); window.__cap.bonspoints(500); window.__cap.feuilleter(1); window.__cap.frames(2); window.__cap.refermer();
@@ -166,13 +167,13 @@ while (st.state !== 'gameover' && st.state !== 'victory' && st.t < BOSS_AT - 4) 
   st = await state();
 }
 if (st.state !== 'gameover' && st.state !== 'victory') {
-  await cap('… 3:00 : le Grand Sifflet arrive !', 2.6);
-  await cap('« Un, deux, trois… soleil ! » : le voisin se fige aussi', 4);
+  await cap('… 3:00 : le Grand Bulletin arrive !', 2.6);
+  await cap('« Peut mieux faire » : passe par le trou du mur !', 4);
   for (let i = 0; i < BOSS_FILM && st.state !== 'victory' && st.state !== 'gameover'; i++) { await grab(1); st = await state(); }
   if (st.state !== 'victory' && st.state !== 'gameover') {   // la fin du combat est sautée, pour que la vidéo reste courte
     await page.evaluate(() => { for (let i = 0; i < 300; i++) { const s = window.__cap.state(); if (s.state === 'victory' || s.state === 'gameover') break; window.__cap.skip(0.5); } });
     st = await state();
-    if (st.state === 'victory') await cap('Quelques coups de sifflet plus tard…', 3);
+    if (st.state === 'victory') await cap('Quelques trimestres plus tard…', 3);
   }
 }
 // l'écran de fin compte ce qu'a fait le voisin de table

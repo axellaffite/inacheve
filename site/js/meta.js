@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 25, date: '2026-10-26', title: 'Le voisin de table', chapter: 'XIII', chapterName: 'Le carnet de correspondance' };
+const GAME_META = { iteration: 26, date: '2026-10-27', title: 'Le bulletin', chapter: 'XIV', chapterName: 'Le bulletin' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -208,6 +208,14 @@ const JOURNAL = [
       "Quand il ne te reste que deux cœurs, il vient t’en prêter un (une fois de temps en temps, il n’en a pas tant que ça).",
       "Jouer à deux sur le même clavier : en mode « à deux », tu joues avec ZQSD et un ami dirige le voisin avec les flèches. S’il lâche les flèches un moment, le voisin rejoue tout seul.",
       "Il papote, aussi : « Copie pas sur moi ! ». Le devoir du jour, lui, se fait toujours seul, et la copie de fin dit ce que ton voisin a biffé."
+    ] },
+  { iteration: 26, date: '2026-10-27', title: 'Le bulletin', notes: [
+      "Chapitre XIV : le bulletin de fin d’année, promis dans la marge du carnet de correspondance. Un huitième cahier rejoint le bureau, bleu comme les vrais bulletins.",
+      "Contrôle surprise ! Cinq ratures deviennent des questions, entourées et numérotées au stylo rouge. Tu as vingt secondes pour les biffer toutes, et chaque coup reçu coûte trois points.",
+      "Ta note s’écrit au stylo rouge dans le bulletin imprimé sur la page, avec une appréciation. Au-dessus de la moyenne, une onde balaie les ratures et la mention reste tamponnée ; à 16 et plus, un cœur en prime.",
+      "Deux nouvelles ratures : le zéro pointé, qui vise puis roule tout droit, et la note sur vingt, qui se coupe en deux notes sur dix quand on la biffe.",
+      "Le Grand Bulletin s’ouvre en grand pour lancer ses notes en éventail et des murs de « peut mieux faire » : il faut passer par le trou. En colère, il convoque le conseil de classe.",
+      "Une marche de distribution des prix accompagne la page, et le bestiaire gagne une quatorzième page."
     ] }
 ];
 window.GAME_META = GAME_META;
