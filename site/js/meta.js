@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 26, date: '2026-10-27', title: 'Le bulletin', chapter: 'XIV', chapterName: 'Le bulletin' };
+const GAME_META = { iteration: 27, date: '2026-10-27', title: 'Le taille-crayon électrique', chapter: 'XIV', chapterName: 'Le bulletin' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -216,6 +216,13 @@ const JOURNAL = [
       "Deux nouvelles ratures : le zéro pointé, qui vise puis roule tout droit, et la note sur vingt, qui se coupe en deux notes sur dix quand on la biffe.",
       "Le Grand Bulletin s’ouvre en grand pour lancer ses notes en éventail et des murs de « peut mieux faire » : il faut passer par le trou. En colère, il convoque le conseil de classe.",
       "Une marche de distribution des prix accompagne la page, et le bestiaire gagne une quatorzième page."
+    ] },
+  { iteration: 27, date: '2026-10-27', title: 'Le taille-crayon électrique', notes: [
+      "Vrrrr ! Une quatrième machine s’est échappée du bureau : le taille-crayon électrique, grand frère branché de celui du brouillon. Vers 0:35, il débarque sur chaque page, son fil arraché traînant derrière lui.",
+      "Quand son voyant passe au rouge, il aspire tout ce qui traîne autour de lui : les lettres, les ratures… et toi. Un pâté t’arrache à son souffle.",
+      "Les ratures aspirées sont taillées en copeaux et remplissent son tiroir transparent. Quand il est plein, il le vide en crachant une couronne de copeaux.",
+      "Tes gouttes d’encre sont aspirées, elles aussi : tire dans le tourbillon, elles frappent deux fois plus fort. Biffé, il rend en fontaine toutes les lettres qu’il a mangées, avec un bon point.",
+      "Le devoir du jour a une nouvelle consigne, « Crayons à tailler », et la page des rares du bestiaire son quatrième croquis. Ton voisin de table, lui, n’aime pas du tout être aspiré."
     ] }
 ];
 window.GAME_META = GAME_META;

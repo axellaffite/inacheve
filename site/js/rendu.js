@@ -142,6 +142,8 @@ function drawEnemy(e) {
     drawAgrafeuse(e, fr, fl);
   } else if (e.type === 'perforatrice') {
     drawPerforatrice(e, fr, fl);
+  } else if (e.type === 'taillelec') {
+    drawTaillelec(e, fr, fl);
   } else if (e.type === 'boss') {
     if (e.phase === 'aim') { ctx.save(); ctx.strokeStyle = C.red; ctx.globalAlpha = 0.4; ctx.setLineDash([16, 10]); ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(e.cx * 420, e.cy * 420); ctx.stroke(); ctx.restore(); }
     const pulse = 1 + Math.sin(G.time * 5) * 0.03;
@@ -291,6 +293,7 @@ function drawWorld() {
   if (G.enemies) drawPhotoFx();   // vitre, lumière et feuilles de la photocopieuse
   if (G.agrafes) drawAgrafFx();   // agrafes en vol, plantées, et ratures clouées
   if (G.confettis) drawPerfoFx();   // là où la perforatrice va retomber, et ses confettis
+  if (G.enemies) drawTailleFx();   // le cercle et la spirale du taille-crayon électrique
   for (const e of G.enemies) if (e.type === 'soupir' && e.phase === 'fade') {   // là où le soupir va se poser
     ctx.save(); ctx.strokeStyle = C.pencil; ctx.globalAlpha = 0.7; ctx.setLineDash([5, 6]); ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(e.bx, e.by, 14 + 8 * (e.pt / 0.65), 0, TAU); ctx.stroke(); ctx.restore();
@@ -521,7 +524,8 @@ function endTally() {
   if (G.photos) parts.push(['photocopies', G.photos]);
   if (G.agrafPins) parts.push(['ratures agrafées', G.agrafPins]);
   if (G.tombees) parts.push(['ratures tombées', G.tombees]);
-  if (parts.length > 5) parts.splice(1, parts.length - 5);   // la copie ne déborde plus : les dictées et les quatre derniers exploits
+  if (G.taillees) parts.push(['ratures taillées', G.taillees]);
+  if (parts.length > 4) parts.splice(1, parts.length - 4);   // la copie ne déborde plus : les dictées et les trois derniers exploits
   return parts.length > 1 ? [parts.map(q => q[0]).join(' · '), parts.map(q => q[1]).join(' · ')] : ['dictées réussies', G.dictees];
 }
 function drawEnd() {

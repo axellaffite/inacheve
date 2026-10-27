@@ -101,13 +101,14 @@ const BESTIAIRE = [null,
 const RARES = [
   ['photocopieuse', 'la photocopieuse', 'Copie tout ce qui passe dans sa lumière. Toi aussi, si tu oses.'],
   ['agrafeuse', 'l’agrafeuse', 'Cloue à la page tout ce qu’elle touche. Ses agrafes perdues clouent aussi les ratures.'],
-  ['perforatrice', 'la perforatrice', 'Saute sur toi et troue la page. Les ratures qui marchent sur ses trous tombent à travers.']
+  ['perforatrice', 'la perforatrice', 'Saute sur toi et troue la page. Les ratures qui marchent sur ses trous tombent à travers.'],
+  ['taillelec', 'le taille-crayon électrique', 'Aspire les lettres, les ratures et la goutte. Biffé, son tiroir rend tout.']
 ];
 const rarePage = () => CHAPTERS.length;
 const bestList = n => n === rarePage() ? RARES : BESTIAIRE[n];
 const BEST_TYPES = new Set(BESTIAIRE.slice(1).concat([RARES]).flat().map(b => b[0]));
 // rayon apparent de chaque croquis, pour qu'il tienne dans sa case
-const BEST_VIS = { grandbulletin: 125, zeropointe: 32, note20: 32, grandtampon: 125, colle: 34, enveloppe: 30, horloge: 130, reveil: 30, cocotte: 28, alexandrin: 125, ver: 30, rime: 52, exclam: 34, corbeau: 36, sifflet: 120, calot: 22, toupie: 30, corde: 150, avion: 32, photocopieuse: 76, agrafeuse: 66, perforatrice: 64, boulier: 125, chiffre: 26, fois: 30, egal: 30, retenue: 26, soleil: 135, cornet: 34, ballon: 30, pointille: 70, coquillage: 24, stylo: 150, blanco: 32, taillecrayon: 30, cafe: 30, trombone: 24, cartable: 130, tampon: 38, peigne: 36, signet: 26, marbrure: 22, paraphe: 175, majuscule: 40, plumeoie: 30, arabesque: 36, delie: 30, boss: 92, fausse: 128, regle: 282, pieuvre: 150, metronome: 54, compas: 42, tourbillon: 34, equerre: 32, rapporteur: 32, bouteille: 34, crabe: 34, mouette: 24, tache: 30, gomme: 32 };
+const BEST_VIS = { grandbulletin: 125, zeropointe: 32, note20: 32, grandtampon: 125, colle: 34, enveloppe: 30, horloge: 130, reveil: 30, cocotte: 28, alexandrin: 125, ver: 30, rime: 52, exclam: 34, corbeau: 36, sifflet: 120, calot: 22, toupie: 30, corde: 150, avion: 32, photocopieuse: 76, agrafeuse: 66, perforatrice: 64, taillelec: 70, boulier: 125, chiffre: 26, fois: 30, egal: 30, retenue: 26, soleil: 135, cornet: 34, ballon: 30, pointille: 70, coquillage: 24, stylo: 150, blanco: 32, taillecrayon: 30, cafe: 30, trombone: 24, cartable: 130, tampon: 38, peigne: 36, signet: 26, marbrure: 22, paraphe: 175, majuscule: 40, plumeoie: 30, arabesque: 36, delie: 30, boss: 92, fausse: 128, regle: 282, pieuvre: 150, metronome: 54, compas: 42, tourbillon: 34, equerre: 32, rapporteur: 32, bouteille: 34, crabe: 34, mouette: 24, tache: 30, gomme: 32 };
 const BEST_TOAST = 3.4;
 
 G.bestiary = {};
@@ -247,6 +248,7 @@ function bestFake(type, i) {
   else if (type === 'photocopieuse') { e.copied = new Set([1, 2]); e.lid = Math.max(0, Math.sin(t * 1.1)); }
   else if (type === 'agrafeuse') { e.lid = Math.max(0, Math.sin(t * 1.4)); e.clac = 0; e.ang = 0; }
   else if (type === 'perforatrice') { e.lever = Math.max(0, Math.sin(t * 1.3)); e.clac = 0; e.h = 0; }
+  else if (type === 'taillelec') { e.hum = Math.max(0, Math.sin(t * 1.1)); e.spin = t * (2 + 20 * e.hum); e.ate = 5 + 3 * Math.sin(t * 0.4); e.drawer = 0; }
   return e;
 }
 function drawCroquis(type, i, cx, cy, R) {
