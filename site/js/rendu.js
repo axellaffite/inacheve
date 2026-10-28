@@ -240,6 +240,7 @@ function drawWorld() {
   if (G.motFx) drawMot(v);
   if (G.ctrlFx) drawCtrlFx();
   if (G.boites) drawChamboule();   // le stand du chamboule-tout, ses boîtes et le pompon du manège
+  if (G.coloFx) drawColoriage(v);   // le coloriage magique, ses numéros et ses crayons
   // lettres
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for (const it of G.items) {
@@ -300,6 +301,7 @@ function drawWorld() {
   if (G.agrafes) drawAgrafFx();   // agrafes en vol, plantées, et ratures clouées
   if (G.confettis) drawPerfoFx();   // là où la perforatrice va retomber, et ses confettis
   if (G.enemies) drawTailleFx();   // le cercle et la spirale du taille-crayon électrique
+  if (G.vivants) drawVivants();   // les dessins coloriés qui ont pris vie
   for (const e of G.enemies) if (e.type === 'soupir' && e.phase === 'fade') {   // là où le soupir va se poser
     ctx.save(); ctx.strokeStyle = C.pencil; ctx.globalAlpha = 0.7; ctx.setLineDash([5, 6]); ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(e.bx, e.by, 14 + 8 * (e.pt / 0.65), 0, TAU); ctx.stroke(); ctx.restore();
@@ -308,6 +310,7 @@ function drawWorld() {
   drawVoisin();
   drawPlayer();
   drawPlayerPin();
+  drawColoHeld();   // le crayon de couleur en main
   for (const pt of G.points) {
     if (pt.done) { const k = (pt.t - pt.fall) / 0.6; ctx.strokeStyle = 'rgba(18,39,95,' + (1 - k) + ')'; ctx.lineWidth = 6 * (1 - k) + 1; ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.r * ease(k), 0, TAU); ctx.stroke(); continue; }
     if (pt.t < 0) continue;
@@ -498,7 +501,7 @@ function drawTitle() {
   txt(G.input.touch ? 'Touche l’écran pour commencer' : 'Appuie sur Entrée pour commencer', W / 2, ty + 196 * s, Math.min(38 * s, W / 18), { color: C.ink, alpha: a * (0.6 + 0.4 * Math.sin(G.time * 3)), hl: C.hl });
   if (!G.input.touch) txt('ZQSD, WASD ou flèches : bouger    Espace : pâté d’encre    Échap : pause    Tab : le bureau    N : voisin    J : devoir du jour    B : bestiaire    I : images    M : son', W / 2, ty + 252 * s, Math.min(22 * s, W / 40), { color: C.pencil, weight: 400, alpha: a });
   else txt('Glisse pour bouger, bouton « pâté » pour foncer', W / 2, ty + 252 * s, 22 * s, { color: C.pencil, weight: 400, alpha: a });
-  const news = 'Nouveau : le chapitre XV, la kermesse ! Chamboule-tout, canards, course en sac et le Grand Manège.';
+  const news = 'Nouveau : le coloriage magique, sur toutes les pages ! Colorie par numéros, et le dessin prend vie.';
   txt(news, W / 2, ty + (G.best ? 322 : 290) * s, Math.min(22 * s, W / 30), { color: C.ink, weight: 400, alpha: a * 0.85 });
   const bn = bestCount(), un = unionCount(), keyI = G.input.touch ? ' (au bout du bestiaire)' : ' (touche I)';
   const bnews = !G.bonsPoints ? 'Nouveau : les bons points ! Chaque exploit en rapporte, et dix bons points font une image' + keyI + '.'
@@ -533,6 +536,7 @@ function endTally() {
   if (G.agrafPins) parts.push(['ratures agrafées', G.agrafPins]);
   if (G.tombees) parts.push(['ratures tombées', G.tombees]);
   if (G.taillees) parts.push(['ratures taillées', G.taillees]);
+  if (G.coloriages) parts.push(['coloriages', G.coloriages]);
   if (parts.length > 4) parts.splice(1, parts.length - 4);   // la copie ne déborde plus : les dictées et les trois derniers exploits
   return parts.length > 1 ? [parts.map(q => q[0]).join(' · '), parts.map(q => q[1]).join(' · ')] : ['dictées réussies', G.dictees];
 }
@@ -598,6 +602,7 @@ function render() {
     drawMotArrow();
     drawCtrlArrow();
     drawChambouleArrow();
+    drawColoArrow();
     drawSoleilScreen();
     if (G.state === 'play') drawBestToast();
     if (G.state === 'levelup') drawLevelUp();

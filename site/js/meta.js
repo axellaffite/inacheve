@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 28, date: '2026-10-28', title: 'La kermesse', chapter: 'XV', chapterName: 'La kermesse' };
+const GAME_META = { iteration: 29, date: '2026-10-28', title: 'Le coloriage magique', chapter: 'XV', chapterName: 'La kermesse' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -230,6 +230,13 @@ const JOURNAL = [
       "Toutes les boîtes par terre avant que le stand ferme ? Gagné : un moulinet de papier tourne autour de toi et fauche les ratures pendant quinze secondes (et parfois un cœur en prime).",
       "Deux nouvelles ratures : les canards de la pêche, qui vont par quatre en file indienne derrière leur chef couronné, et la course en sac, qui bondit vers toi et retombe dans un grand « boum ».",
       "À 3:00, le Grand Manège tourne en lançant des lettres en spirale. Quand le pompon descend, attrape-le : un tour gratuit, et le manège s’arrête avec le tournis. Une polka à l’orgue de barbarie accompagne la fête."
+    ] },
+  { iteration: 29, date: '2026-10-28', title: 'Le coloriage magique', notes: [
+      "Sur toutes les pages, un coloriage magique s’imprime près de toi vers 0:20 : un dessin au crayon avec ses zones numérotées, sa légende, et trois crayons de couleur posés autour.",
+      "Ramasse un crayon, puis reste dans les zones de son numéro : les traits de couleur les remplissent peu à peu. Le numéro du crayon que tu tiens est surligné ; une zone d’une autre couleur te le rappelle.",
+      "Tout colorié avant que la gomme passe ? Le dessin prend vie ! Le poisson rouge nage autour de toi et croque les ratures, le papillon sème son pollen sur les plus proches, le soleil lance ses rayons sur toute la page.",
+      "Chaque coloriage réussi fait trembler les ratures alentour, reste imprimé en couleur sur la page, rapporte un bon point, compte comme exploit au devoir du jour, et rend un cœur une fois sur deux.",
+      "Trois dessins se suivent, toujours dans le même ordre : le poisson, le papillon, puis le soleil. Ton voisin de table, lui, trouve qu’ils sont trop beaux."
     ] }
 ];
 window.GAME_META = GAME_META;

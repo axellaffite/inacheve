@@ -74,6 +74,7 @@ function newGame(demo, start = 1, devoir = null) {
     colles: [], mot: null, motN: 0, signatures: 0, pates: 0, nextMot: MOT.first, motFx: [], motSeen: false, pateSeen: false, tamponSeen: false, dateSeen: false,
     ctrl: null, ctrlN: 0, controles: 0, vingts: 0, nextCtrl: CTRL.first, ctrlFx: [], bulletin: [], ctrlSeen: false, wallSeen: false,
     stand: null, nextStand: CHAMB.first, boites: [], chambFx: [], moulinets: [], pompon: null, chamboules: 0, chambKills: 0, peches: 0, pompons: 0, standSeen: false, pomponSeen: false,
+    colo: null, coloN: 0, nextColo: COLO.first, coloFx: [], vivants: [], coloriages: 0, coloKills: 0, coloSeen: false,
     v: null, voisinKills: 0, voisinLends: 0, voisinStops: 0
   });
   const hp = demo ? 7 : 6;
@@ -122,7 +123,8 @@ function turnPage() {
     hour: 0, nextBell: HEURE.len, bell: 0, agenda: null, nextAgenda: AGENDA.first, agendaFx: [],
     colles: [], mot: null, nextMot: MOT.first, motFx: [],
     ctrl: null, nextCtrl: CTRL.first, ctrlFx: [], bulletin: [],
-    stand: null, nextStand: CHAMB.first, boites: [], chambFx: [], moulinets: [], pompon: null
+    stand: null, nextStand: CHAMB.first, boites: [], chambFx: [], moulinets: [], pompon: null,
+    colo: null, nextColo: COLO.first, coloFx: [], vivants: []
   });
   G.dicteeWord = CH().dictees[0];
   const p = G.p; Object.assign(p, { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, hp: p.maxHp, inv: 2.5, dashT: 0, hidden: 0, pin: 0 });
@@ -285,9 +287,9 @@ function botInput() {
   const need = G.dicteeWord[G.dicteeProg];
   for (const it of G.items) { const d = Math.hypot(it.x - p.x, it.y - p.y) - (it.ch === need ? 160 : 0) - (it.rare ? 80 : 0); if (d < gd && d < 520) { gd = d; goal = it; } }
   if (soleilFreezeBot()) return { x: 0, y: 0, dash: false };   // « soleil ! » : on ne bouge plus
-  const rn = photoTarget() || agrafTarget() || perfoTarget() || tailleTarget() || (G.refrain && G.refrain.notes[G.refrain.prog]) || figureTarget() || tresorTarget() || enluTarget() || sceauTarget() || lignesTarget() || morpionTarget() || labyTarget() || calcTarget() || marelleTarget() || rimesTarget() || agendaTarget() || motTarget() || ctrlTarget() || chambouleTarget();   // machines égarées, refrain, figure, trésor, lettrine, sceau, lignes, morpion, labyrinthe, calcul, marelle, rimes, case à cocher, mot à signer, questions du contrôle, chamboule-tout et pompon passent avant les lettres
+  const rn = coloTarget() || photoTarget() || agrafTarget() || perfoTarget() || tailleTarget() || (G.refrain && G.refrain.notes[G.refrain.prog]) || figureTarget() || tresorTarget() || enluTarget() || sceauTarget() || lignesTarget() || morpionTarget() || labyTarget() || calcTarget() || marelleTarget() || rimesTarget() || agendaTarget() || motTarget() || ctrlTarget() || chambouleTarget();   // coloriage, machines égarées, refrain, figure, trésor, lettrine, sceau, lignes, morpion, labyrinthe, calcul, marelle, rimes, case à cocher, mot à signer, questions du contrôle, chamboule-tout et pompon passent avant les lettres
   const toSong = rn && Math.hypot(rn.x - p.x, rn.y - p.y) < 1600;
-  const pull = toSong ? ((G.laby && !G.laby.end && rn === G.labyGoal) || rn === calcTarget() || (G.marelle && !G.marelle.end) || (G.rimes && !G.rimes.end) || rn === agendaTarget() || rn === motTarget() || rn === G.pompon ? 5 : 3) : 1.5;   // le labyrinthe, la bonne réponse, la marelle, les rimes, la case à cocher et le mot attirent plus fort : il faut traverser la foule
+  const pull = toSong ? ((G.laby && !G.laby.end && rn === G.labyGoal) || rn === calcTarget() || (G.marelle && !G.marelle.end) || (G.rimes && !G.rimes.end) || rn === agendaTarget() || rn === motTarget() || rn === G.pompon || (G.colo && rn === G.colo.tgt) ? 5 : 3) : 1.5;   // le labyrinthe, la bonne réponse, la marelle, les rimes, la case à cocher et le mot attirent plus fort : il faut traverser la foule
   if (toSong) goal = rn;
   if (!goal) goal = { x: WORLD.w / 2 + Math.cos(G.t * 0.21) * 700, y: WORLD.h / 2 + Math.sin(G.t * 0.17) * 420 };
   const gdx = goal.x - p.x, gdy = goal.y - p.y, gl = Math.hypot(gdx, gdy) || 1;
@@ -351,6 +353,7 @@ function botInput() {
   if (tresorDigging() && !close && bestS > -6) { const X = tresorTarget(); return { x: (X.x - p.x) / 80, y: (X.y - p.y) / 80, dash: false }; }   // on reste sur le X pour creuser
   if (labyGuiding()) { const X = labyTarget(), dx = X.x - p.x, dy = X.y - p.y, dd = Math.hypot(dx, dy) || 1; return { x: dx / dd, y: dy / dd, dash: close && p.dashCd <= 0 }; }   // dans le labyrinthe, on suit le chemin
   if (motHolding() && !close && bestS > -6) { const X = motTarget(); return { x: (X.x - p.x) / 70, y: (X.y - p.y) / 70, dash: false }; }   // on reste près du mot pendant qu'il se signe
+  if (coloGoing() && !close && bestS > -40) { const X = G.colo.tgt, dx = X.x - p.x, dy = X.y - p.y, dd = Math.max(60, Math.hypot(dx, dy)); return { x: dx / dd, y: dy / dd, dash: false }; }   // près du coloriage, on file droit au crayon ou à la zone
   if (morpionHolding() && !close && bestS > -6) { const X = morpionTarget(); return { x: (X.x - p.x) / 60, y: (X.y - p.y) / 60, dash: false }; }   // on reste dans la case pour poser son O
   return { x: best.x, y: best.y, dash: close && p.dashCd <= 0 };
 }
@@ -704,6 +707,7 @@ function stepPlay(dt) {
   stepAgraf(dt);   // l'agrafeuse égarée
   stepPerfo(dt);   // la perforatrice égarée
   stepTaille(dt);   // le taille-crayon électrique égaré
+  stepColo(dt);   // le coloriage magique, et les dessins qui ont pris vie
   for (const c of G.coins) c.t += dt;
   G.coins = G.coins.filter(c => c.t < c.dur);
   for (const sg of G.songs) sg.t += dt;

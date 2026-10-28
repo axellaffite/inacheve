@@ -540,6 +540,14 @@ const AU = {
       case 'pomponDown': [1046.5, 880, 698.46].forEach((f, i) => this.tone(f, 0.16, { type: 'triangle', vol: 0.06, when: i * 0.1 })); break;
       case 'pompon': [698.46, 880, 1046.5, 1396.9].forEach((f, i) => this.tone(f, 0.3, { type: 'triangle', vol: 0.1, when: i * 0.07 })); this.tone(220, 1, { type: 'square', vol: 0.03, slide: 0.3, when: 0.3 }); break;
       case 'boss15': [349.23, 440, 523.25, 698.46, 523.25, 698.46].forEach((f, i) => this.tone(f, 0.25, { type: 'square', vol: 0.03, when: i * 0.13 })); for (let i = 0; i < 3; i++) this.tone(87.31, 0.4, { vol: 0.22, when: 0.8 + i * 0.3 }); break;
+      // le coloriage magique (itération 29)
+      case 'coloNew': for (let i = 0; i < 7; i++) this.noise(0.06, { f: 2600 + (i % 3) * 500, q: 3, vol: 0.06, when: i * 0.05 }); [587.33, 739.99, 880, 1174.7].forEach((f, i) => this.tone(f, 0.22, { type: 'triangle', vol: 0.06, when: 0.35 + i * 0.08 })); break;
+      case 'coloPick': this.noise(0.04, { f: 4000, q: 5, vol: 0.08 }); this.tone([0, 523.25, 659.25, 587.33, 783.99][k] || 600, 0.16, { type: 'triangle', vol: 0.08, when: 0.03 }); break;
+      case 'coloScrib': if (this.throttle('coloScrib', 110)) this.noise(0.09, { f: 2200 + Math.random() * 1600, q: 2.5, vol: 0.035 }); break;
+      case 'coloZone': this.tone([587.33, 659.25, 739.99, 880, 987.77, 1174.7][Math.min(5, Math.max(0, k - 1))], 0.3, { type: 'triangle', vol: 0.09 }); this.tone(1760, 0.1, { type: 'sine', vol: 0.03, when: 0.06 }); break;
+      case 'coloAlive': [587.33, 739.99, 880, 1174.7, 1479.98, 1760].forEach((f, i) => this.tone(f, 0.4, { type: 'triangle', vol: 0.08, when: i * 0.07 })); for (let i = 0; i < 10; i++) this.tone(2349.3 + (i % 4) * 300, 0.06, { type: 'sine', vol: 0.025, when: 0.45 + i * 0.05 }); break;
+      case 'coloPollen': if (this.throttle('coloPollen', 300)) [1318.5, 1760].forEach((f, i) => this.tone(f, 0.08, { type: 'sine', vol: 0.03, when: i * 0.04 })); break;
+      case 'coloSun': this.tone(293.66, 0.5, { type: 'triangle', vol: 0.06, slide: 2 }); this.noise(0.4, { f: 1200, q: 1, vol: 0.04, sweep: 2 }); break;
       case 'lose': [6, 4, 2, 0].forEach((n, i) => this.tone(PENTA[n], 0.8, { type: 'triangle', vol: 0.15, when: i * 0.18 })); break;
     }
   },
