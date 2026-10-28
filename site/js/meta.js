@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 27, date: '2026-10-27', title: 'Le taille-crayon électrique', chapter: 'XIV', chapterName: 'Le bulletin' };
+const GAME_META = { iteration: 28, date: '2026-10-28', title: 'La kermesse', chapter: 'XV', chapterName: 'La kermesse' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -223,6 +223,13 @@ const JOURNAL = [
       "Les ratures aspirées sont taillées en copeaux et remplissent son tiroir transparent. Quand il est plein, il le vide en crachant une couronne de copeaux.",
       "Tes gouttes d’encre sont aspirées, elles aussi : tire dans le tourbillon, elles frappent deux fois plus fort. Biffé, il rend en fontaine toutes les lettres qu’il a mangées, avec un bon point.",
       "Le devoir du jour a une nouvelle consigne, « Crayons à tailler », et la page des rares du bestiaire son quatrième croquis. Ton voisin de table, lui, n’aime pas du tout être aspiré."
+    ] },
+  { iteration: 28, date: '2026-10-28', title: 'La kermesse', notes: [
+      "Chapitre XV : c’est la fête de fin d’année ! Un neuvième cahier, couleur de soleil, rejoint le bureau. La page est couverte de guirlandes de fanions, de confettis et du programme de la fête.",
+      "Un chamboule-tout s’installe près de toi. Approche-toi : ta plume vise les boîtes. Chaque boîte touchée s’envole, fait tomber celles du dessus et roule à travers la page en bousculant les ratures.",
+      "Toutes les boîtes par terre avant que le stand ferme ? Gagné : un moulinet de papier tourne autour de toi et fauche les ratures pendant quinze secondes (et parfois un cœur en prime).",
+      "Deux nouvelles ratures : les canards de la pêche, qui vont par quatre en file indienne derrière leur chef couronné, et la course en sac, qui bondit vers toi et retombe dans un grand « boum ».",
+      "À 3:00, le Grand Manège tourne en lançant des lettres en spirale. Quand le pompon descend, attrape-le : un tour gratuit, et le manège s’arrête avec le tournis. Une polka à l’orgue de barbarie accompagne la fête."
     ] }
 ];
 window.GAME_META = GAME_META;

@@ -526,6 +526,20 @@ const AU = {
       case 'ctrlGood': [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => this.tone(f, 0.35, { type: 'triangle', vol: 0.1, when: i * 0.08 })); break;
       case 'ctrlTop': [523.25, 659.25, 783.99, 1046.5, 1318.5, 1568].forEach((f, i) => this.tone(f, 0.45, { type: 'triangle', vol: 0.1, when: i * 0.07 })); [523.25, 659.25, 783.99].forEach(f => this.tone(f * 2, 1.2, { vol: 0.05, when: 0.45 })); break;
       case 'ctrlBad': [392, 369.99, 349.23].forEach((f, i) => this.tone(f, 0.28, { type: 'triangle', vol: 0.08, when: i * 0.15 })); break;
+      // chapitre XV : la kermesse
+      case 'kermesseKill': if (this.throttle('kill', 45)) { this.noise(0.05, { f: 2600, q: 3, vol: 0.08, sweep: 0.7 }); this.tone([349.23, 440, 523.25, 587.33, 698.46][k % 5], 0.1, { type: 'square', vol: 0.025 }); } break;
+      case 'sacHop': if (this.throttle('sacHop', 120)) this.tone(220, 0.25, { type: 'triangle', vol: 0.04, slide: 1.8 }); break;
+      case 'sacThump': if (this.throttle('sacThump', 90)) { this.tone(80, 0.18, { vol: 0.16, slide: 0.5 }); this.noise(0.12, { f: 400, q: 0.8, vol: 0.08, type: 'lowpass' }); } break;
+      case 'peche': [698.46, 880, 1046.5].forEach((f, i) => this.tone(f, 0.18, { type: 'triangle', vol: 0.06, when: i * 0.07 })); this.tone(1200, 0.12, { type: 'square', vol: 0.02, slide: 0.6, when: 0.22 }); break;
+      case 'standUp': for (let i = 0; i < 6; i++) this.noise(0.04, { f: 1500 + i * 200, q: 4, vol: 0.06, when: i * 0.06 }); [523.25, 659.25, 783.99].forEach((f, i) => this.tone(f, 0.2, { type: 'square', vol: 0.025, when: 0.4 + i * 0.09 })); break;
+      case 'boite': if (this.throttle('boite', 40)) { this.noise(0.08, { f: 3000 + (k % 3) * 600, q: 6, vol: 0.12 }); this.tone(900 + (k % 6) * 120, 0.12, { type: 'triangle', vol: 0.05, slide: 0.7 }); } break;
+      case 'boiteHit': if (this.throttle('boiteHit', 60)) this.noise(0.05, { f: 2400, q: 5, vol: 0.09 }); break;
+      case 'chambWin': [523.25, 659.25, 783.99, 1046.5, 783.99, 1046.5].forEach((f, i) => this.tone(f, 0.22, { type: 'square', vol: 0.03, when: i * 0.08 })); for (let i = 0; i < 8; i++) this.noise(0.03, { f: 5000, q: 2, vol: 0.05, when: 0.1 + i * 0.05 }); break;
+      case 'manegeTour': for (let i = 0; i < 6; i++) this.tone(392 * (1 + i * 0.12), 0.12, { type: 'square', vol: 0.025, when: i * 0.08 }); break;
+      case 'manegeRing': this.noise(0.4, { f: 1400, q: 1, vol: 0.06, sweep: 1.6 }); this.tone(174.61, 0.4, { type: 'square', vol: 0.03 }); break;
+      case 'pomponDown': [1046.5, 880, 698.46].forEach((f, i) => this.tone(f, 0.16, { type: 'triangle', vol: 0.06, when: i * 0.1 })); break;
+      case 'pompon': [698.46, 880, 1046.5, 1396.9].forEach((f, i) => this.tone(f, 0.3, { type: 'triangle', vol: 0.1, when: i * 0.07 })); this.tone(220, 1, { type: 'square', vol: 0.03, slide: 0.3, when: 0.3 }); break;
+      case 'boss15': [349.23, 440, 523.25, 698.46, 523.25, 698.46].forEach((f, i) => this.tone(f, 0.25, { type: 'square', vol: 0.03, when: i * 0.13 })); for (let i = 0; i < 3; i++) this.tone(87.31, 0.4, { vol: 0.22, when: 0.8 + i * 0.3 }); break;
       case 'lose': [6, 4, 2, 0].forEach((n, i) => this.tone(PENTA[n], 0.8, { type: 'triangle', vol: 0.15, when: i * 0.18 })); break;
     }
   },
@@ -557,6 +571,9 @@ const AU = {
   // la marche de la distribution des prix (un air original en do majeur, à deux temps), une croche par case ; 0 = la note précédente continue
   MARCHE: [523.25, 659.25, 783.99, 659.25, 523.25, 0, 392, 0, 440, 523.25, 698.46, 523.25, 440, 0, 0, 0,
            392, 493.88, 587.33, 698.46, 659.25, 587.33, 523.25, 493.88, 523.25, 659.25, 783.99, 0, 1046.5, 0, 0, 0],
+  // l'orgue de la kermesse (une polka originale en fa majeur, à deux temps), une croche par case ; 0 = la note précédente continue
+  KERMESSE: [523.25, 0, 440, 523.25, 698.46, 0, 659.25, 587.33, 523.25, 0, 466.16, 440, 392, 0, 0, 0,
+             466.16, 0, 392, 466.16, 587.33, 0, 523.25, 466.16, 440, 523.25, 440, 392, 349.23, 0, 0, 0],
   // la valse du facteur (un air original en sol majeur, à trois temps), un temps par case ; 0 = la note précédente continue
   VALSE: [587.33, 0, 493.88, 523.25, 0, 440, 493.88, 523.25, 587.33, 392, 0, 0,
           659.25, 0, 523.25, 587.33, 0, 493.88, 440, 493.88, 523.25, 587.33, 0, 0,
@@ -682,6 +699,21 @@ const AU = {
       if (s % 32 === 0) this.tone(65.41, beat * 6, { type: 'sine', vol: 0.14, when, dest: this.mus, attack: 0.01 });
       const n = this.CARILLON[s % 32];
       if (n && (s >= 8 || intensity > 0.15)) { this.tone(n, beat * 1.8, { type: 'sine', vol: 0.1, when, dest: this.mus, attack: 0.002 }); this.tone(n * 2.76, beat * 0.8, { type: 'sine', vol: 0.02, when, dest: this.mus, attack: 0.002 }); }
+      if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
+      return;
+    }
+    if (chap === 15) {   // l'orgue de la kermesse : basse « oum-pa », accords pincés, grosse caisse et la mélodie à l'orgue
+      const root = [87.31, 87.31, 65.41, 87.31, 58.27, 65.41, 87.31, 87.31][Math.floor(s / 4) % 8];
+      if (s % 2 === 0) { this.tone(root, beat * 0.7, { type: 'sine', vol: 0.22, when, dest: this.mus, attack: 0.01 }); if (s % 4 === 0) this.tone(55, 0.12, { vol: 0.14, slide: 0.5, when }); }
+      else [2, 2.52, 3].forEach(m => this.tone(root * m * 2, beat * 0.28, { type: 'square', vol: 0.012, when, dest: this.mus, attack: 0.004 }));
+      const i = s % 32, n = this.KERMESSE[i];
+      if (n && (s >= 16 || intensity > 0.15)) {
+        let len = 1; while (len < 4 && !this.KERMESSE[(i + len) % 32]) len++;
+        this.tone(n, beat * (len - 0.1), { type: 'square', vol: 0.022, when, dest: this.mus, attack: 0.01 });
+        this.tone(n * 2, beat * (len - 0.1), { type: 'triangle', vol: 0.03, when, dest: this.mus, attack: 0.01 });
+        if (intensity > 0.5) this.tone(n * 1.5, beat * (len - 0.2), { type: 'triangle', vol: 0.015, when, dest: this.mus, attack: 0.01 });
+      }
+      if (s % 16 === 15) this.noise(0.05, { f: 6000, q: 3, vol: 0.03, when });   // un petit grelot
       if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
       return;
     }

@@ -31,7 +31,7 @@ function drawPage(v) {
   ctx.restore();
   ctx.fillStyle = paperPattern; ctx.fillRect(Math.max(0, v.x0), Math.max(0, v.y0), Math.min(WORLD.w, v.x1) - Math.max(0, v.x0), Math.min(WORLD.h, v.y1) - Math.max(0, v.y0));
   const paper = CH().paper;
-  if (paper === 'portee') drawPortee(v); else if (paper === 'milli') drawMilli(v); else if (paper === 'carte') drawCarte(v); else if (paper === 'calli') drawCalli(v); else if (paper === 'garde') drawGarde(v); else if (paper === 'brouillon') drawBrouillon(v); else if (paper === 'vacances') drawVacances(v); else if (paper === 'tables') drawTables(v); else if (paper === 'recre') drawRecre(v); else if (paper === 'poesie') drawPoesie(v); else if (paper === 'textes') drawTextes(v); else if (paper === 'carnet') drawCarnet(v); else if (paper === 'bulletin') drawBulletin(v); else drawSeyes(v);
+  if (paper === 'portee') drawPortee(v); else if (paper === 'milli') drawMilli(v); else if (paper === 'carte') drawCarte(v); else if (paper === 'calli') drawCalli(v); else if (paper === 'garde') drawGarde(v); else if (paper === 'brouillon') drawBrouillon(v); else if (paper === 'vacances') drawVacances(v); else if (paper === 'tables') drawTables(v); else if (paper === 'recre') drawRecre(v); else if (paper === 'poesie') drawPoesie(v); else if (paper === 'textes') drawTextes(v); else if (paper === 'carnet') drawCarnet(v); else if (paper === 'bulletin') drawBulletin(v); else if (paper === 'kermesse') drawKermesse(v); else drawSeyes(v);
   // bord crayonné
   ctx.save(); ctx.strokeStyle = C.pencil; ctx.globalAlpha = 0.55; ctx.lineWidth = 1.6; ctx.setLineDash([14, 9]);
   ctx.strokeRect(-6, -6, WORLD.w + 12, WORLD.h + 12); ctx.restore();
@@ -132,6 +132,10 @@ function drawEnemy(e) {
     drawBulletinEnemy(e, fr, fl);
   } else if (e.type === 'grandbulletin') {
     drawGrandBulletin(e, fr, fl);
+  } else if (KERMESSE_TYPES.has(e.type)) {
+    drawKermesseEnemy(e, fr, fl);
+  } else if (e.type === 'manege') {
+    drawManege(e, fr, fl);
   } else if (CARNET_TYPES.has(e.type)) {
     drawCarnetEnemy(e, fr, fl);
   } else if (e.type === 'grandtampon') {
@@ -235,6 +239,7 @@ function drawWorld() {
   if (G.colles) drawColles(v);
   if (G.motFx) drawMot(v);
   if (G.ctrlFx) drawCtrlFx();
+  if (G.boites) drawChamboule();   // le stand du chamboule-tout, ses boîtes et le pompon du manège
   // lettres
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for (const it of G.items) {
@@ -289,6 +294,7 @@ function drawWorld() {
   if (G.pieds) drawPoesieFx();
   if (G.agendaFx) drawTextesFx();   // aiguilles, douze heures, réveils et cocottes
   if (G.ctrlFx) drawBulletinFx();   // le couloir des zéros qui visent
+  if (G.boites) { drawKermesseFx(); drawMoulinets(); }   // là où les sacs retombent, et les moulinets gagnés
   if (G.motFx) drawCarnetFx();   // ombre du tampon, lettres, encre, enveloppes ouvertes
   if (G.enemies) drawPhotoFx();   // vitre, lumière et feuilles de la photocopieuse
   if (G.agrafes) drawAgrafFx();   // agrafes en vol, plantées, et ratures clouées
@@ -388,6 +394,7 @@ function drawHUD() {
   drawDevoirHUD();
   drawEmploiHUD();   // l'emploi du temps du chapitre XII
   drawCtrlHUD();   // la copie du contrôle surprise
+  drawChambouleHUD();   // le ticket du chamboule-tout
   if (G.input.touch && !G.demo && !devoirHas('sansPate')) {
     const bxp = W - SAFE.r - 70 * s, byp = H - SAFE.b - 110 * s;
     ctx.save(); ctx.globalAlpha = p.dashCd > 0 ? 0.35 : 0.85; ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(bxp, byp, 40 * s, 0, TAU); ctx.fill(); ctx.restore();
@@ -491,7 +498,7 @@ function drawTitle() {
   txt(G.input.touch ? 'Touche l’écran pour commencer' : 'Appuie sur Entrée pour commencer', W / 2, ty + 196 * s, Math.min(38 * s, W / 18), { color: C.ink, alpha: a * (0.6 + 0.4 * Math.sin(G.time * 3)), hl: C.hl });
   if (!G.input.touch) txt('ZQSD, WASD ou flèches : bouger    Espace : pâté d’encre    Échap : pause    Tab : le bureau    N : voisin    J : devoir du jour    B : bestiaire    I : images    M : son', W / 2, ty + 252 * s, Math.min(22 * s, W / 40), { color: C.pencil, weight: 400, alpha: a });
   else txt('Glisse pour bouger, bouton « pâté » pour foncer', W / 2, ty + 252 * s, 22 * s, { color: C.pencil, weight: 400, alpha: a });
-  const news = 'Nouveau : le chapitre XIV, le bulletin ! Contrôles surprise, zéros pointés et le Grand Bulletin.';
+  const news = 'Nouveau : le chapitre XV, la kermesse ! Chamboule-tout, canards, course en sac et le Grand Manège.';
   txt(news, W / 2, ty + (G.best ? 322 : 290) * s, Math.min(22 * s, W / 30), { color: C.ink, weight: 400, alpha: a * 0.85 });
   const bn = bestCount(), un = unionCount(), keyI = G.input.touch ? ' (au bout du bestiaire)' : ' (touche I)';
   const bnews = !G.bonsPoints ? 'Nouveau : les bons points ! Chaque exploit en rapporte, et dix bons points font une image' + keyI + '.'
@@ -521,6 +528,7 @@ function endTally() {
   if (G.agendas) parts.push(['devoirs cochés', G.agendas]);
   if (G.signatures) parts.push(['mots signés', G.signatures]);
   if (G.controles) parts.push(['contrôles réussis', G.controles]);
+  if (G.chamboules) parts.push(['chamboule-tout gagnés', G.chamboules]);
   if (G.photos) parts.push(['photocopies', G.photos]);
   if (G.agrafPins) parts.push(['ratures agrafées', G.agrafPins]);
   if (G.tombees) parts.push(['ratures tombées', G.tombees]);
@@ -589,6 +597,7 @@ function render() {
     drawAgendaArrow();
     drawMotArrow();
     drawCtrlArrow();
+    drawChambouleArrow();
     drawSoleilScreen();
     if (G.state === 'play') drawBestToast();
     if (G.state === 'levelup') drawLevelUp();
