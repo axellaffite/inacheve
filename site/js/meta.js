@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 29, date: '2026-10-28', title: 'Le coloriage magique', chapter: 'XV', chapterName: 'La kermesse' };
+const GAME_META = { iteration: 30, date: '2026-11-23', title: 'La veillée', chapter: 'XVI', chapterName: 'La colo' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -237,6 +237,14 @@ const JOURNAL = [
       "Tout colorié avant que la gomme passe ? Le dessin prend vie ! Le poisson rouge nage autour de toi et croque les ratures, le papillon sème son pollen sur les plus proches, le soleil lance ses rayons sur toute la page.",
       "Chaque coloriage réussi fait trembler les ratures alentour, reste imprimé en couleur sur la page, rapporte un bon point, compte comme exploit au devoir du jour, et rend un cœur une fois sur deux.",
       "Trois dessins se suivent, toujours dans le même ordre : le poisson, le papillon, puis le soleil. Ton voisin de table, lui, trouve qu’ils sont trop beaux."
+    ] },
+  { iteration: 30, date: '2026-11-23', title: 'La veillée', notes: [
+      "Un dixième cahier arrive sur le bureau : le carnet de colo, avec ses sapins au crayon, sa tente et le planning de la semaine. La note de marge « les grandes vacances ? » a enfin sa réponse : le chapitre XVI, la colo.",
+      "Vers 0:25, puis toutes les cinquante secondes, la nuit tombe : c’est la veillée. La page s’assombrit, seule ta lumière éclaire autour de toi, et des étoiles filantes traversent le ciel.",
+      "Huit lucioles s’allument dans le noir. Attrape-les : elles vont dans ton bocal, et ta lumière grandit. Bocal plein (ou au lever du jour), tu l’ouvres et les lucioles foncent sur les ratures. Un bocal plein rend un cœur et rapporte un bon point.",
+      "Deux nouvelles ratures : le moustique, qui s’arrête, vise et pique en piqué (la nuit, ils sortent en nombre), et le hérisson, qui se roule en boule, hérisse ses piquants et les lance tout autour.",
+      "À 3:00, la Grande Ourse descend du ciel, une constellation avec son morceau de nuit : pluie d’étoiles filantes, étoiles qui s’allument en cercle autour de toi avant de foncer, et une berceuse en « z ». Avec elle, la nuit dure jusqu’au matin.",
+      "Une berceuse originale à la guitare, avec des grillons, accompagne la page, et la Grande Ourse a sa case au bestiaire."
     ] }
 ];
 window.GAME_META = GAME_META;

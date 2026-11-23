@@ -548,6 +548,19 @@ const AU = {
       case 'coloAlive': [587.33, 739.99, 880, 1174.7, 1479.98, 1760].forEach((f, i) => this.tone(f, 0.4, { type: 'triangle', vol: 0.08, when: i * 0.07 })); for (let i = 0; i < 10; i++) this.tone(2349.3 + (i % 4) * 300, 0.06, { type: 'sine', vol: 0.025, when: 0.45 + i * 0.05 }); break;
       case 'coloPollen': if (this.throttle('coloPollen', 300)) [1318.5, 1760].forEach((f, i) => this.tone(f, 0.08, { type: 'sine', vol: 0.03, when: i * 0.04 })); break;
       case 'coloSun': this.tone(293.66, 0.5, { type: 'triangle', vol: 0.06, slide: 2 }); this.noise(0.4, { f: 1200, q: 1, vol: 0.04, sweep: 2 }); break;
+      // chapitre XVI : la colo
+      case 'campKill': if (this.throttle('kill', 45)) { this.noise(0.05, { f: 1800, q: 2, vol: 0.07, sweep: 0.6 }); this.tone([392, 493.88, 587.33, 659.25, 783.99][k % 5], 0.14, { type: 'triangle', vol: 0.05 }); } break;
+      case 'moustique': if (this.throttle('moustique', 200)) { this.tone(880, 0.4, { type: 'sawtooth', vol: 0.012, slide: 1.12 }); this.tone(886, 0.4, { type: 'sawtooth', vol: 0.01, slide: 1.1 }); } break;
+      case 'herisson': if (this.throttle('herisson', 150)) this.noise(0.25, { f: 3500, q: 4, vol: 0.05, sweep: 1.5 }); break;
+      case 'epines': if (this.throttle('epines', 100)) { for (let i = 0; i < 4; i++) this.noise(0.03, { f: 2800 + i * 400, q: 6, vol: 0.06, when: i * 0.02 }); } break;
+      case 'filantes': [1567.98, 1318.51, 1174.66, 987.77].forEach((f, i) => this.tone(f, 0.3, { type: 'sine', vol: 0.05, when: i * 0.09, slide: 0.8 })); break;
+      case 'constellation': [783.99, 987.77, 1174.66, 1567.98, 1975.53].forEach((f, i) => this.tone(f, 0.25, { type: 'sine', vol: 0.05, when: i * 0.12 })); break;
+      case 'baille': this.tone(196, 1.1, { type: 'triangle', vol: 0.08, slide: 0.6 }); this.noise(0.8, { f: 700, q: 0.7, vol: 0.03, type: 'lowpass' }); break;
+      case 'boss16': [392, 493.88, 587.33, 783.99, 987.77, 1174.66].forEach((f, i) => this.tone(f, 0.6, { type: 'sine', vol: 0.06, when: i * 0.14 })); for (let i = 0; i < 3; i++) this.tone(98, 0.6, { vol: 0.2, when: 0.9 + i * 0.35 }); break;
+      case 'nuit': [587.33, 493.88, 392, 293.66].forEach((f, i) => this.tone(f, 0.6, { type: 'sine', vol: 0.07, when: i * 0.18 })); break;
+      case 'aube': [293.66, 392, 493.88, 587.33, 783.99].forEach((f, i) => this.tone(f, 0.5, { type: 'triangle', vol: 0.06, when: i * 0.1 })); break;
+      case 'luciole': this.tone([0, 1046.5, 1174.66, 1318.51, 1567.98, 1760, 1975.53, 2093, 2349.32][Math.min(8, k)] || 1500, 0.25, { type: 'sine', vol: 0.07 }); this.tone(3000, 0.05, { type: 'sine', vol: 0.02, when: 0.05 }); break;
+      case 'bocal': this.noise(0.08, { f: 2500, q: 3, vol: 0.06 }); for (let i = 0; i < 8; i++) this.tone(1318.51 * (1 + i * 0.12), 0.18, { type: 'sine', vol: 0.04, when: 0.05 + i * 0.05 }); break;
       case 'lose': [6, 4, 2, 0].forEach((n, i) => this.tone(PENTA[n], 0.8, { type: 'triangle', vol: 0.15, when: i * 0.18 })); break;
     }
   },
@@ -580,6 +593,9 @@ const AU = {
   MARCHE: [523.25, 659.25, 783.99, 659.25, 523.25, 0, 392, 0, 440, 523.25, 698.46, 523.25, 440, 0, 0, 0,
            392, 493.88, 587.33, 698.46, 659.25, 587.33, 523.25, 493.88, 523.25, 659.25, 783.99, 0, 1046.5, 0, 0, 0],
   // l'orgue de la kermesse (une polka originale en fa majeur, à deux temps), une croche par case ; 0 = la note précédente continue
+  // la berceuse de la veillée (un air original en sol majeur, à trois temps), un temps par case ; 0 = la note précédente continue
+  VEILLEE: [587.33, 0, 659.25, 587.33, 0, 493.88, 523.25, 0, 440, 493.88, 0, 0,
+            440, 0, 493.88, 523.25, 0, 587.33, 493.88, 0, 440, 392, 0, 0],
   KERMESSE: [523.25, 0, 440, 523.25, 698.46, 0, 659.25, 587.33, 523.25, 0, 466.16, 440, 392, 0, 0, 0,
              466.16, 0, 392, 466.16, 587.33, 0, 523.25, 466.16, 440, 523.25, 440, 392, 349.23, 0, 0, 0],
   // la valse du facteur (un air original en sol majeur, à trois temps), un temps par case ; 0 = la note précédente continue
@@ -707,6 +723,19 @@ const AU = {
       if (s % 32 === 0) this.tone(65.41, beat * 6, { type: 'sine', vol: 0.14, when, dest: this.mus, attack: 0.01 });
       const n = this.CARILLON[s % 32];
       if (n && (s >= 8 || intensity > 0.15)) { this.tone(n, beat * 1.8, { type: 'sine', vol: 0.1, when, dest: this.mus, attack: 0.002 }); this.tone(n * 2.76, beat * 0.8, { type: 'sine', vol: 0.02, when, dest: this.mus, attack: 0.002 }); }
+      if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
+      return;
+    }
+    if (chap === 16) {   // la berceuse de la veillée : guitare en arpèges, grillons, et la mélodie à la flûte
+      const bar = s % 3, root = [98, 98, 130.81, 98, 146.83, 130.81, 146.83, 98][Math.floor(s / 3) % 8], i = s % 24, n = this.VEILLEE[i];
+      if (bar === 0) this.tone(root, beat * 2.6, { type: 'sine', vol: 0.2, when, dest: this.mus, attack: 0.02 });
+      else [2, 2.52, 3].forEach((m, j) => this.tone(root * m, beat * 0.7, { type: 'triangle', vol: 0.025, when: when + j * beat / 3, dest: this.mus, attack: 0.004 }));
+      if (n && (s >= 12 || intensity > 0.15)) {
+        let len = 1; while (len < 3 && !this.VEILLEE[(i + len) % 24]) len++;
+        this.tone(n, beat * (len - 0.1), { type: 'sine', vol: 0.09, when, dest: this.mus, attack: 0.03 });
+        if (intensity > 0.5) this.tone(n * 1.5, beat * (len - 0.2), { type: 'triangle', vol: 0.015, when, dest: this.mus, attack: 0.02 });
+      }
+      if (s % 3 === 2) for (let j = 0; j < 3; j++) this.noise(0.015, { f: 5200, q: 12, vol: 0.012, when: when + j * 0.05 });   // les grillons
       if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
       return;
     }

@@ -31,7 +31,7 @@ function drawPage(v) {
   ctx.restore();
   ctx.fillStyle = paperPattern; ctx.fillRect(Math.max(0, v.x0), Math.max(0, v.y0), Math.min(WORLD.w, v.x1) - Math.max(0, v.x0), Math.min(WORLD.h, v.y1) - Math.max(0, v.y0));
   const paper = CH().paper;
-  if (paper === 'portee') drawPortee(v); else if (paper === 'milli') drawMilli(v); else if (paper === 'carte') drawCarte(v); else if (paper === 'calli') drawCalli(v); else if (paper === 'garde') drawGarde(v); else if (paper === 'brouillon') drawBrouillon(v); else if (paper === 'vacances') drawVacances(v); else if (paper === 'tables') drawTables(v); else if (paper === 'recre') drawRecre(v); else if (paper === 'poesie') drawPoesie(v); else if (paper === 'textes') drawTextes(v); else if (paper === 'carnet') drawCarnet(v); else if (paper === 'bulletin') drawBulletin(v); else if (paper === 'kermesse') drawKermesse(v); else drawSeyes(v);
+  if (paper === 'portee') drawPortee(v); else if (paper === 'milli') drawMilli(v); else if (paper === 'carte') drawCarte(v); else if (paper === 'calli') drawCalli(v); else if (paper === 'garde') drawGarde(v); else if (paper === 'brouillon') drawBrouillon(v); else if (paper === 'vacances') drawVacances(v); else if (paper === 'tables') drawTables(v); else if (paper === 'recre') drawRecre(v); else if (paper === 'poesie') drawPoesie(v); else if (paper === 'textes') drawTextes(v); else if (paper === 'carnet') drawCarnet(v); else if (paper === 'bulletin') drawBulletin(v); else if (paper === 'kermesse') drawKermesse(v); else if (paper === 'camp') drawCamp(v); else drawSeyes(v);
   // bord crayonné
   ctx.save(); ctx.strokeStyle = C.pencil; ctx.globalAlpha = 0.55; ctx.lineWidth = 1.6; ctx.setLineDash([14, 9]);
   ctx.strokeRect(-6, -6, WORLD.w + 12, WORLD.h + 12); ctx.restore();
@@ -132,6 +132,10 @@ function drawEnemy(e) {
     drawBulletinEnemy(e, fr, fl);
   } else if (e.type === 'grandbulletin') {
     drawGrandBulletin(e, fr, fl);
+  } else if (CAMP_TYPES.has(e.type)) {
+    drawCampEnemy(e, fr, fl);
+  } else if (e.type === 'ourse') {
+    drawOurse(e, fr, fl);
   } else if (KERMESSE_TYPES.has(e.type)) {
     drawKermesseEnemy(e, fr, fl);
   } else if (e.type === 'manege') {
@@ -280,7 +284,7 @@ function drawWorld() {
   if (G.quotes) drawCitations();
   // traits rouges du boss
   ctx.strokeStyle = C.red; ctx.lineWidth = 4;
-  for (const b of G.ebul) { if (b.note || b.deg || b.cork || b.blot || b.ink || b.fleur || b.crayon || b.copeau || b.sheet || b.sun || b.bead || b.eq || b.agrafe || b.vers || b.heure || b.lettre || b.tampon || b.lettreT) continue; const n = Math.hypot(b.vx, b.vy) || 1; ctx.beginPath(); ctx.moveTo(b.x - b.vx / n * 9, b.y - b.vy / n * 9); ctx.lineTo(b.x + b.vx / n * 9, b.y + b.vy / n * 9); ctx.stroke(); }
+  for (const b of G.ebul) { if (b.note || b.deg || b.cork || b.blot || b.ink || b.fleur || b.crayon || b.copeau || b.sheet || b.sun || b.bead || b.eq || b.agrafe || b.vers || b.heure || b.lettre || b.tampon || b.lettreT || b.epine || b.etoile || b.zz) continue; const n = Math.hypot(b.vx, b.vy) || 1; ctx.beginPath(); ctx.moveTo(b.x - b.vx / n * 9, b.y - b.vy / n * 9); ctx.lineTo(b.x + b.vx / n * 9, b.y + b.vy / n * 9); ctx.stroke(); }
   drawNoteBullets();
   drawDegBullets();
   if (G.waves) drawWaves();
@@ -295,6 +299,7 @@ function drawWorld() {
   if (G.pieds) drawPoesieFx();
   if (G.agendaFx) drawTextesFx();   // aiguilles, douze heures, réveils et cocottes
   if (G.ctrlFx) drawBulletinFx();   // le couloir des zéros qui visent
+  if (G.vols) drawCampFx();   // le piqué des moustiques, épines, étoiles et « z » (de jour)
   if (G.boites) { drawKermesseFx(); drawMoulinets(); }   // là où les sacs retombent, et les moulinets gagnés
   if (G.motFx) drawCarnetFx();   // ombre du tampon, lettres, encre, enveloppes ouvertes
   if (G.enemies) drawPhotoFx();   // vitre, lumière et feuilles de la photocopieuse
@@ -398,6 +403,7 @@ function drawHUD() {
   drawEmploiHUD();   // l'emploi du temps du chapitre XII
   drawCtrlHUD();   // la copie du contrôle surprise
   drawChambouleHUD();   // le ticket du chamboule-tout
+  drawBocalHUD();   // le bocal de lucioles de la veillée
   if (G.input.touch && !G.demo && !devoirHas('sansPate')) {
     const bxp = W - SAFE.r - 70 * s, byp = H - SAFE.b - 110 * s;
     ctx.save(); ctx.globalAlpha = p.dashCd > 0 ? 0.35 : 0.85; ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(bxp, byp, 40 * s, 0, TAU); ctx.fill(); ctx.restore();
@@ -501,7 +507,7 @@ function drawTitle() {
   txt(G.input.touch ? 'Touche l’écran pour commencer' : 'Appuie sur Entrée pour commencer', W / 2, ty + 196 * s, Math.min(38 * s, W / 18), { color: C.ink, alpha: a * (0.6 + 0.4 * Math.sin(G.time * 3)), hl: C.hl });
   if (!G.input.touch) txt('ZQSD, WASD ou flèches : bouger    Espace : pâté d’encre    Échap : pause    Tab : le bureau    N : voisin    J : devoir du jour    B : bestiaire    I : images    M : son', W / 2, ty + 252 * s, Math.min(22 * s, W / 40), { color: C.pencil, weight: 400, alpha: a });
   else txt('Glisse pour bouger, bouton « pâté » pour foncer', W / 2, ty + 252 * s, 22 * s, { color: C.pencil, weight: 400, alpha: a });
-  const news = 'Nouveau : le coloriage magique, sur toutes les pages ! Colorie par numéros, et le dessin prend vie.';
+  const news = 'Nouveau : le chapitre XVI, la colo ! La veillée, les lucioles, les moustiques et la Grande Ourse.';
   txt(news, W / 2, ty + (G.best ? 322 : 290) * s, Math.min(22 * s, W / 30), { color: C.ink, weight: 400, alpha: a * 0.85 });
   const bn = bestCount(), un = unionCount(), keyI = G.input.touch ? ' (au bout du bestiaire)' : ' (touche I)';
   const bnews = !G.bonsPoints ? 'Nouveau : les bons points ! Chaque exploit en rapporte, et dix bons points font une image' + keyI + '.'
@@ -537,6 +543,7 @@ function endTally() {
   if (G.tombees) parts.push(['ratures tombées', G.tombees]);
   if (G.taillees) parts.push(['ratures taillées', G.taillees]);
   if (G.coloriages) parts.push(['coloriages', G.coloriages]);
+  if (G.bocaux) parts.push(['bocaux de lucioles', G.bocaux]);
   if (parts.length > 4) parts.splice(1, parts.length - 4);   // la copie ne déborde plus : les dictées et les trois derniers exploits
   return parts.length > 1 ? [parts.map(q => q[0]).join(' · '), parts.map(q => q[1]).join(' · ')] : ['dictées réussies', G.dictees];
 }
@@ -581,6 +588,7 @@ function render() {
     drawWorld();
     drawDevoirFx();   // courant d'air, brouillard de gomme
     drawVacancesScreen();   // le coucher du Grand Soleil
+    drawNuitScreen();   // la nuit de la colo
   }
   if (G.state === 'bestiaire') { if (G.bestFrom !== 'title' && !desk) drawHUD(); drawBestiaire(); }
   else if (G.state === 'title') drawTitle();
@@ -603,6 +611,7 @@ function render() {
     drawCtrlArrow();
     drawChambouleArrow();
     drawColoArrow();
+    drawVeilleeArrow();
     drawSoleilScreen();
     if (G.state === 'play') drawBestToast();
     if (G.state === 'levelup') drawLevelUp();
