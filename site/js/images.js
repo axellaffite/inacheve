@@ -26,6 +26,7 @@ const BON_SOURCES = [
   [() => G.tailleKills || 0, 1, 'taille-crayon débranché'],
   [() => G.coloriages || 0, 1, 'coloriage magique'],
   [() => G.bocaux || 0, 1, 'bocal de lucioles'],
+  [() => G.oies || 0, 1, 'jeu de l’oie gagné'],
   [() => Math.floor((G.kills || 0) / 300), 1, 'trois cents ratures biffées'],
   [() => bestCount(), 1, 'nouveau croquis'],
   [() => unionCount(), 2, 'nouvelle union'],

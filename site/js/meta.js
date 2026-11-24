@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 30, date: '2026-11-23', title: 'La veillée', chapter: 'XVI', chapterName: 'La colo' };
+const GAME_META = { iteration: 31, date: '2026-11-24', title: 'Le jeu de l’oie', chapter: 'XVI', chapterName: 'La colo' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -245,6 +245,13 @@ const JOURNAL = [
       "Deux nouvelles ratures : le moustique, qui s’arrête, vise et pique en piqué (la nuit, ils sortent en nombre), et le hérisson, qui se roule en boule, hérisse ses piquants et les lance tout autour.",
       "À 3:00, la Grande Ourse descend du ciel, une constellation avec son morceau de nuit : pluie d’étoiles filantes, étoiles qui s’allument en cercle autour de toi avant de foncer, et une berceuse en « z ». Avec elle, la nuit dure jusqu’au matin.",
       "Une berceuse originale à la guitare, avec des grillons, accompagne la page, et la Grande Ourse a sa case au bestiaire."
+    ] },
+  { iteration: 31, date: '2026-11-24', title: 'Le jeu de l’oie', notes: [
+      "Sur toutes les pages, vers 0:40, un petit jeu de l’oie s’imprime à côté de toi : une spirale de cases, un pion goutte d’encre et un gros dé posé tout près.",
+      "Fonce dans le dé : il part en roulant à travers les ratures, les bouscule et les cogne, puis s’arrête sur un nombre. Avec un pâté, il roule encore plus loin.",
+      "Ton pion avance d’autant de cases. Sur une case de l’oie, il avance encore du même nombre ; le pont le fait sauter plus loin, le labyrinthe le fait reculer.",
+      "Arrivé au centre ? L’oie s’envole : une grande oie de papier en écharpe rouge traverse la page en fauchant les ratures. Un cœur, un bon point, et un exploit pour le devoir du jour.",
+      "La vidéo de l’itération 30 n’a pas pu être tournée (la machine qui filme avait changé) : c’est réparé, le tournage reprend."
     ] }
 ];
 window.GAME_META = GAME_META;

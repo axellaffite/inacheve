@@ -18,7 +18,8 @@ concurrency:
 
 jobs:
   construire:
-    runs-on: ubuntu-latest
+    # Épinglé : Playwright ne sait pas installer Chromium sur ubuntu-latest (26.04) — itération 30 perdue.
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     outputs:
       pages: ${{ steps.pages_upload.outcome }}

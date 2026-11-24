@@ -83,16 +83,17 @@ async function load(seed) {
 // Montage (itération 30, « La veillée ») : un dixième cahier arrive sur le bureau, on ouvre le chapitre XVI (la colo). À 0:09,
 // la nuit tombe : le pilote attrape les lucioles une à une (sa lumière grandit), le bocal plein s'ouvre et elles foncent sur
 // les ratures. Les moustiques et les hérissons vers 1:10, puis la Grande Ourse à 3:00, avec la nuit qui dure tout le combat.
+// Montage (itération 31, « Le jeu de l'oie ») : à la récré (chapitre X), un jeu de l'oie s'imprime à côté de la goutte ; le pilote
+// fonce dans le dé, qui roule à travers les ratures, et le pion avance (oie, pont, labyrinthe). Puis à la kermesse (chapitre XV),
+// le pion est presque au bout : l'arrivée fait s'envoler une grande oie de papier qui fauche les ratures. Puis le Grand Manège à 3:00.
 const STEPS = [
-  { act: () => { const c = window.__cap; c.voisin(0); c.debloque(16); c.bureau(16); },
-    cap: ['Un dixième cahier arrive sur le bureau : le carnet de colo…'], play: 3.4 },
-  { act: () => { const c = window.__cap; c.start(16); c.skip(6); }, cap: ['Chapitre XVI : la colo, ses sapins, sa tente et son planning'], play: 3 },
-  { act: () => window.__cap.veillee(), play: 4.5 },   // le jeu annonce lui-même la veillée
-  { cap: ['Attrape les lucioles : elles vont dans ton bocal… et ta lumière grandit'], play: 7 },
-  { cap: ['Bocal plein ! Les lucioles foncent sur les ratures (et un cœur)'], play: 5, need: r => r.bocaux >= 1 },
-  { skip: 45, cap: ['Le moustique s’arrête, vise… et pique en piqué !', 'Le hérisson se roule en boule et lance ses épines tout autour'], play: 7 }
+  { act: () => { const c = window.__cap; c.voisin(0); c.start(10); c.skip(6); c.oie(0); }, cap: ['Nouveau, sur toutes les pages : un jeu de l’oie s’imprime à côté de toi'], play: 4 },
+  { cap: ['Fonce dans le dé : il roule à travers les ratures et les bouscule'], play: 7 },
+  { cap: ['Ton pion avance : l’oie fait rejouer, le pont fait sauter, le labyrinthe fait reculer…'], play: 8 },
+  { act: () => { const c = window.__cap; c.start(15); c.skip(5); c.oie(10); }, cap: ['À la kermesse, le pion est presque arrivé…'], play: 6 },
+  { cap: ['Arrivée ! Une grande oie de papier s’envole et fauche les ratures'], play: 5, need: r => r.oies >= 1 }
 ];
-const BOSS_AT = 180, BOSS_FILM = 22;   // la Grande Ourse arrive à 3:00 ; secondes de combat filmées au plus (la suite est sautée)
+const BOSS_AT = 180, BOSS_FILM = 22;   // le Grand Manège arrive à 3:00 ; secondes de combat filmées au plus (la suite est sautée)
 const argOf = (st, s) => st.arg ? st.arg(s) : undefined;
 // Joue tout le montage en accéléré (sans filmer) pour savoir comment se termine la partie avec la graine s
 async function simulate(s) {
@@ -105,14 +106,14 @@ async function simulate(s) {
   const r = await page.evaluate(() => { for (let i = 0; i < 320; i++) { window.__cap.skip(1); const r = window.__cap.state(); if (r.state === 'victory' || r.state === 'gameover') return r; } return window.__cap.state(); });
   return { ...r, ok };
 }
-// une bonne graine : un bocal plein à l'écran, puis la Grande Ourse tombe avant la fin du tournage
-const good = r => r.ok && r.state === 'victory' && r.chapter === 16 && r.t <= BOSS_AT + 75;
+// une bonne graine : l'oie s'envole à l'écran, puis le Grand Manège tombe avant la fin du tournage
+const good = r => r.ok && r.state === 'victory' && r.chapter === 15 && r.t <= BOSS_AT + 75;
 let SEED = SEED_ARG ? parseInt(SEED_ARG, 10) : null;
 if (SEED === null && !SMOKE) {
   let best = null;
   for (const s of [42, 7, 5, 99, 3, 11, 23, 64, 1, 8, 13, 21]) {
     const r = await simulate(s);
-    console.log(`graine ${s} : ${r.state} à ${r.t.toFixed(0)} s (chapitre ${r.chapter}, niveau ${r.level}, ${r.hp} cœur(s), ${r.bocaux} bocal(aux) plein(s), ${r.lucioles} luciole(s), ${r.luciKills} ratures biffées par les lucioles)`);
+    console.log(`graine ${s} : ${r.state} à ${r.t.toFixed(0)} s (chapitre ${r.chapter}, niveau ${r.level}, ${r.hp} cœur(s), ${r.oies} oie(s) envolée(s), ${r.deKicks} lancer(s) de dé, ${r.oieKills} ratures biffées par le dé et l’oie)`);
     const score = x => (good(x) ? 1e6 : 0) + (x.ok ? 1e5 : 0) + (x.state === 'victory' ? 5e4 - x.t : x.t);
     if (!best || score(r) > score(best.r)) best = { s, r };
     if (good(r)) break;
@@ -133,6 +134,7 @@ if (SMOKE) {
     window.__cap.start(15); window.__cap.skip(9); window.__cap.frames(3); window.__cap.skip(4); window.__cap.frames(3); window.__cap.skip(30); window.__cap.frames(2); window.__cap.chamboule(); window.__cap.skip(3); window.__cap.frames(2); window.__cap.patron(); for (let i = 0; i < 24; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.skip(60); window.__cap.frames(2); window.__cap.bestiaire(15); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(2); window.__cap.refermer();
     window.__cap.start(16); window.__cap.skip(9); window.__cap.frames(3); window.__cap.veillee(); window.__cap.skip(3); window.__cap.frames(3); window.__cap.skip(14); window.__cap.frames(2); window.__cap.skip(40); window.__cap.frames(2); window.__cap.patron(); for (let i = 0; i < 24; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.skip(60); window.__cap.frames(2); window.__cap.bestiaire(16); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(2); window.__cap.refermer();
     for (const [chapter, n] of [[6, 0], [11, 1], [13, 2]]) { window.__cap.start(chapter); window.__cap.skip(3); window.__cap.coloriage(n); for (let i = 0; i < 30; i++) { window.__cap.skip(1); if (i % 5 === 0) window.__cap.frames(1); } }
+    for (const [chapter, pos] of [[1, 0], [8, 10], [16, 12], [7, 3]]) { window.__cap.start(chapter); window.__cap.skip(3); if (chapter === 16) window.__cap.veillee(); window.__cap.oie(pos); for (let i = 0; i < 30; i++) { window.__cap.skip(1); if (i % 5 === 0) window.__cap.frames(1); } }
     window.__cap.debloque(16); window.__cap.pages({ 1: { w: 2, t: 200 } }); window.__cap.bureau(); window.__cap.frames(3); for (let i = 0; i < 12; i++) { window.__cap.choisir(1); window.__cap.frames(2); } window.__cap.bureau(5); window.__cap.commencer(); window.__cap.skip(5); window.__cap.frames(2); window.__cap.debloque(1); window.__cap.bureau(4); window.__cap.commencer(); window.__cap.frames(2); window.__cap.bureau(); window.__cap.choisir(-1); window.__cap.commencer(); window.__cap.skip(5); window.__cap.frames(2);
     for (const [chapter, consigne, pouce] of [[1, 'miroir', 'pluie'], [1, 'sansPate', 'propre'], [4, 'courant', 'pluie'], [2, 'brouillard', 'souffle'], [6, 'double', 'aimant'], [3, 'presse', 'souffle'], [5, 'fragile', 'propre'], [7, 'courant', 'aimant'], [8, 'miroir', 'pluie'], [9, 'double', 'souffle'], [10, 'sansPate', 'aimant'], [11, 'courant', 'pluie'], [12, 'presse', 'propre'], [13, 'courant', 'souffle'], [14, 'presse', 'aimant'], [15, 'courant', 'pluie'], [16, 'presse', 'souffle'], [2, 'taille', 'souffle'], [3, 'perfore', 'pluie'], [11, 'perfore', 'souffle']]) {
       window.__cap.devoir({ chapter, consigne, pouce, seed: chapter }); window.__cap.skip(25); window.__cap.frames(2);
@@ -184,16 +186,16 @@ while (st.state !== 'gameover' && st.state !== 'victory' && st.t < BOSS_AT - 4) 
   st = await state();
 }
 if (st.state !== 'gameover' && st.state !== 'victory') {
-  await cap('… 3:00 : la Grande Ourse descend du ciel, et la nuit ne repart plus !', 2.6);
-  await cap('Étoiles filantes, constellation qui se referme, berceuse en « z »…', 5);
+  await cap('… 3:00 : le Grand Manège se met à tourner !', 2.6);
+  await cap('Lettres en spirale, ronde des chevaux… et le pompon à attraper', 5);
   for (let i = 0; i < BOSS_FILM && st.state !== 'victory' && st.state !== 'gameover'; i++) { await grab(1); st = await state(); }
   if (st.state !== 'victory' && st.state !== 'gameover') {   // la fin du combat est sautée, pour que la vidéo reste courte
     await page.evaluate(() => { for (let i = 0; i < 300; i++) { const s = window.__cap.state(); if (s.state === 'victory' || s.state === 'gameover') break; window.__cap.skip(0.5); } });
     st = await state();
-    if (st.state === 'victory') await cap('Quelques étoiles filantes plus tard…', 3);
+    if (st.state === 'victory') await cap('Quelques tours de manège plus tard…', 3);
   }
 }
-// l'écran de fin compte les bocaux de lucioles
+// l'écran de fin compte les parties de l'oie
 if (st.state === 'victory' || st.state === 'gameover') await grab(6.5);
 else await grab(1);
 // retour à l'écran titre

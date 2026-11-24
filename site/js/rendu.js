@@ -245,6 +245,7 @@ function drawWorld() {
   if (G.ctrlFx) drawCtrlFx();
   if (G.boites) drawChamboule();   // le stand du chamboule-tout, ses boîtes et le pompon du manège
   if (G.coloFx) drawColoriage(v);   // le coloriage magique, ses numéros et ses crayons
+  if (G.oieVols) drawOieBoard(v);   // le jeu de l'oie : la spirale et le pion
   // lettres
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for (const it of G.items) {
@@ -307,6 +308,7 @@ function drawWorld() {
   if (G.confettis) drawPerfoFx();   // là où la perforatrice va retomber, et ses confettis
   if (G.enemies) drawTailleFx();   // le cercle et la spirale du taille-crayon électrique
   if (G.vivants) drawVivants();   // les dessins coloriés qui ont pris vie
+  if (G.oieVols) drawOieTop();   // le dé, et l'oie qui s'envole
   for (const e of G.enemies) if (e.type === 'soupir' && e.phase === 'fade') {   // là où le soupir va se poser
     ctx.save(); ctx.strokeStyle = C.pencil; ctx.globalAlpha = 0.7; ctx.setLineDash([5, 6]); ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(e.bx, e.by, 14 + 8 * (e.pt / 0.65), 0, TAU); ctx.stroke(); ctx.restore();
@@ -544,6 +546,7 @@ function endTally() {
   if (G.taillees) parts.push(['ratures taillées', G.taillees]);
   if (G.coloriages) parts.push(['coloriages', G.coloriages]);
   if (G.bocaux) parts.push(['bocaux de lucioles', G.bocaux]);
+  if (G.oies) parts.push(['parties de l’oie', G.oies]);
   if (parts.length > 4) parts.splice(1, parts.length - 4);   // la copie ne déborde plus : les dictées et les trois derniers exploits
   return parts.length > 1 ? [parts.map(q => q[0]).join(' · '), parts.map(q => q[1]).join(' · ')] : ['dictées réussies', G.dictees];
 }
@@ -611,6 +614,7 @@ function render() {
     drawCtrlArrow();
     drawChambouleArrow();
     drawColoArrow();
+    drawOieArrow();
     drawVeilleeArrow();
     drawSoleilScreen();
     if (G.state === 'play') drawBestToast();

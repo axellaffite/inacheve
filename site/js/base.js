@@ -548,6 +548,17 @@ const AU = {
       case 'coloAlive': [587.33, 739.99, 880, 1174.7, 1479.98, 1760].forEach((f, i) => this.tone(f, 0.4, { type: 'triangle', vol: 0.08, when: i * 0.07 })); for (let i = 0; i < 10; i++) this.tone(2349.3 + (i % 4) * 300, 0.06, { type: 'sine', vol: 0.025, when: 0.45 + i * 0.05 }); break;
       case 'coloPollen': if (this.throttle('coloPollen', 300)) [1318.5, 1760].forEach((f, i) => this.tone(f, 0.08, { type: 'sine', vol: 0.03, when: i * 0.04 })); break;
       case 'coloSun': this.tone(293.66, 0.5, { type: 'triangle', vol: 0.06, slide: 2 }); this.noise(0.4, { f: 1200, q: 1, vol: 0.04, sweep: 2 }); break;
+      // le jeu de l'oie (itération 31)
+      case 'oieNew': for (let i = 0; i < 5; i++) this.noise(0.05, { f: 1800 + i * 300, q: 3, vol: 0.05, when: i * 0.05 }); [523.25, 659.25, 783.99, 659.25, 1046.5].forEach((f, i) => this.tone(f, 0.18, { type: 'square', vol: 0.025, when: 0.3 + i * 0.09 })); break;
+      case 'deKick': this.tone(140, 0.15, { vol: 0.14, slide: 0.6 }); this.noise(0.08, { f: 900, q: 1, vol: 0.1 }); break;
+      case 'deRoll': if (this.throttle('deRoll', 60)) this.noise(0.03, { f: 2600 + Math.random() * 1400, q: 6, vol: 0.06 }); break;
+      case 'deHit': if (this.throttle('deHit', 70)) { this.noise(0.06, { f: 1300, q: 3, vol: 0.12 }); this.tone(260, 0.08, { type: 'triangle', vol: 0.06, slide: 0.7 }); } break;
+      case 'deStop': this.noise(0.05, { f: 2000, q: 4, vol: 0.08 }); this.tone(784, 0.2, { type: 'triangle', vol: 0.07, when: 0.05 }); break;
+      case 'pion': this.tone([523.25, 587.33, 659.25, 698.46, 783.99, 880, 987.77, 1046.5][k % 8], 0.12, { type: 'triangle', vol: 0.07, slide: 1.15 }); break;
+      case 'oieCase': [659.25, 783.99, 1046.5].forEach((f, i) => this.tone(f, 0.2, { type: 'triangle', vol: 0.07, when: i * 0.07 })); break;
+      case 'oieRecule': [523.25, 440, 349.23].forEach((f, i) => this.tone(f, 0.22, { type: 'triangle', vol: 0.07, when: i * 0.1 })); break;
+      case 'oieHonk': if (this.throttle('oieHonk', 300)) { this.tone(330, 0.18, { type: 'sawtooth', vol: 0.05, slide: 0.8 }); this.tone(336, 0.18, { type: 'square', vol: 0.025, slide: 0.8 }); this.tone(300, 0.22, { type: 'sawtooth', vol: 0.045, slide: 0.75, when: 0.2 }); } break;
+      case 'oieWin': [523.25, 659.25, 783.99, 1046.5, 1318.5, 1567.98].forEach((f, i) => this.tone(f, 0.3, { type: 'square', vol: 0.03, when: i * 0.08 })); this.noise(0.6, { f: 1500, q: 0.8, vol: 0.05, sweep: 2, when: 0.2 }); break;
       // chapitre XVI : la colo
       case 'campKill': if (this.throttle('kill', 45)) { this.noise(0.05, { f: 1800, q: 2, vol: 0.07, sweep: 0.6 }); this.tone([392, 493.88, 587.33, 659.25, 783.99][k % 5], 0.14, { type: 'triangle', vol: 0.05 }); } break;
       case 'moustique': if (this.throttle('moustique', 200)) { this.tone(880, 0.4, { type: 'sawtooth', vol: 0.012, slide: 1.12 }); this.tone(886, 0.4, { type: 'sawtooth', vol: 0.01, slide: 1.1 }); } break;

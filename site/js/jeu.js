@@ -76,6 +76,7 @@ function newGame(demo, start = 1, devoir = null) {
     stand: null, nextStand: CHAMB.first, boites: [], chambFx: [], moulinets: [], pompon: null, chamboules: 0, chambKills: 0, peches: 0, pompons: 0, standSeen: false, pomponSeen: false,
     colo: null, coloN: 0, nextColo: COLO.first, coloFx: [], vivants: [], coloriages: 0, coloKills: 0, coloSeen: false,
     nuit: null, nextNuit: VEIL.first, lucioles: [], vols: [], bocal: 0, nuits: 0, bocaux: 0, lucioPrises: 0, luciKills: 0, luciT: null, nuitSeen: false, constSeen: false,
+    oie: null, nextOie: OIE.first, oieVols: [], oies: 0, oieKills: 0, deKicks: 0, oieSeen: false,
     v: null, voisinKills: 0, voisinLends: 0, voisinStops: 0
   });
   const hp = demo ? 7 : 6;
@@ -126,7 +127,8 @@ function turnPage() {
     ctrl: null, nextCtrl: CTRL.first, ctrlFx: [], bulletin: [],
     stand: null, nextStand: CHAMB.first, boites: [], chambFx: [], moulinets: [], pompon: null,
     colo: null, nextColo: COLO.first, coloFx: [], vivants: [],
-    nuit: null, nextNuit: VEIL.first, lucioles: [], vols: [], bocal: 0, luciT: null
+    nuit: null, nextNuit: VEIL.first, lucioles: [], vols: [], bocal: 0, luciT: null,
+    oie: null, nextOie: OIE.first, oieVols: []
   });
   G.dicteeWord = CH().dictees[0];
   const p = G.p; Object.assign(p, { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, hp: p.maxHp, inv: 2.5, dashT: 0, hidden: 0, pin: 0 });
@@ -290,9 +292,9 @@ function botInput() {
   const need = G.dicteeWord[G.dicteeProg];
   for (const it of G.items) { const d = Math.hypot(it.x - p.x, it.y - p.y) - (it.ch === need ? 160 : 0) - (it.rare ? 80 : 0); if (d < gd && d < 520) { gd = d; goal = it; } }
   if (soleilFreezeBot()) return { x: 0, y: 0, dash: false };   // « soleil ! » : on ne bouge plus
-  const rn = veilleeTarget() || coloTarget() || photoTarget() || agrafTarget() || perfoTarget() || tailleTarget() || (G.refrain && G.refrain.notes[G.refrain.prog]) || figureTarget() || tresorTarget() || enluTarget() || sceauTarget() || lignesTarget() || morpionTarget() || labyTarget() || calcTarget() || marelleTarget() || rimesTarget() || agendaTarget() || motTarget() || ctrlTarget() || chambouleTarget();   // coloriage, machines égarées, refrain, figure, trésor, lettrine, sceau, lignes, morpion, labyrinthe, calcul, marelle, rimes, case à cocher, mot à signer, questions du contrôle, chamboule-tout et pompon passent avant les lettres
+  const rn = veilleeTarget() || coloTarget() || oieTarget() || photoTarget() || agrafTarget() || perfoTarget() || tailleTarget() || (G.refrain && G.refrain.notes[G.refrain.prog]) || figureTarget() || tresorTarget() || enluTarget() || sceauTarget() || lignesTarget() || morpionTarget() || labyTarget() || calcTarget() || marelleTarget() || rimesTarget() || agendaTarget() || motTarget() || ctrlTarget() || chambouleTarget();   // coloriage, machines égarées, refrain, figure, trésor, lettrine, sceau, lignes, morpion, labyrinthe, calcul, marelle, rimes, case à cocher, mot à signer, questions du contrôle, chamboule-tout et pompon passent avant les lettres
   const toSong = rn && Math.hypot(rn.x - p.x, rn.y - p.y) < 1600;
-  const pull = toSong ? ((G.laby && !G.laby.end && rn === G.labyGoal) || rn === calcTarget() || (G.marelle && !G.marelle.end) || (G.rimes && !G.rimes.end) || rn === agendaTarget() || rn === motTarget() || rn === G.pompon || (G.colo && rn === G.colo.tgt) || rn === G.luciT ? 5 : 3) : 1.5;   // le labyrinthe, la bonne réponse, la marelle, les rimes, la case à cocher et le mot attirent plus fort : il faut traverser la foule
+  const pull = toSong ? ((G.laby && !G.laby.end && rn === G.labyGoal) || rn === calcTarget() || (G.marelle && !G.marelle.end) || (G.rimes && !G.rimes.end) || rn === agendaTarget() || rn === motTarget() || rn === G.pompon || (G.colo && rn === G.colo.tgt) || (G.oie && rn === G.oie.de) || rn === G.luciT ? 5 : 3) : 1.5;   // le labyrinthe, la bonne réponse, la marelle, les rimes, la case à cocher et le mot attirent plus fort : il faut traverser la foule
   if (toSong) goal = rn;
   if (!goal) goal = { x: WORLD.w / 2 + Math.cos(G.t * 0.21) * 700, y: WORLD.h / 2 + Math.sin(G.t * 0.17) * 420 };
   const gdx = goal.x - p.x, gdy = goal.y - p.y, gl = Math.hypot(gdx, gdy) || 1;
@@ -718,6 +720,7 @@ function stepPlay(dt) {
   stepTaille(dt);   // le taille-crayon électrique égaré
   stepColo(dt);   // le coloriage magique, et les dessins qui ont pris vie
   stepVeillee(dt);   // la nuit de la colo, les lucioles et le bocal
+  stepOie(dt);   // le jeu de l'oie, son dé et l'oie qui s'envole
   for (const c of G.coins) c.t += dt;
   G.coins = G.coins.filter(c => c.t < c.dur);
   for (const sg of G.songs) sg.t += dt;
