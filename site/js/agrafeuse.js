@@ -61,7 +61,7 @@ function fireAgrafe(e) {
 function agrafeHit() {
   const p = G.p;
   if (p.inv > 0 || p.dashT > 0 || G.state !== 'play') return;
-  p.pin = AGRAF.pinP; G.agrafees = (G.agrafees || 0) + 1;
+  p.pin = AGRAF.pinP; p.dateur = null; G.agrafees = (G.agrafees || 0) + 1;
   AU.play('agrafPin');
   addText(p.x, p.y - 34, 'agrafée !', C.red, 28);
   if (G.agrafees === 1) caption('Agrafée ! Bouge dans tous les sens pour t’arracher', 3, 'pink');
@@ -76,7 +76,7 @@ function stepPin(p, inp, dt) {
   return true;
 }
 function unpin(p) {
-  p.pin = 0; AU.play('agrafTear');
+  p.pin = 0; p.dateur = null; AU.play('agrafTear');
   addText(p.x, p.y - 30, 'arrachée !', C.ink, 22);
   for (let i = 0; i < 8; i++) { const a = rnd(TAU); G.parts.push({ x: p.x, y: p.y, vx: Math.cos(a) * 160, vy: Math.sin(a) * 160, life: 0.4, max: 0.4, size: rnd(2, 3.5), color: i % 2 ? AGRAF_STEEL : C.ink, drag: 4 }); }
 }
@@ -185,12 +185,12 @@ function drawAgrafFx() {
       for (const o of [-12, 12]) { ctx.beginPath(); ctx.moveTo(56, o); ctx.lineTo(AGRAF.len, o); ctx.stroke(); }   // deux rails de pointillés, comme une agrafe vue de dessus
       ctx.restore();
     }
-    if (e.pin > 0) drawStaple(e.x, e.y - e.r * 0.2, e.pinA + Math.PI / 2, Math.max(18, e.r * 1.2), Math.min(1, e.pin * 3));
+    if (e.pin > 0 && !(e.datee > 0)) drawStaple(e.x, e.y - e.r * 0.2, e.pinA + Math.PI / 2, Math.max(18, e.r * 1.2), Math.min(1, e.pin * 3));
   }
   for (const b of G.ebul) if (b.agrafe) drawStaple(b.x, b.y, b.a, 18, 1);
 }
 function drawPlayerPin() {
   const p = G.p; if (!(p.pin > 0)) return;
-  drawStaple(p.x + vrnd(-1.5, 1.5), p.y, Math.PI / 2 + 0.2, 30, 1);
+  if (p.dateur) drawPlayerDate(p); else drawStaple(p.x + vrnd(-1.5, 1.5), p.y, Math.PI / 2 + 0.2, 30, 1);
   txt('secoue-toi !', p.x, p.y + 38, 20, { color: C.red, alpha: 0.6 + 0.4 * Math.sin(G.time * 12) });
 }

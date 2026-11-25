@@ -24,6 +24,7 @@ const BON_SOURCES = [
   [() => G.chamboules || 0, 1, 'chamboule-tout gagné'],
   [() => G.pompons || 0, 1, 'pompon attrapé'],
   [() => G.tailleKills || 0, 1, 'taille-crayon débranché'],
+  [() => G.dateurKills || 0, 1, 'tampon dateur biffé'],
   [() => G.coloriages || 0, 1, 'coloriage magique'],
   [() => G.bocaux || 0, 1, 'bocal de lucioles'],
   [() => G.oies || 0, 1, 'jeu de l’oie gagné'],

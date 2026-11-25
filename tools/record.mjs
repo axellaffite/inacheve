@@ -89,16 +89,18 @@ async function load(seed) {
 // Montage (itération 32, « La farandole ») : un onzième cahier arrive sur le bureau, on ouvre le chapitre XVII (le dernier jour).
 // Un copain attend tout près : le pilote va le voir, il écrit sa dédicace et rejoint la farandole. Puis la file se remplit
 // (cinq copains), le sixième arrive, et c'est la ronde. Le chewing-gum et la feuille volante vers 1:10, puis le Grand Tableau à 3:00.
+// Montage (itération 33, « Le tampon dateur ») : au chapitre I, à 0:12, le tampon dateur arrive à côté de la goutte. Il vise,
+// saute et retombe : sous son cadre, tout reste figé à la date du jour. Les ratures datées ne bougent plus et prennent plus cher,
+// les lettres datées comptent double, la goutte datée doit se secouer. Puis la Grande Rature à 3:00.
 const STEPS = [
-  { act: () => { const c = window.__cap; c.voisin(0); c.debloque(17); c.bureau(17); }, cap: ['Un onzième cahier arrive sur le bureau : le dernier jour d’école…'], play: 3.4 },
-  { act: () => { const c = window.__cap; c.start(17); c.skip(4); c.copain(0); }, cap: ['Chapitre XVII : la dernière page, pleine de dédicaces'], play: 3 },
-  { cap: ['Un copain veut écrire dans ton cahier : va le voir !'], play: 5 },
-  { cap: ['Il écrit sa dédicace… et te suit en farandole, plume à la main'], play: 5, need: r => r.copains >= 1 },
-  { act: () => window.__cap.copain(4), cap: ['Cinq copains dans la file ! Le sixième arrive…'], play: 6 },
-  { cap: ['Six copains : c’est la ronde ! Ils tournent autour de toi et renversent tout'], play: 7, need: r => r.rondes >= 1 || r.ronde === 1 },
-  { skip: 45, cap: ['Le chewing-gum souffle des bulles et colle aux pattes', 'Au courant d’air, la feuille volante file tout droit'], play: 7 }
+  { act: () => { const c = window.__cap; c.voisin(0); c.start(1); c.skip(12); c.dateur(); }, cap: ['Une cinquième machine quitte le bureau…'], play: 4.5 },
+  { cap: ['Il vise la goutte… et retombe de tout son poids'], play: 6, need: r => r.dateurs >= 1 },
+  { cap: ['Sous son cadre, tout reste figé à la date du jour'], play: 6 },
+  { cap: ['Les ratures datées ne bougent plus : biffe-les, elles prennent plus cher !'], play: 7, need: r => r.datees >= 2 },
+  { cap: ['Les lettres datées comptent double. Et toi, sors vite du cadre !'], play: 7 },
+  { skip: 20, cap: ['Il avance d’un jour à chaque coup de tampon'], play: 6 }
 ];
-const BOSS_AT = 180, BOSS_FILM = 22;   // le Grand Tableau arrive à 3:00 ; secondes de combat filmées au plus (la suite est sautée)
+const BOSS_AT = 180, BOSS_FILM = 22;   // la Grande Rature arrive à 3:00 ; secondes de combat filmées au plus (la suite est sautée)
 const argOf = (st, s) => st.arg ? st.arg(s) : undefined;
 // Joue tout le montage en accéléré (sans filmer) pour savoir comment se termine la partie avec la graine s
 async function simulate(s) {
@@ -111,14 +113,14 @@ async function simulate(s) {
   const r = await page.evaluate(() => { for (let i = 0; i < 320; i++) { window.__cap.skip(1); const r = window.__cap.state(); if (r.state === 'victory' || r.state === 'gameover') return r; } return window.__cap.state(); });
   return { ...r, ok };
 }
-// une bonne graine : la ronde à l'écran, puis le Grand Tableau tombe avant la fin du tournage
-const good = r => r.ok && r.state === 'victory' && r.chapter === 17 && r.t <= BOSS_AT + 75;
+// une bonne graine : des ratures datées à l'écran, puis la Grande Rature tombe avant la fin du tournage
+const good = r => r.ok && r.state === 'victory' && r.chapter === 1 && r.t <= BOSS_AT + 75;
 let SEED = SEED_ARG ? parseInt(SEED_ARG, 10) : null;
 if (SEED === null && !SMOKE) {
   let best = null;
   for (const s of [42, 7, 5, 99, 3, 11, 23, 64, 1, 8, 13, 21]) {
     const r = await simulate(s);
-    console.log(`graine ${s} : ${r.state} à ${r.t.toFixed(0)} s (chapitre ${r.chapter}, niveau ${r.level}, ${r.hp} cœur(s), ${r.copains} copain(s), ${r.rondes} ronde(s), ${r.copainsOut} copain(s) lâché(s), ${r.faraKills} ratures biffées par les copains)`);
+    console.log(`graine ${s} : ${r.state} à ${r.t.toFixed(0)} s (chapitre ${r.chapter}, niveau ${r.level}, ${r.hp} cœur(s), ${r.dateurs} coup(s) de tampon, ${r.datees} rature(s) datée(s), ${r.dateesP} fois datée, ${r.dateurKills} tampon(s) biffé(s))`);
     const score = x => (good(x) ? 1e6 : 0) + (x.ok ? 1e5 : 0) + (x.state === 'victory' ? 5e4 - x.t : x.t);
     if (!best || score(r) > score(best.r)) best = { s, r };
     if (good(r)) break;
@@ -130,7 +132,7 @@ const meta = await page.evaluate(() => window.__cap.meta);
 const fail = msg => { console.error('ÉCHEC : ' + msg); if (errors.length) console.error(errors.join('\n')); process.exitCode = 1; };
 
 if (SMOKE) {
-  await page.evaluate(() => { window.__cap.start(); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(2); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(3); window.__cap.skip(30); window.__cap.frames(3); window.__cap.start(4); window.__cap.skip(30); window.__cap.frames(3); window.__cap.start(5); window.__cap.skip(40); window.__cap.frames(3); window.__cap.grant({ PLUME: 2, ENCRE: 2, GUILLEMETS: 2, ITALIQUE: 2, LUNE: 2, FEU: 2, CALLIGRAPHIE: 1, CITATION: 1, LUNE_ROUSSE: 1 }); window.__cap.skip(15); window.__cap.frames(3); window.__cap.start(6); window.__cap.skip(100); window.__cap.frames(3); window.__cap.skip(90); window.__cap.frames(3); window.__cap.start(7); window.__cap.skip(100); window.__cap.frames(3); window.__cap.skip(100); window.__cap.frames(3); window.__cap.start(9); window.__cap.skip(12); window.__cap.frames(3); window.__cap.skip(170); for (let i = 0; i < 12; i++) { window.__cap.skip(1.5); window.__cap.frames(1); } window.__cap.bestiaire(9); window.__cap.frames(3); window.__cap.start(8); window.__cap.skip(12); window.__cap.frames(3); window.__cap.skip(90); window.__cap.frames(3); window.__cap.skip(95); for (let i = 0; i < 12; i++) { window.__cap.skip(1.5); window.__cap.frames(1); } window.__cap.bestiaire(8); window.__cap.frames(3); window.__cap.start(3); window.__cap.skip(10); window.__cap.photocopie(); for (let i = 0; i < 12; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.agrafeuse(); for (let i = 0; i < 20; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.perforatrice(); for (let i = 0; i < 16; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.taillecrayon(); for (let i = 0; i < 16; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.bestiaire(14); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(3); window.__cap.refermer(); window.__cap.start(7); window.__cap.skip(150); for (let i = 0; i < 10; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.bestiaire(7); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(3); window.__cap.refermer();
+  await page.evaluate(() => { window.__cap.start(); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(2); window.__cap.skip(20); window.__cap.frames(3); window.__cap.start(3); window.__cap.skip(30); window.__cap.frames(3); window.__cap.start(4); window.__cap.skip(30); window.__cap.frames(3); window.__cap.start(5); window.__cap.skip(40); window.__cap.frames(3); window.__cap.grant({ PLUME: 2, ENCRE: 2, GUILLEMETS: 2, ITALIQUE: 2, LUNE: 2, FEU: 2, CALLIGRAPHIE: 1, CITATION: 1, LUNE_ROUSSE: 1 }); window.__cap.skip(15); window.__cap.frames(3); window.__cap.start(6); window.__cap.skip(100); window.__cap.frames(3); window.__cap.skip(90); window.__cap.frames(3); window.__cap.start(7); window.__cap.skip(100); window.__cap.frames(3); window.__cap.skip(100); window.__cap.frames(3); window.__cap.start(9); window.__cap.skip(12); window.__cap.frames(3); window.__cap.skip(170); for (let i = 0; i < 12; i++) { window.__cap.skip(1.5); window.__cap.frames(1); } window.__cap.bestiaire(9); window.__cap.frames(3); window.__cap.start(8); window.__cap.skip(12); window.__cap.frames(3); window.__cap.skip(90); window.__cap.frames(3); window.__cap.skip(95); for (let i = 0; i < 12; i++) { window.__cap.skip(1.5); window.__cap.frames(1); } window.__cap.bestiaire(8); window.__cap.frames(3); window.__cap.start(3); window.__cap.skip(10); window.__cap.photocopie(); for (let i = 0; i < 12; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.agrafeuse(); for (let i = 0; i < 20; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.perforatrice(); for (let i = 0; i < 16; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.taillecrayon(); for (let i = 0; i < 16; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.dateur(); for (let i = 0; i < 20; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.bestiaire(14); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(3); window.__cap.refermer(); window.__cap.start(7); window.__cap.skip(150); for (let i = 0; i < 10; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.bestiaire(7); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(3); window.__cap.refermer();
     window.__cap.start(10); window.__cap.skip(14); window.__cap.frames(3); window.__cap.skip(60); window.__cap.frames(3); window.__cap.sifflet(); for (let i = 0; i < 16; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.skip(60); window.__cap.frames(2); window.__cap.bestiaire(10); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(2); window.__cap.refermer();
     window.__cap.start(11); window.__cap.skip(14); window.__cap.frames(3); window.__cap.skip(95); window.__cap.frames(3); window.__cap.patron(); for (let i = 0; i < 16; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.skip(60); window.__cap.frames(2); window.__cap.bestiaire(11); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(2); window.__cap.refermer();
     window.__cap.start(12); window.__cap.skip(12); window.__cap.frames(3); window.__cap.sonnerie(); window.__cap.skip(20); window.__cap.frames(3); window.__cap.sonnerie(); window.__cap.skip(70); window.__cap.frames(3); window.__cap.patron(); for (let i = 0; i < 20; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.skip(60); window.__cap.frames(2); window.__cap.bestiaire(12); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(2); window.__cap.refermer();
@@ -142,7 +144,7 @@ if (SMOKE) {
     for (const [chapter, n] of [[6, 0], [11, 1], [13, 2]]) { window.__cap.start(chapter); window.__cap.skip(3); window.__cap.coloriage(n); for (let i = 0; i < 30; i++) { window.__cap.skip(1); if (i % 5 === 0) window.__cap.frames(1); } }
     for (const [chapter, pos] of [[1, 0], [8, 10], [16, 12], [7, 3]]) { window.__cap.start(chapter); window.__cap.skip(3); if (chapter === 16) window.__cap.veillee(); window.__cap.oie(pos); for (let i = 0; i < 30; i++) { window.__cap.skip(1); if (i % 5 === 0) window.__cap.frames(1); } }
     window.__cap.debloque(17); window.__cap.pages({ 1: { w: 2, t: 200 } }); window.__cap.bureau(); window.__cap.frames(3); for (let i = 0; i < 12; i++) { window.__cap.choisir(1); window.__cap.frames(2); } window.__cap.bureau(5); window.__cap.commencer(); window.__cap.skip(5); window.__cap.frames(2); window.__cap.debloque(1); window.__cap.bureau(4); window.__cap.commencer(); window.__cap.frames(2); window.__cap.bureau(); window.__cap.choisir(-1); window.__cap.commencer(); window.__cap.skip(5); window.__cap.frames(2);
-    for (const [chapter, consigne, pouce] of [[1, 'miroir', 'pluie'], [1, 'sansPate', 'propre'], [4, 'courant', 'pluie'], [2, 'brouillard', 'souffle'], [6, 'double', 'aimant'], [3, 'presse', 'souffle'], [5, 'fragile', 'propre'], [7, 'courant', 'aimant'], [8, 'miroir', 'pluie'], [9, 'double', 'souffle'], [10, 'sansPate', 'aimant'], [11, 'courant', 'pluie'], [12, 'presse', 'propre'], [13, 'courant', 'souffle'], [14, 'presse', 'aimant'], [15, 'courant', 'pluie'], [16, 'presse', 'souffle'], [17, 'courant', 'aimant'], [2, 'taille', 'souffle'], [3, 'perfore', 'pluie'], [11, 'perfore', 'souffle']]) {
+    for (const [chapter, consigne, pouce] of [[1, 'miroir', 'pluie'], [1, 'sansPate', 'propre'], [4, 'courant', 'pluie'], [2, 'brouillard', 'souffle'], [6, 'double', 'aimant'], [3, 'presse', 'souffle'], [5, 'fragile', 'propre'], [7, 'courant', 'aimant'], [8, 'miroir', 'pluie'], [9, 'double', 'souffle'], [10, 'sansPate', 'aimant'], [11, 'courant', 'pluie'], [12, 'presse', 'propre'], [13, 'courant', 'souffle'], [14, 'presse', 'aimant'], [15, 'courant', 'pluie'], [16, 'presse', 'souffle'], [17, 'courant', 'aimant'], [2, 'taille', 'souffle'], [3, 'perfore', 'pluie'], [11, 'perfore', 'souffle'], [4, 'dateur', 'pluie']]) {
       window.__cap.devoir({ chapter, consigne, pouce, seed: chapter }); window.__cap.skip(25); window.__cap.frames(2);
     }
     window.__cap.bonspoints(9); window.__cap.start(9); window.__cap.skip(40); window.__cap.frames(3); window.__cap.images(); window.__cap.frames(2); window.__cap.feuilleter(-1); window.__cap.frames(2); window.__cap.bonspoints(500); window.__cap.feuilleter(1); window.__cap.frames(2); window.__cap.refermer();
@@ -192,16 +194,16 @@ while (st.state !== 'gameover' && st.state !== 'victory' && st.t < BOSS_AT - 4) 
   st = await state();
 }
 if (st.state !== 'gameover' && st.state !== 'victory') {
-  await cap('… 3:00 : le Grand Tableau se décroche du mur !', 2.6);
-  await cap('Volées de craies, brosse qui fonce… et cercles de craie : passe par le trou !', 5);
+  await cap('… 3:00 : la Grande Rature veut tout effacer !', 2.6);
+  await cap('Elle charge et lance ses traits rouges : un pâté pour l’esquiver !', 5);
   for (let i = 0; i < BOSS_FILM && st.state !== 'victory' && st.state !== 'gameover'; i++) { await grab(1); st = await state(); }
   if (st.state !== 'victory' && st.state !== 'gameover') {   // la fin du combat est sautée, pour que la vidéo reste courte
     await page.evaluate(() => { for (let i = 0; i < 300; i++) { const s = window.__cap.state(); if (s.state === 'victory' || s.state === 'gameover') break; window.__cap.skip(0.5); } });
     st = await state();
-    if (st.state === 'victory') await cap('Quelques coups de brosse plus tard…', 3);
+    if (st.state === 'victory') await cap('Quelques pâtés plus tard…', 3);
   }
 }
-// l'écran de fin compte les rondes des copains
+// l'écran de fin compte les ratures datées
 if (st.state === 'victory' || st.state === 'gameover') await grab(6.5);
 else await grab(1);
 // retour à l'écran titre

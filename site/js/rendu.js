@@ -156,6 +156,8 @@ function drawEnemy(e) {
     drawPerforatrice(e, fr, fl);
   } else if (e.type === 'taillelec') {
     drawTaillelec(e, fr, fl);
+  } else if (e.type === 'dateur') {
+    drawDateur(e, fr, fl);
   } else if (e.type === 'boss') {
     if (e.phase === 'aim') { ctx.save(); ctx.strokeStyle = C.red; ctx.globalAlpha = 0.4; ctx.setLineDash([16, 10]); ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(e.cx * 420, e.cy * 420); ctx.stroke(); ctx.restore(); }
     const pulse = 1 + Math.sin(G.time * 5) * 0.03;
@@ -259,6 +261,7 @@ function drawWorld() {
     ctx.save(); ctx.translate(it.x, it.y + bob); ctx.rotate(it.rot);
     if (it.ch === G.dicteeWord[G.dicteeProg]) drawHighlight(-13, -10, 26, 20, C.hl);
     if (it.rare) drawHighlight(-14, -11, 28, 22, C.hlPink);
+    if (it.date) { ctx.strokeStyle = DATEUR_INK; ctx.lineWidth = 2; ctx.strokeRect(-15, -14, 30, 28); }   // datée : elle compte double
     ctx.font = '700 ' + sz + 'px ' + FONT_MAIN; ctx.fillStyle = it.rare ? C.gold : C.ink; ctx.fillText(it.ch, 0, 1);
     ctx.restore();
   }
@@ -268,6 +271,7 @@ function drawWorld() {
   if (G.glows) drawEnlu(v);
   if (G.stamps) drawSceau(v);
   if (G.trail) drawTrail();
+  if (G.dates) drawDateurUnder();   // les empreintes fraîches du tampon dateur
   // ennemis
   for (const e of G.enemies) if (inView(e.x, e.y, e.r + 300)) drawEnemy(e);
   // lunes
@@ -312,6 +316,7 @@ function drawWorld() {
   if (G.agrafes) drawAgrafFx();   // agrafes en vol, plantées, et ratures clouées
   if (G.confettis) drawPerfoFx();   // là où la perforatrice va retomber, et ses confettis
   if (G.enemies) drawTailleFx();   // le cercle et la spirale du taille-crayon électrique
+  if (G.dates) drawDateurFx();   // le cadre du tampon dateur, et les ratures datées
   if (G.vivants) drawVivants();   // les dessins coloriés qui ont pris vie
   if (G.oieVols) drawOieTop();   // le dé, et l'oie qui s'envole
   if (G.crisses) drawDernierFx();   // craies, chewing-gum, courant d'air, brosse et cercles de craie
@@ -552,6 +557,7 @@ function endTally() {
   if (G.agrafPins) parts.push(['ratures agrafées', G.agrafPins]);
   if (G.tombees) parts.push(['ratures tombées', G.tombees]);
   if (G.taillees) parts.push(['ratures taillées', G.taillees]);
+  if (G.datees) parts.push(['ratures datées', G.datees]);
   if (G.coloriages) parts.push(['coloriages', G.coloriages]);
   if (G.bocaux) parts.push(['bocaux de lucioles', G.bocaux]);
   if (G.oies) parts.push(['parties de l’oie', G.oies]);

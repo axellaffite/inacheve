@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 32, date: '2026-11-25', title: 'La farandole', chapter: 'XVII', chapterName: 'Le dernier jour' };
+const GAME_META = { iteration: 33, date: '2026-11-25', title: 'Le tampon dateur', chapter: 'XVII', chapterName: 'Le dernier jour' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -260,6 +260,14 @@ const JOURNAL = [
       "Six copains dans la file ? C’est la ronde ! Ils tournent autour de toi en se donnant la main, renversent les ratures et arrêtent les coups. À la fin : « Bonnes vacances ! », un cœur et un bon point.",
       "Deux nouvelles ratures : le chewing-gum, qui souffle des bulles et colle aux pattes, et la feuille volante, qui file tout droit quand souffle le courant d’air.",
       "À 3:00, le Grand Tableau se décroche du mur : volées de craies, brosse qui fonce, et cercles de craie qui crissent (passe par le trou !). Une chanson du dernier jour, avec claquements de mains, accompagne la page."
+    ] },
+  { iteration: 33, date: '2026-11-25', title: 'Le tampon dateur',
+    notes: [
+      "Tchac ! Une cinquième machine s’est échappée du bureau : le tampon dateur. Vers 1:20, il débarque sur chaque page, son gros bouton rouge plein d’yeux.",
+      "Il vise la goutte, saute… et retombe de tout son poids. Un cadre en pointillés annonce le coup : sors-en vite, ou fais un pâté !",
+      "Tout ce qu’il tamponne reste figé à la date du jour : les ratures datées ne bougent plus et prennent plus cher, les lettres datées comptent double. Attire les ratures sous son cadre !",
+      "Il avance d’un jour à chaque coup, et ses empreintes violines restent un moment sur la page. Biffé, son dernier coup de tampon date toute la foule autour de lui.",
+      "Le devoir du jour a une nouvelle consigne, « Tout est daté », et la page des rares du bestiaire son cinquième croquis. Ton voisin de table n’aime pas du tout qu’on lui tamponne le front."
     ] }
 ];
 window.GAME_META = GAME_META;
