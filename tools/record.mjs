@@ -86,14 +86,19 @@ async function load(seed) {
 // Montage (itération 31, « Le jeu de l'oie ») : à la récré (chapitre X), un jeu de l'oie s'imprime à côté de la goutte ; le pilote
 // fonce dans le dé, qui roule à travers les ratures, et le pion avance (oie, pont, labyrinthe). Puis à la kermesse (chapitre XV),
 // le pion est presque au bout : l'arrivée fait s'envoler une grande oie de papier qui fauche les ratures. Puis le Grand Manège à 3:00.
+// Montage (itération 32, « La farandole ») : un onzième cahier arrive sur le bureau, on ouvre le chapitre XVII (le dernier jour).
+// Un copain attend tout près : le pilote va le voir, il écrit sa dédicace et rejoint la farandole. Puis la file se remplit
+// (cinq copains), le sixième arrive, et c'est la ronde. Le chewing-gum et la feuille volante vers 1:10, puis le Grand Tableau à 3:00.
 const STEPS = [
-  { act: () => { const c = window.__cap; c.voisin(0); c.start(10); c.skip(6); c.oie(0); }, cap: ['Nouveau, sur toutes les pages : un jeu de l’oie s’imprime à côté de toi'], play: 4 },
-  { cap: ['Fonce dans le dé : il roule à travers les ratures et les bouscule'], play: 7 },
-  { cap: ['Ton pion avance : l’oie fait rejouer, le pont fait sauter, le labyrinthe fait reculer…'], play: 8 },
-  { act: () => { const c = window.__cap; c.start(15); c.skip(5); c.oie(10); }, cap: ['À la kermesse, le pion est presque arrivé…'], play: 6 },
-  { cap: ['Arrivée ! Une grande oie de papier s’envole et fauche les ratures'], play: 5, need: r => r.oies >= 1 }
+  { act: () => { const c = window.__cap; c.voisin(0); c.debloque(17); c.bureau(17); }, cap: ['Un onzième cahier arrive sur le bureau : le dernier jour d’école…'], play: 3.4 },
+  { act: () => { const c = window.__cap; c.start(17); c.skip(4); c.copain(0); }, cap: ['Chapitre XVII : la dernière page, pleine de dédicaces'], play: 3 },
+  { cap: ['Un copain veut écrire dans ton cahier : va le voir !'], play: 5 },
+  { cap: ['Il écrit sa dédicace… et te suit en farandole, plume à la main'], play: 5, need: r => r.copains >= 1 },
+  { act: () => window.__cap.copain(4), cap: ['Cinq copains dans la file ! Le sixième arrive…'], play: 6 },
+  { cap: ['Six copains : c’est la ronde ! Ils tournent autour de toi et renversent tout'], play: 7, need: r => r.rondes >= 1 || r.ronde === 1 },
+  { skip: 45, cap: ['Le chewing-gum souffle des bulles et colle aux pattes', 'Au courant d’air, la feuille volante file tout droit'], play: 7 }
 ];
-const BOSS_AT = 180, BOSS_FILM = 22;   // le Grand Manège arrive à 3:00 ; secondes de combat filmées au plus (la suite est sautée)
+const BOSS_AT = 180, BOSS_FILM = 22;   // le Grand Tableau arrive à 3:00 ; secondes de combat filmées au plus (la suite est sautée)
 const argOf = (st, s) => st.arg ? st.arg(s) : undefined;
 // Joue tout le montage en accéléré (sans filmer) pour savoir comment se termine la partie avec la graine s
 async function simulate(s) {
@@ -106,14 +111,14 @@ async function simulate(s) {
   const r = await page.evaluate(() => { for (let i = 0; i < 320; i++) { window.__cap.skip(1); const r = window.__cap.state(); if (r.state === 'victory' || r.state === 'gameover') return r; } return window.__cap.state(); });
   return { ...r, ok };
 }
-// une bonne graine : l'oie s'envole à l'écran, puis le Grand Manège tombe avant la fin du tournage
-const good = r => r.ok && r.state === 'victory' && r.chapter === 15 && r.t <= BOSS_AT + 75;
+// une bonne graine : la ronde à l'écran, puis le Grand Tableau tombe avant la fin du tournage
+const good = r => r.ok && r.state === 'victory' && r.chapter === 17 && r.t <= BOSS_AT + 75;
 let SEED = SEED_ARG ? parseInt(SEED_ARG, 10) : null;
 if (SEED === null && !SMOKE) {
   let best = null;
   for (const s of [42, 7, 5, 99, 3, 11, 23, 64, 1, 8, 13, 21]) {
     const r = await simulate(s);
-    console.log(`graine ${s} : ${r.state} à ${r.t.toFixed(0)} s (chapitre ${r.chapter}, niveau ${r.level}, ${r.hp} cœur(s), ${r.oies} oie(s) envolée(s), ${r.deKicks} lancer(s) de dé, ${r.oieKills} ratures biffées par le dé et l’oie)`);
+    console.log(`graine ${s} : ${r.state} à ${r.t.toFixed(0)} s (chapitre ${r.chapter}, niveau ${r.level}, ${r.hp} cœur(s), ${r.copains} copain(s), ${r.rondes} ronde(s), ${r.copainsOut} copain(s) lâché(s), ${r.faraKills} ratures biffées par les copains)`);
     const score = x => (good(x) ? 1e6 : 0) + (x.ok ? 1e5 : 0) + (x.state === 'victory' ? 5e4 - x.t : x.t);
     if (!best || score(r) > score(best.r)) best = { s, r };
     if (good(r)) break;
@@ -133,10 +138,11 @@ if (SMOKE) {
     window.__cap.start(14); window.__cap.skip(9); window.__cap.frames(3); window.__cap.skip(4); window.__cap.frames(3); window.__cap.skip(20); window.__cap.frames(2); window.__cap.controle(); window.__cap.skip(3); window.__cap.frames(2); window.__cap.patron(); for (let i = 0; i < 20; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.skip(60); window.__cap.frames(2); window.__cap.bestiaire(14); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(2); window.__cap.refermer();
     window.__cap.start(15); window.__cap.skip(9); window.__cap.frames(3); window.__cap.skip(4); window.__cap.frames(3); window.__cap.skip(30); window.__cap.frames(2); window.__cap.chamboule(); window.__cap.skip(3); window.__cap.frames(2); window.__cap.patron(); for (let i = 0; i < 24; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.skip(60); window.__cap.frames(2); window.__cap.bestiaire(15); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(2); window.__cap.refermer();
     window.__cap.start(16); window.__cap.skip(9); window.__cap.frames(3); window.__cap.veillee(); window.__cap.skip(3); window.__cap.frames(3); window.__cap.skip(14); window.__cap.frames(2); window.__cap.skip(40); window.__cap.frames(2); window.__cap.patron(); for (let i = 0; i < 24; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.skip(60); window.__cap.frames(2); window.__cap.bestiaire(16); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(2); window.__cap.refermer();
+    window.__cap.start(17); window.__cap.skip(9); window.__cap.frames(3); window.__cap.copain(0); window.__cap.skip(4); window.__cap.frames(3); window.__cap.copain(4); window.__cap.skip(6); window.__cap.frames(3); window.__cap.skip(60); window.__cap.frames(2); window.__cap.patron(); for (let i = 0; i < 24; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.skip(60); window.__cap.frames(2); window.__cap.bestiaire(17); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(2); window.__cap.refermer();
     for (const [chapter, n] of [[6, 0], [11, 1], [13, 2]]) { window.__cap.start(chapter); window.__cap.skip(3); window.__cap.coloriage(n); for (let i = 0; i < 30; i++) { window.__cap.skip(1); if (i % 5 === 0) window.__cap.frames(1); } }
     for (const [chapter, pos] of [[1, 0], [8, 10], [16, 12], [7, 3]]) { window.__cap.start(chapter); window.__cap.skip(3); if (chapter === 16) window.__cap.veillee(); window.__cap.oie(pos); for (let i = 0; i < 30; i++) { window.__cap.skip(1); if (i % 5 === 0) window.__cap.frames(1); } }
-    window.__cap.debloque(16); window.__cap.pages({ 1: { w: 2, t: 200 } }); window.__cap.bureau(); window.__cap.frames(3); for (let i = 0; i < 12; i++) { window.__cap.choisir(1); window.__cap.frames(2); } window.__cap.bureau(5); window.__cap.commencer(); window.__cap.skip(5); window.__cap.frames(2); window.__cap.debloque(1); window.__cap.bureau(4); window.__cap.commencer(); window.__cap.frames(2); window.__cap.bureau(); window.__cap.choisir(-1); window.__cap.commencer(); window.__cap.skip(5); window.__cap.frames(2);
-    for (const [chapter, consigne, pouce] of [[1, 'miroir', 'pluie'], [1, 'sansPate', 'propre'], [4, 'courant', 'pluie'], [2, 'brouillard', 'souffle'], [6, 'double', 'aimant'], [3, 'presse', 'souffle'], [5, 'fragile', 'propre'], [7, 'courant', 'aimant'], [8, 'miroir', 'pluie'], [9, 'double', 'souffle'], [10, 'sansPate', 'aimant'], [11, 'courant', 'pluie'], [12, 'presse', 'propre'], [13, 'courant', 'souffle'], [14, 'presse', 'aimant'], [15, 'courant', 'pluie'], [16, 'presse', 'souffle'], [2, 'taille', 'souffle'], [3, 'perfore', 'pluie'], [11, 'perfore', 'souffle']]) {
+    window.__cap.debloque(17); window.__cap.pages({ 1: { w: 2, t: 200 } }); window.__cap.bureau(); window.__cap.frames(3); for (let i = 0; i < 12; i++) { window.__cap.choisir(1); window.__cap.frames(2); } window.__cap.bureau(5); window.__cap.commencer(); window.__cap.skip(5); window.__cap.frames(2); window.__cap.debloque(1); window.__cap.bureau(4); window.__cap.commencer(); window.__cap.frames(2); window.__cap.bureau(); window.__cap.choisir(-1); window.__cap.commencer(); window.__cap.skip(5); window.__cap.frames(2);
+    for (const [chapter, consigne, pouce] of [[1, 'miroir', 'pluie'], [1, 'sansPate', 'propre'], [4, 'courant', 'pluie'], [2, 'brouillard', 'souffle'], [6, 'double', 'aimant'], [3, 'presse', 'souffle'], [5, 'fragile', 'propre'], [7, 'courant', 'aimant'], [8, 'miroir', 'pluie'], [9, 'double', 'souffle'], [10, 'sansPate', 'aimant'], [11, 'courant', 'pluie'], [12, 'presse', 'propre'], [13, 'courant', 'souffle'], [14, 'presse', 'aimant'], [15, 'courant', 'pluie'], [16, 'presse', 'souffle'], [17, 'courant', 'aimant'], [2, 'taille', 'souffle'], [3, 'perfore', 'pluie'], [11, 'perfore', 'souffle']]) {
       window.__cap.devoir({ chapter, consigne, pouce, seed: chapter }); window.__cap.skip(25); window.__cap.frames(2);
     }
     window.__cap.bonspoints(9); window.__cap.start(9); window.__cap.skip(40); window.__cap.frames(3); window.__cap.images(); window.__cap.frames(2); window.__cap.feuilleter(-1); window.__cap.frames(2); window.__cap.bonspoints(500); window.__cap.feuilleter(1); window.__cap.frames(2); window.__cap.refermer();
@@ -186,16 +192,16 @@ while (st.state !== 'gameover' && st.state !== 'victory' && st.t < BOSS_AT - 4) 
   st = await state();
 }
 if (st.state !== 'gameover' && st.state !== 'victory') {
-  await cap('… 3:00 : le Grand Manège se met à tourner !', 2.6);
-  await cap('Lettres en spirale, ronde des chevaux… et le pompon à attraper', 5);
+  await cap('… 3:00 : le Grand Tableau se décroche du mur !', 2.6);
+  await cap('Volées de craies, brosse qui fonce… et cercles de craie : passe par le trou !', 5);
   for (let i = 0; i < BOSS_FILM && st.state !== 'victory' && st.state !== 'gameover'; i++) { await grab(1); st = await state(); }
   if (st.state !== 'victory' && st.state !== 'gameover') {   // la fin du combat est sautée, pour que la vidéo reste courte
     await page.evaluate(() => { for (let i = 0; i < 300; i++) { const s = window.__cap.state(); if (s.state === 'victory' || s.state === 'gameover') break; window.__cap.skip(0.5); } });
     st = await state();
-    if (st.state === 'victory') await cap('Quelques tours de manège plus tard…', 3);
+    if (st.state === 'victory') await cap('Quelques coups de brosse plus tard…', 3);
   }
 }
-// l'écran de fin compte les parties de l'oie
+// l'écran de fin compte les rondes des copains
 if (st.state === 'victory' || st.state === 'gameover') await grab(6.5);
 else await grab(1);
 // retour à l'écran titre

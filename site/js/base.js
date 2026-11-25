@@ -572,6 +572,20 @@ const AU = {
       case 'aube': [293.66, 392, 493.88, 587.33, 783.99].forEach((f, i) => this.tone(f, 0.5, { type: 'triangle', vol: 0.06, when: i * 0.1 })); break;
       case 'luciole': this.tone([0, 1046.5, 1174.66, 1318.51, 1567.98, 1760, 1975.53, 2093, 2349.32][Math.min(8, k)] || 1500, 0.25, { type: 'sine', vol: 0.07 }); this.tone(3000, 0.05, { type: 'sine', vol: 0.02, when: 0.05 }); break;
       case 'bocal': this.noise(0.08, { f: 2500, q: 3, vol: 0.06 }); for (let i = 0; i < 8; i++) this.tone(1318.51 * (1 + i * 0.12), 0.18, { type: 'sine', vol: 0.04, when: 0.05 + i * 0.05 }); break;
+      // chapitre XVII : le dernier jour
+      case 'dernierKill': if (this.throttle('kill', 45)) { this.noise(0.05, { f: 2200, q: 2, vol: 0.07, sweep: 0.7 }); this.tone([587.33, 739.99, 880, 987.77, 1174.66][k % 5], 0.12, { type: 'triangle', vol: 0.05 }); } break;
+      case 'chewing': if (this.throttle('chewing', 120)) { this.noise(0.06, { f: 900, q: 2, vol: 0.12 }); this.tone(330, 0.1, { type: 'sine', vol: 0.08, slide: 0.5 }); } break;
+      case 'vent': this.noise(1.6, { f: 500, q: 0.6, vol: 0.06, sweep: 3, type: 'lowpass' }); break;
+      case 'craie': if (this.throttle('craie', 120)) this.noise(0.12, { f: 4200, q: 8, vol: 0.05, sweep: 1.3 }); break;
+      case 'brosseAim': this.tone(220, 0.3, { type: 'triangle', vol: 0.06, slide: 1.5 }); break;
+      case 'brosse': this.noise(0.4, { f: 600, q: 1, vol: 0.12, sweep: 0.5 }); this.tone(110, 0.25, { vol: 0.15, slide: 0.6 }); break;
+      case 'crisse': this.tone(2793.8, 0.6, { type: 'sawtooth', vol: 0.012, slide: 1.06 }); this.tone(2960, 0.6, { type: 'sine', vol: 0.03, slide: 0.94 }); break;
+      case 'boss17': for (let i = 0; i < 6; i++) this.tone(1318.51, 0.12, { type: 'square', vol: 0.025, when: i * 0.16 }); [293.66, 369.99, 440, 587.33].forEach((f, i) => this.tone(f, 0.5, { type: 'triangle', vol: 0.07, when: 1 + i * 0.12 })); break;
+      case 'copain': [880, 1174.66].forEach((f, i) => this.tone(f, 0.14, { type: 'triangle', vol: 0.06, when: i * 0.1 })); break;
+      case 'dedicace': for (let i = 0; i < 5; i++) this.noise(0.04, { f: 3000 + i * 300, q: 5, vol: 0.04, when: i * 0.06 }); this.tone([0, 587.33, 659.25, 739.99, 880, 987.77, 1174.66][Math.min(6, k)] || 880, 0.3, { type: 'triangle', vol: 0.07, when: 0.3 }); break;
+      case 'copainOut': this.tone(659.25, 0.2, { type: 'triangle', vol: 0.06, slide: 0.6 }); break;
+      case 'ronde': [587.33, 739.99, 880, 1174.66, 880, 1174.66, 1479.98].forEach((f, i) => this.tone(f, 0.22, { type: 'triangle', vol: 0.07, when: i * 0.09 })); break;
+      case 'rondeFin': [1174.66, 987.77, 880, 739.99, 880, 1174.66].forEach((f, i) => this.tone(f, 0.3, { type: 'sine', vol: 0.06, when: i * 0.12 })); break;
       case 'lose': [6, 4, 2, 0].forEach((n, i) => this.tone(PENTA[n], 0.8, { type: 'triangle', vol: 0.15, when: i * 0.18 })); break;
     }
   },
@@ -607,6 +621,9 @@ const AU = {
   // la berceuse de la veillée (un air original en sol majeur, à trois temps), un temps par case ; 0 = la note précédente continue
   VEILLEE: [587.33, 0, 659.25, 587.33, 0, 493.88, 523.25, 0, 440, 493.88, 0, 0,
             440, 0, 493.88, 523.25, 0, 587.33, 493.88, 0, 440, 392, 0, 0],
+  // la chanson du dernier jour (un air original en ré majeur, à quatre temps), une croche par case ; 0 = la note précédente continue
+  DERNIER: [587.33, 0, 739.99, 880, 987.77, 0, 880, 0, 739.99, 783.99, 880, 739.99, 659.25, 0, 0, 0,
+            554.37, 0, 659.25, 739.99, 783.99, 0, 739.99, 659.25, 587.33, 659.25, 739.99, 554.37, 587.33, 0, 0, 0],
   KERMESSE: [523.25, 0, 440, 523.25, 698.46, 0, 659.25, 587.33, 523.25, 0, 466.16, 440, 392, 0, 0, 0,
              466.16, 0, 392, 466.16, 587.33, 0, 523.25, 466.16, 440, 523.25, 440, 392, 349.23, 0, 0, 0],
   // la valse du facteur (un air original en sol majeur, à trois temps), un temps par case ; 0 = la note précédente continue
@@ -734,6 +751,21 @@ const AU = {
       if (s % 32 === 0) this.tone(65.41, beat * 6, { type: 'sine', vol: 0.14, when, dest: this.mus, attack: 0.01 });
       const n = this.CARILLON[s % 32];
       if (n && (s >= 8 || intensity > 0.15)) { this.tone(n, beat * 1.8, { type: 'sine', vol: 0.1, when, dest: this.mus, attack: 0.002 }); this.tone(n * 2.76, beat * 0.8, { type: 'sine', vol: 0.02, when, dest: this.mus, attack: 0.002 }); }
+      if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
+      return;
+    }
+    if (chap === 17) {   // la chanson du dernier jour : basse sautillante, accords au piano, claquements de mains et glockenspiel
+      const root = [146.83, 146.83, 196, 146.83, 220, 196, 220, 146.83][Math.floor(s / 4) % 8];
+      if (s % 2 === 0) this.tone(s % 4 === 0 ? root : root * 1.5, beat * 0.8, { type: 'sine', vol: 0.2, when, dest: this.mus, attack: 0.01 });
+      else [2, 2.52, 3].forEach(m => this.tone(root * m, beat * 0.4, { type: 'triangle', vol: 0.02, when, dest: this.mus, attack: 0.004 }));
+      if (s % 4 === 2) this.noise(0.06, { f: 1800, q: 1.5, vol: 0.05, when });   // les mains qui claquent
+      const i = s % 32, n = this.DERNIER[i];
+      if (n && (s >= 16 || intensity > 0.15)) {
+        let len = 1; while (len < 4 && !this.DERNIER[(i + len) % 32]) len++;
+        this.tone(n * 2, beat * Math.min(1.2, len - 0.1), { type: 'sine', vol: 0.05, when, dest: this.mus, attack: 0.002 });
+        this.tone(n, beat * (len - 0.1), { type: 'triangle', vol: 0.03, when, dest: this.mus, attack: 0.01 });
+        if (intensity > 0.5) this.tone(n * 1.5, beat * (len - 0.2), { type: 'triangle', vol: 0.015, when, dest: this.mus, attack: 0.01 });
+      }
       if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
       return;
     }

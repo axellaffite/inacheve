@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 31, date: '2026-11-24', title: 'Le jeu de l’oie', chapter: 'XVI', chapterName: 'La colo' };
+const GAME_META = { iteration: 32, date: '2026-11-25', title: 'La farandole', chapter: 'XVII', chapterName: 'Le dernier jour' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -252,6 +252,14 @@ const JOURNAL = [
       "Ton pion avance d’autant de cases. Sur une case de l’oie, il avance encore du même nombre ; le pont le fait sauter plus loin, le labyrinthe le fait reculer.",
       "Arrivé au centre ? L’oie s’envole : une grande oie de papier en écharpe rouge traverse la page en fauchant les ratures. Un cœur, un bon point, et un exploit pour le devoir du jour.",
       "La vidéo de l’itération 30 n’a pas pu être tournée (la machine qui filme avait changé) : c’est réparé, le tournage reprend."
+    ] },
+  { iteration: 32, date: '2026-11-25', title: 'La farandole', notes: [
+      "Un onzième cahier arrive sur le bureau, couleur brique, avec sa cloche : le dernier jour d’école. La note de marge « le dernier jour ? » a enfin sa réponse : le chapitre XVII.",
+      "La dernière page du cahier se remplit de dédicaces : les copains de la classe arrivent un à un et te demandent : « Je peux écrire dans ton cahier ? » Va les voir avant qu’ils repartent !",
+      "Chaque copain écrit son petit mot sur la page, puis te suit en farandole et tire sur les ratures avec sa plume. Attention : une rature qui le bouscule, et il lâche ta main.",
+      "Six copains dans la file ? C’est la ronde ! Ils tournent autour de toi en se donnant la main, renversent les ratures et arrêtent les coups. À la fin : « Bonnes vacances ! », un cœur et un bon point.",
+      "Deux nouvelles ratures : le chewing-gum, qui souffle des bulles et colle aux pattes, et la feuille volante, qui file tout droit quand souffle le courant d’air.",
+      "À 3:00, le Grand Tableau se décroche du mur : volées de craies, brosse qui fonce, et cercles de craie qui crissent (passe par le trou !). Une chanson du dernier jour, avec claquements de mains, accompagne la page."
     ] }
 ];
 window.GAME_META = GAME_META;

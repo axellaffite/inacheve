@@ -7,7 +7,7 @@ const NOTES_CAMP = [
   { x: WORLD.w / 2, y: -150, t: '— carnet n° 10 · chapitre XVI : la colo —', r: -0.02 },
   { x: WORLD.w * 0.72, y: -96, t: 'ajouté : la veillée, et des lucioles', r: 0.025 },
   { x: WORLD.w + 175, y: WORLD.h * 0.3, t: 'ici, plus tard :', r: 0.06 },
-  { x: WORLD.w + 190, y: WORLD.h * 0.3 + 46, t: 'le dernier jour ? la cour vide ?', r: 0.04 },
+  { x: WORLD.w + 190, y: WORLD.h * 0.3 + 46, t: 'le dernier jour ? → oui : la farandole !', r: 0.04 },
   { x: -185, y: WORLD.h * 0.45, t: 'ne pas oublier', r: -0.07 },
   { x: -175, y: WORLD.h * 0.45 + 44, t: 'la lampe de poche', r: -0.05 },
   { x: -160, y: WORLD.h * 0.45 + 88, t: '(et le doudou)', r: -0.04 },
