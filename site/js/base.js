@@ -589,6 +589,20 @@ const AU = {
       case 'copain': [880, 1174.66].forEach((f, i) => this.tone(f, 0.14, { type: 'triangle', vol: 0.06, when: i * 0.1 })); break;
       case 'dedicace': for (let i = 0; i < 5; i++) this.noise(0.04, { f: 3000 + i * 300, q: 5, vol: 0.04, when: i * 0.06 }); this.tone([0, 587.33, 659.25, 739.99, 880, 987.77, 1174.66][Math.min(6, k)] || 880, 0.3, { type: 'triangle', vol: 0.07, when: 0.3 }); break;
       case 'copainOut': this.tone(659.25, 0.2, { type: 'triangle', vol: 0.06, slide: 0.6 }); break;
+      // chapitre XVIII : la classe de neige
+      case 'neigeKill': if (this.throttle('kill', 45)) { this.noise(0.07, { f: 2600, q: 1.2, vol: 0.08, sweep: 0.6 }); this.tone([1396.91, 1567.98, 1760, 2093, 2349.32][k % 5], 0.18, { type: 'sine', vol: 0.035 }); } break;
+      case 'flocon': if (this.throttle('flocon', 100)) { [2637, 3135.96, 3520].forEach((f, i) => this.tone(f, 0.25, { type: 'sine', vol: 0.025, when: i * 0.04 })); this.noise(0.08, { f: 6000, q: 4, vol: 0.04 }); } break;
+      case 'pouf': if (this.throttle('pouf', 120)) { this.noise(0.12, { f: 700, q: 0.8, vol: 0.12, sweep: 0.5 }); } break;
+      case 'claqueAim': this.tone(196, 0.5, { type: 'triangle', vol: 0.07, slide: 2 }); break;
+      case 'claque': this.noise(0.35, { f: 300, q: 0.7, vol: 0.2, sweep: 0.4 }); this.tone(73.42, 0.35, { vol: 0.2, slide: 0.6 }); break;
+      case 'avalanche': this.noise(2.2, { f: 400, q: 0.5, vol: 0.09, sweep: 2.5, type: 'lowpass' }); this.tone(55, 1.6, { type: 'sine', vol: 0.08 }); break;
+      case 'boss18': for (let i = 0; i < 8; i++) this.noise(0.04, { f: 7000, q: 3, vol: 0.04, when: i * 0.12 }); [349.23, 440, 523.25, 698.46].forEach((f, i) => this.tone(f, 0.6, { type: 'triangle', vol: 0.07, when: 1 + i * 0.12 })); this.tone(87.31, 1.4, { vol: 0.15, when: 1 }); break;
+      case 'bhBall': this.noise(0.1, { f: 1200, q: 1, vol: 0.08 }); this.tone(523.25, 0.12, { type: 'triangle', vol: 0.05 }); break;
+      case 'bhPret': [1046.5, 1318.51].forEach((f, i) => this.tone(f, 0.15, { type: 'sine', vol: 0.05, when: i * 0.08 })); break;
+      case 'bhPose': this.noise(0.15, { f: 500, q: 0.8, vol: 0.12 }); [523.25, 659.25, 783.99].slice(0, k || 1).forEach((f, i) => this.tone(f * 2, 0.25, { type: 'triangle', vol: 0.06, when: 0.1 + i * 0.1 })); break;
+      case 'bhVie': [698.46, 880, 1046.5, 1396.91, 1046.5, 1396.91, 1760].forEach((f, i) => this.tone(f, 0.22, { type: 'triangle', vol: 0.07, when: i * 0.09 })); for (let i = 0; i < 10; i++) this.noise(0.04, { f: 7000, q: 3, vol: 0.03, when: i * 0.07 }); break;
+      case 'bhLance': if (this.throttle('bhLance', 200)) { this.noise(0.08, { f: 1500, q: 1, vol: 0.06, sweep: 0.6 }); } break;
+      case 'bhFonte': [1046.5, 880, 698.46, 523.25].forEach((f, i) => this.tone(f, 0.3, { type: 'sine', vol: 0.05, when: i * 0.14 })); break;
       case 'ronde': [587.33, 739.99, 880, 1174.66, 880, 1174.66, 1479.98].forEach((f, i) => this.tone(f, 0.22, { type: 'triangle', vol: 0.07, when: i * 0.09 })); break;
       case 'rondeFin': [1174.66, 987.77, 880, 739.99, 880, 1174.66].forEach((f, i) => this.tone(f, 0.3, { type: 'sine', vol: 0.06, when: i * 0.12 })); break;
       case 'lose': [6, 4, 2, 0].forEach((n, i) => this.tone(PENTA[n], 0.8, { type: 'triangle', vol: 0.15, when: i * 0.18 })); break;
@@ -627,6 +641,9 @@ const AU = {
   VEILLEE: [587.33, 0, 659.25, 587.33, 0, 493.88, 523.25, 0, 440, 493.88, 0, 0,
             440, 0, 493.88, 523.25, 0, 587.33, 493.88, 0, 440, 392, 0, 0],
   // la chanson du dernier jour (un air original en ré majeur, à quatre temps), une croche par case ; 0 = la note précédente continue
+  // la chanson de la classe de neige (un air original en fa majeur, à quatre temps), une croche par case ; 0 = la note précédente continue
+  NEIGE: [698.46, 0, 880, 0, 1046.5, 0, 880, 698.46, 783.99, 0, 932.33, 0, 880, 0, 0, 0,
+          659.25, 0, 783.99, 0, 932.33, 0, 880, 783.99, 698.46, 0, 659.25, 587.33, 523.25, 0, 0, 0],
   DERNIER: [587.33, 0, 739.99, 880, 987.77, 0, 880, 0, 739.99, 783.99, 880, 739.99, 659.25, 0, 0, 0,
             554.37, 0, 659.25, 739.99, 783.99, 0, 739.99, 659.25, 587.33, 659.25, 739.99, 554.37, 587.33, 0, 0, 0],
   KERMESSE: [523.25, 0, 440, 523.25, 698.46, 0, 659.25, 587.33, 523.25, 0, 466.16, 440, 392, 0, 0, 0,
@@ -756,6 +773,21 @@ const AU = {
       if (s % 32 === 0) this.tone(65.41, beat * 6, { type: 'sine', vol: 0.14, when, dest: this.mus, attack: 0.01 });
       const n = this.CARILLON[s % 32];
       if (n && (s >= 8 || intensity > 0.15)) { this.tone(n, beat * 1.8, { type: 'sine', vol: 0.1, when, dest: this.mus, attack: 0.002 }); this.tone(n * 2.76, beat * 0.8, { type: 'sine', vol: 0.02, when, dest: this.mus, attack: 0.002 }); }
+      if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
+      return;
+    }
+    if (chap === 18) {   // la chanson de la classe de neige : basse douce, célesta, et grelots de traîneau
+      const root = [87.31, 87.31, 116.54, 87.31, 130.81, 116.54, 130.81, 87.31][Math.floor(s / 4) % 8];
+      if (s % 4 === 0) this.tone(root, beat * 3.6, { type: 'sine', vol: 0.2, when, dest: this.mus, attack: 0.03 });
+      else if (s % 2 === 0) [2, 2.5, 3].forEach(m => this.tone(root * m, beat * 0.6, { type: 'sine', vol: 0.018, when, dest: this.mus, attack: 0.01 }));
+      if (intensity > 0.25 || bossOn) this.noise(0.035, { f: 7200, q: 3, vol: s % 2 ? 0.012 : 0.022, when });   // les grelots
+      const i = s % 32, n = this.NEIGE[i];
+      if (n && (s >= 16 || intensity > 0.15)) {
+        let len = 1; while (len < 4 && !this.NEIGE[(i + len) % 32]) len++;
+        this.tone(n * 2, beat * 0.7, { type: 'sine', vol: 0.045, when, dest: this.mus, attack: 0.002 });
+        this.tone(n, beat * (len - 0.1), { type: 'triangle', vol: 0.03, when, dest: this.mus, attack: 0.01 });
+        if (intensity > 0.5) this.tone(n * 1.5, beat * (len - 0.2), { type: 'sine', vol: 0.014, when, dest: this.mus, attack: 0.01 });
+      }
       if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
       return;
     }

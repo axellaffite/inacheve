@@ -7,7 +7,7 @@ const NOTES_DERNIER = [
   { x: WORLD.w / 2, y: -150, t: '— carnet n° 11 · chapitre XVII : le dernier jour —', r: -0.02 },
   { x: WORLD.w * 0.72, y: -96, t: 'ajouté : la farandole des copains', r: 0.025 },
   { x: WORLD.w + 175, y: WORLD.h * 0.3, t: 'ici, plus tard :', r: 0.06 },
-  { x: WORLD.w + 190, y: WORLD.h * 0.3 + 46, t: 'la rentrée suivante ? une classe de plus ?', r: 0.04 },
+  { x: WORLD.w + 190, y: WORLD.h * 0.3 + 46, t: 'une classe de plus ? → oui : la classe de neige !', r: 0.04 },
   { x: -185, y: WORLD.h * 0.45, t: 'rendre', r: -0.07 },
   { x: -175, y: WORLD.h * 0.45 + 44, t: 'les livres', r: -0.05 },
   { x: -160, y: WORLD.h * 0.45 + 88, t: '(et la gomme du voisin)', r: -0.04 },

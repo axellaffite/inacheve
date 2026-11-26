@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 33, date: '2026-11-25', title: 'Le tampon dateur', chapter: 'XVII', chapterName: 'Le dernier jour' };
+const GAME_META = { iteration: 34, date: '2026-11-26', title: 'La classe de neige', chapter: 'XVIII', chapterName: 'La classe de neige' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -268,6 +268,14 @@ const JOURNAL = [
       "Tout ce qu’il tamponne reste figé à la date du jour : les ratures datées ne bougent plus et prennent plus cher, les lettres datées comptent double. Attire les ratures sous son cadre !",
       "Il avance d’un jour à chaque coup, et ses empreintes violines restent un moment sur la page. Biffé, son dernier coup de tampon date toute la foule autour de lui.",
       "Le devoir du jour a une nouvelle consigne, « Tout est daté », et la page des rares du bestiaire son cinquième croquis. Ton voisin de table n’aime pas du tout qu’on lui tamponne le front."
+    ] },
+  { iteration: 34, date: '2026-11-26', title: 'La classe de neige', notes: [
+      "Un douzième cahier arrive sur le bureau, bleu glacier, avec son flocon : la classe de neige. La note de marge « une classe de plus ? » a sa réponse : le chapitre XVIII.",
+      "Il neige sur la page, et le papier est semé de plaques de verglas : dessus, tout glisse. La goutte comme les ratures ! Sers-t’en pour les semer.",
+      "Une boule de neige t’attend : pousse-la, elle roule devant toi et grossit. Bien ronde, amène-la dans le rond « ici ». Trois boules (le ventre, le buste, la tête) font un bonhomme de neige.",
+      "Le bonhomme prend vie, avec son bonnet, son écharpe et son nez en carotte : il lance des boules de neige sur les ratures, puis fond doucement. Un cœur et un bon point pour toi.",
+      "Deux nouvelles ratures : le flocon, qui tourne de plus en plus vite et éclate en étoile de glace, et la boule de neige, qui grossit en roulant et se casse en deux.",
+      "À 3:00, la Grande Moufle descend la piste : boules en éventail, claque à plat sur le rond annoncé, et avalanches à traverser par le trou. Une chanson de neige, avec ses grelots, accompagne la page."
     ] }
 ];
 window.GAME_META = GAME_META;
