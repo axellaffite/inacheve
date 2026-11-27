@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 35, date: '2026-11-27', title: 'Le cerf-volant', chapter: 'XVIII', chapterName: 'La classe de neige' };
+const GAME_META = { iteration: 36, date: '2026-11-27', title: 'Le cahier de sciences', chapter: 'XIX', chapterName: 'Le cahier de sciences' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -283,6 +283,13 @@ const JOURNAL = [
       "Si tu t’arrêtes, ou si tu cours avec le vent dans le dos, il redescend… et finit par piquer du nez. Une rature qui te touche fait détendre le fil.",
       "En vol, il se balance au bout de son fil, et lui comme sa queue fauchent les ratures qu’ils touchent. Assez de ciel, et il touche les nuages : un grand looping autour de toi balaie la page, avec un cœur et un bon point en prime.",
       "Sur le bureau, les douze cahiers ne tenaient plus sur une ligne : ils sont maintenant rangés sur deux étagères, bien plus lisibles, avec la place vide d’un treizième cahier."
+    ] },
+  { iteration: 36, date: '2026-11-27', title: 'Le cahier de sciences', notes: [
+      "La place vide du bureau est prise : un treizième cahier, vert tendre avec sa feuille, le cahier de sciences. Chapitre XIX : une page d’observation avec des feuilles d’herbier scotchées, le cycle de l’eau et la métamorphose de la grenouille dessinés au crayon.",
+      "L’expérience du jour : faire pousser un haricot dans le coton. Ramasse l’arrosoir, remplis-le sous le petit nuage de pluie qui se promène, puis arrose le bocal. Attention : si une rature te touche, l’eau se renverse !",
+      "Trois arrosages : une racine, deux feuilles… et le haricot magique pousse jusqu’au ciel. Ses lianes fouettent les ratures autour de lui, avec un cœur et un bon point pour toi.",
+      "De nouvelles ratures : le têtard, qui frétille et, si on le laisse grandir, devient une grenouille qui saute là où tu vas ; et le pissenlit, qui souffle ses aigrettes en éventail, même quand on le biffe.",
+      "À 3:00, la Grande Loupe se penche sur la page. Sous son verre, tout est vraiment grossi ! Elle concentre le soleil en un point qui brûle, grossit les ratures qu’elle regarde et lance des reflets. Une petite chanson de printemps, avec ses oiseaux, accompagne la page."
     ] }
 ];
 window.GAME_META = GAME_META;

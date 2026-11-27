@@ -589,6 +589,25 @@ const AU = {
       case 'copain': [880, 1174.66].forEach((f, i) => this.tone(f, 0.14, { type: 'triangle', vol: 0.06, when: i * 0.1 })); break;
       case 'dedicace': for (let i = 0; i < 5; i++) this.noise(0.04, { f: 3000 + i * 300, q: 5, vol: 0.04, when: i * 0.06 }); this.tone([0, 587.33, 659.25, 739.99, 880, 987.77, 1174.66][Math.min(6, k)] || 880, 0.3, { type: 'triangle', vol: 0.07, when: 0.3 }); break;
       case 'copainOut': this.tone(659.25, 0.2, { type: 'triangle', vol: 0.06, slide: 0.6 }); break;
+      // chapitre XIX : le cahier de sciences
+      case 'sciKill': if (this.throttle('kill', 45)) { this.noise(0.05, { f: 1800, q: 2, vol: 0.07 }); this.tone([783.99, 880, 987.77, 1174.66, 1318.51][k % 5], 0.16, { type: 'triangle', vol: 0.04 }); } break;
+      case 'morph': this.tone(392, 0.4, { type: 'triangle', vol: 0.05, slide: 2 }); this.tone(587.33, 0.3, { type: 'sine', vol: 0.04, when: 0.3 }); break;
+      case 'croa': if (this.throttle('croa', 140)) { this.noise(0.1, { f: 520, q: 4, vol: 0.06 }); this.tone(130.81 + (k % 3) * 20, 0.12, { type: 'square', vol: 0.025 }); } break;
+      case 'plouf': if (this.throttle('plouf', 90)) { this.noise(0.18, { f: 900, q: 1, vol: 0.09, sweep: 0.4 }); this.tone(220, 0.15, { type: 'sine', vol: 0.07, slide: 0.5 }); } break;
+      case 'pfff': if (this.throttle('pfff', 120)) this.noise(0.3, { f: 3000, q: 0.6, vol: 0.05, sweep: 0.5 }); break;
+      case 'foyer': if (this.throttle('foyer', 150)) this.tone(660, 1.2, { type: 'sine', vol: 0.035, slide: 2 }); break;
+      case 'brule': if (this.throttle('brule', 120)) { this.noise(0.4, { f: 5000, q: 0.8, vol: 0.09, sweep: 0.3 }); this.tone(1318.51, 0.1, { type: 'triangle', vol: 0.03 }); } break;
+      case 'grossi': this.tone(196, 0.55, { type: 'triangle', vol: 0.07, slide: 3 }); this.tone(293.66, 0.55, { type: 'sine', vol: 0.04, slide: 3, when: 0.05 }); break;
+      case 'reflet': if (this.throttle('reflet', 150)) [1318.51, 1760, 2093].forEach((f, i) => this.tone(f, 0.18, { type: 'sine', vol: 0.03, when: i * 0.04 })); break;
+      case 'boss19': [392, 493.88, 587.33, 783.99, 987.77].forEach((f, i) => this.tone(f, 0.5, { type: 'triangle', vol: 0.07, when: i * 0.11 })); this.tone(98, 1.6, { vol: 0.16, when: 0.5 }); this.noise(0.6, { f: 6000, q: 2, vol: 0.04, when: 0.6, sweep: 0.5 }); break;
+      case 'haCan': this.tone(659.25, 0.1, { type: 'triangle', vol: 0.05 }); this.noise(0.06, { f: 4000, q: 8, vol: 0.04 }); break;
+      case 'haPlein': [1046.5, 1318.51, 1567.98].forEach((f, i) => this.tone(f, 0.18, { type: 'sine', vol: 0.05, when: i * 0.07 })); break;
+      case 'haArrose': if (this.throttle('haArrose', 140)) this.noise(0.12, { f: 2500, q: 1.5, vol: 0.035 }); break;
+      case 'haRenverse': this.noise(0.3, { f: 1200, q: 0.8, vol: 0.09, sweep: 0.4 }); this.tone(440, 0.25, { type: 'triangle', vol: 0.05, slide: 0.5 }); break;
+      case 'haPousse': [523.25, 659.25, 783.99].slice(0, k || 1).forEach((f, i) => this.tone(f * 2, 0.25, { type: 'triangle', vol: 0.06, when: 0.05 + i * 0.1 })); this.noise(0.15, { f: 800, q: 1, vol: 0.05 }); break;
+      case 'haVie': [392, 493.88, 587.33, 783.99, 987.77, 1174.66, 1567.98].forEach((f, i) => this.tone(f, 0.25, { type: 'triangle', vol: 0.07, when: i * 0.08 })); this.tone(98, 1.2, { vol: 0.14 }); break;
+      case 'haFouet': if (this.throttle('haFouet', 120)) { this.noise(0.08, { f: 2200, q: 1, vol: 0.08, sweep: 2 }); this.tone(1567.98, 0.06, { type: 'sine', vol: 0.03 }); } break;
+      case 'haFin': [1174.66, 987.77, 783.99, 587.33].forEach((f, i) => this.tone(f, 0.3, { type: 'sine', vol: 0.05, when: i * 0.14 })); break;
       // chapitre XVIII : la classe de neige
       case 'neigeKill': if (this.throttle('kill', 45)) { this.noise(0.07, { f: 2600, q: 1.2, vol: 0.08, sweep: 0.6 }); this.tone([1396.91, 1567.98, 1760, 2093, 2349.32][k % 5], 0.18, { type: 'sine', vol: 0.035 }); } break;
       case 'flocon': if (this.throttle('flocon', 100)) { [2637, 3135.96, 3520].forEach((f, i) => this.tone(f, 0.25, { type: 'sine', vol: 0.025, when: i * 0.04 })); this.noise(0.08, { f: 6000, q: 4, vol: 0.04 }); } break;
@@ -647,6 +666,9 @@ const AU = {
   VEILLEE: [587.33, 0, 659.25, 587.33, 0, 493.88, 523.25, 0, 440, 493.88, 0, 0,
             440, 0, 493.88, 523.25, 0, 587.33, 493.88, 0, 440, 392, 0, 0],
   // la chanson du dernier jour (un air original en ré majeur, à quatre temps), une croche par case ; 0 = la note précédente continue
+  // la chanson du cahier de sciences (un air original en sol majeur, à quatre temps), une croche par case ; 0 = la note précédente continue
+  SCIENCES: [587.33, 0, 493.88, 587.33, 783.99, 0, 739.99, 659.25, 587.33, 0, 523.25, 493.88, 440, 0, 0, 0,
+             493.88, 0, 587.33, 659.25, 739.99, 0, 659.25, 587.33, 523.25, 493.88, 440, 493.88, 392, 0, 0, 0],
   // la chanson de la classe de neige (un air original en fa majeur, à quatre temps), une croche par case ; 0 = la note précédente continue
   NEIGE: [698.46, 0, 880, 0, 1046.5, 0, 880, 698.46, 783.99, 0, 932.33, 0, 880, 0, 0, 0,
           659.25, 0, 783.99, 0, 932.33, 0, 880, 783.99, 698.46, 0, 659.25, 587.33, 523.25, 0, 0, 0],
@@ -779,6 +801,19 @@ const AU = {
       if (s % 32 === 0) this.tone(65.41, beat * 6, { type: 'sine', vol: 0.14, when, dest: this.mus, attack: 0.01 });
       const n = this.CARILLON[s % 32];
       if (n && (s >= 8 || intensity > 0.15)) { this.tone(n, beat * 1.8, { type: 'sine', vol: 0.1, when, dest: this.mus, attack: 0.002 }); this.tone(n * 2.76, beat * 0.8, { type: 'sine', vol: 0.02, when, dest: this.mus, attack: 0.002 }); }
+      if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
+      return;
+    }
+    if (chap === 19) {   // la chanson du cahier de sciences : basse pizzicato, marimba, et des oiseaux au printemps
+      const root = [98, 98, 130.81, 98, 146.83, 130.81, 146.83, 98][Math.floor(s / 4) % 8];
+      if (s % 2 === 0) this.tone(s % 4 === 0 ? root : root * 1.5, beat * 0.7, { type: 'triangle', vol: 0.16, when, dest: this.mus, attack: 0.005 });
+      const i = s % 32, n = this.SCIENCES[i];
+      if (n && (s >= 16 || intensity > 0.15)) {
+        this.tone(n, beat * 0.55, { type: 'sine', vol: 0.06, when, dest: this.mus, attack: 0.002 });
+        this.tone(n * 4, 0.04, { type: 'sine', vol: 0.012, when, dest: this.mus, attack: 0.001 });   // le maillet
+        if (intensity > 0.5) this.tone(n * 0.75, beat * 0.5, { type: 'triangle', vol: 0.02, when, dest: this.mus, attack: 0.01 });
+      }
+      if (s % 16 === 12 && (intensity > 0.3 || (s >> 4) % 3 === 0)) [0, 0.09].forEach(d => this.tone(2637.02, 0.07, { type: 'sine', vol: 0.014, when: when + d, slide: 1.25 }));   // un oiseau
       if (bossOn && s % 2 === 0) this.noise(0.05, { f: 5000, q: 1, vol: 0.03, when });
       return;
     }

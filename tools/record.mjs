@@ -98,16 +98,19 @@ async function load(seed) {
 // Montage (itération 35, « Le cerf-volant ») : le bureau range ses douze cahiers sur deux étagères. Au chapitre I, un cerf-volant
 // tombe à côté de la goutte : le pilote le ramasse et court face au vent, il monte et sa queue fauche les ratures. Sur la carte
 // au trésor, il est découpé dans la carte. À la kermesse (chapitre XV), il touche les nuages : grand looping. Puis le Grand Manège.
+// Montage (itération 36, « Le cahier de sciences ») : un treizième cahier arrive sur le bureau, on ouvre le chapitre XIX. L'arrosoir
+// à la main, le pilote le remplit sous le petit nuage de pluie et arrose le haricot dans son bocal ; une racine, deux feuilles, et
+// le haricot magique pousse jusqu'au ciel et fouette les ratures. Les têtards, les grenouilles et les pissenlits vers 1:10, puis
+// la Grande Loupe à 3:00 : sous son verre, la page est vraiment grossie.
 const STEPS = [
-  { act: () => { const c = window.__cap; c.voisin(0); c.debloque(18); c.bureau(18); }, cap: ['Sur le bureau, les douze cahiers ont maintenant deux étagères'], play: 3.4 },
-  { act: () => { const c = window.__cap; c.start(1); c.skip(4); c.cerfvolant(0); }, cap: ['Nouveau, sur toutes les pages !'], play: 4 },
-  { cap: ['Il monte… et sa queue à nœuds fauche les ratures derrière toi'], play: 8, need: r => r.cerf === 1 },
-  { act: () => { const c = window.__cap; c.start(4); c.skip(4); c.cerfvolant(0.3); }, cap: ['Il est découpé dans la page où l’on joue : ici, la carte au trésor'], play: 6.5, need: r => r.cerf === 1 },
-  { act: () => { const c = window.__cap; c.start(15); c.skip(4); c.cerfvolant(0.62); }, cap: ['À la kermesse, le vent tourne : la flèche montre où courir'], play: 6 },
-  { cap: ['Plus il vole haut, plus le ciel se remplit…'], play: 5, need: r => r.cerfs >= 1 },
-  { skip: 30, cap: ['Les canards de la pêche vont en file indienne', 'La course en sac bondit… et retombe en « boum » !'], play: 6 }
+  { act: () => { const c = window.__cap; c.voisin(0); c.debloque(19); c.bureau(19); }, cap: ['Un treizième cahier arrive sur le bureau : le cahier de sciences'], play: 3.4 },
+  { act: () => { const c = window.__cap; c.start(19); c.skip(4); c.haricot(0, 0); }, cap: ['L’expérience du jour : un haricot dans le coton'], play: 5 },
+  { cap: ['Remplis l’arrosoir sous le petit nuage, puis arrose le bocal'], play: 6, need: r => r.haStage >= 1 },
+  { act: () => { window.__cap.haricot(2, 1); }, cap: ['Une racine, deux feuilles… un dernier arrosage !'], play: 4.5, need: r => r.haVivant === 1 },
+  { cap: ['Le haricot magique pousse jusqu’au ciel, et ses lianes fouettent les ratures'], play: 6.5 },
+  { skip: 34, cap: ['Le têtard grandit… et devient une grenouille qui saute', 'Le pissenlit souffle ses aigrettes en éventail'], play: 7 }
 ];
-const BOSS_AT = 180, BOSS_FILM = 22;   // le Grand Manège arrive à 3:00 ; secondes de combat filmées au plus (la suite est sautée)
+const BOSS_AT = 180, BOSS_FILM = 22;   // la Grande Loupe arrive à 3:00 ; secondes de combat filmées au plus (la suite est sautée)
 const argOf = (st, s) => st.arg ? st.arg(s) : undefined;
 // Joue tout le montage en accéléré (sans filmer) pour savoir comment se termine la partie avec la graine s
 async function simulate(s) {
@@ -120,14 +123,14 @@ async function simulate(s) {
   const r = await page.evaluate(() => { for (let i = 0; i < 320; i++) { window.__cap.skip(1); const r = window.__cap.state(); if (r.state === 'victory' || r.state === 'gameover') return r; } return window.__cap.state(); });
   return { ...r, ok };
 }
-// une bonne graine : le cerf-volant touche les nuages à l'écran, puis le Grand Manège tombe avant la fin du tournage
-const good = r => r.ok && r.state === 'victory' && r.chapter === 15 && r.t <= BOSS_AT + 75;
+// une bonne graine : le haricot magique pousse à l'écran, puis la Grande Loupe tombe avant la fin du tournage
+const good = r => r.ok && r.state === 'victory' && r.chapter === 19 && r.t <= BOSS_AT + 75;
 let SEED = SEED_ARG ? parseInt(SEED_ARG, 10) : null;
 if (SEED === null && !SMOKE) {
   let best = null;
   for (const s of [42, 7, 5, 99, 3, 11, 23, 64, 1, 8, 13, 21]) {
     const r = await simulate(s);
-    console.log(`graine ${s} : ${r.state} à ${r.t.toFixed(0)} s (chapitre ${r.chapter}, niveau ${r.level}, ${r.hp} cœur(s), ${r.cerfs} cerf(s)-volant(s) dans les nuages, ${r.cerfKills} ratures fauchées par le cerf-volant)`);
+    console.log(`graine ${s} : ${r.state} à ${r.t.toFixed(0)} s (chapitre ${r.chapter}, niveau ${r.level}, ${r.hp} cœur(s), ${r.haricots} haricot(s) magique(s), ${r.haKills} ratures fouettées, ${r.grenouilles} grenouille(s))`);
     const score = x => (good(x) ? 1e6 : 0) + (x.ok ? 1e5 : 0) + (x.state === 'victory' ? 5e4 - x.t : x.t);
     if (!best || score(r) > score(best.r)) best = { s, r };
     if (good(r)) break;
@@ -149,12 +152,13 @@ if (SMOKE) {
     window.__cap.start(16); window.__cap.skip(9); window.__cap.frames(3); window.__cap.veillee(); window.__cap.skip(3); window.__cap.frames(3); window.__cap.skip(14); window.__cap.frames(2); window.__cap.skip(40); window.__cap.frames(2); window.__cap.patron(); for (let i = 0; i < 24; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.skip(60); window.__cap.frames(2); window.__cap.bestiaire(16); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(2); window.__cap.refermer();
     window.__cap.start(17); window.__cap.skip(9); window.__cap.frames(3); window.__cap.copain(0); window.__cap.skip(4); window.__cap.frames(3); window.__cap.copain(4); window.__cap.skip(6); window.__cap.frames(3); window.__cap.skip(60); window.__cap.frames(2); window.__cap.patron(); for (let i = 0; i < 24; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.skip(60); window.__cap.frames(2); window.__cap.bestiaire(17); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(2); window.__cap.refermer();
     window.__cap.start(18); window.__cap.skip(9); window.__cap.frames(3); window.__cap.bonhomme(0); window.__cap.skip(6); window.__cap.frames(3); window.__cap.bonhomme(2, 0.9); window.__cap.skip(8); window.__cap.frames(3); window.__cap.skip(60); window.__cap.frames(2); window.__cap.patron(); for (let i = 0; i < 24; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.skip(60); window.__cap.frames(2); window.__cap.bestiaire(18); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(2); window.__cap.refermer();
+    window.__cap.start(19); window.__cap.skip(9); window.__cap.frames(3); window.__cap.haricot(0, 0); window.__cap.skip(8); window.__cap.frames(3); window.__cap.haricot(2, 1); window.__cap.skip(10); window.__cap.frames(3); window.__cap.skip(60); window.__cap.frames(2); window.__cap.patron(); for (let i = 0; i < 24; i++) { window.__cap.skip(1); window.__cap.frames(1); } window.__cap.skip(60); window.__cap.frames(2); window.__cap.bestiaire(19); window.__cap.frames(3); window.__cap.feuilleter(1); window.__cap.frames(2); window.__cap.refermer();
     for (const [chapter, n] of [[6, 0], [11, 1], [13, 2]]) { window.__cap.start(chapter); window.__cap.skip(3); window.__cap.coloriage(n); for (let i = 0; i < 30; i++) { window.__cap.skip(1); if (i % 5 === 0) window.__cap.frames(1); } }
-    for (const [chapter, sky] of [[1, 0], [2, 0.5], [3, 0.8], [4, 0.2], [5, 0.9], [6, 0.6], [9, 0.85], [13, 0.4], [16, 0.7], [18, 0.9]]) { window.__cap.start(chapter); window.__cap.skip(3); if (chapter === 16) window.__cap.veillee(); window.__cap.cerfvolant(sky); for (let i = 0; i < 24; i++) { window.__cap.skip(1); if (i % 4 === 0) window.__cap.frames(1); } }
+    for (const [chapter, sky] of [[1, 0], [2, 0.5], [3, 0.8], [4, 0.2], [5, 0.9], [6, 0.6], [9, 0.85], [13, 0.4], [16, 0.7], [18, 0.9], [19, 0.5]]) { window.__cap.start(chapter); window.__cap.skip(3); if (chapter === 16) window.__cap.veillee(); window.__cap.cerfvolant(sky); for (let i = 0; i < 24; i++) { window.__cap.skip(1); if (i % 4 === 0) window.__cap.frames(1); } }
     window.__cap.devoir({ chapter: 7, consigne: 'courant', pouce: 'pluie', seed: 7 }); window.__cap.skip(3); window.__cap.cerfvolant(0.5); for (let i = 0; i < 16; i++) { window.__cap.skip(1); if (i % 4 === 0) window.__cap.frames(1); }
     for (const [chapter, pos] of [[1, 0], [8, 10], [16, 12], [7, 3]]) { window.__cap.start(chapter); window.__cap.skip(3); if (chapter === 16) window.__cap.veillee(); window.__cap.oie(pos); for (let i = 0; i < 30; i++) { window.__cap.skip(1); if (i % 5 === 0) window.__cap.frames(1); } }
     window.__cap.debloque(18); window.__cap.pages({ 1: { w: 2, t: 200 } }); window.__cap.bureau(); window.__cap.frames(3); for (let i = 0; i < 12; i++) { window.__cap.choisir(1); window.__cap.frames(2); } window.__cap.bureau(5); window.__cap.commencer(); window.__cap.skip(5); window.__cap.frames(2); window.__cap.debloque(1); window.__cap.bureau(4); window.__cap.commencer(); window.__cap.frames(2); window.__cap.bureau(); window.__cap.choisir(-1); window.__cap.commencer(); window.__cap.skip(5); window.__cap.frames(2);
-    for (const [chapter, consigne, pouce] of [[1, 'miroir', 'pluie'], [1, 'sansPate', 'propre'], [4, 'courant', 'pluie'], [2, 'brouillard', 'souffle'], [6, 'double', 'aimant'], [3, 'presse', 'souffle'], [5, 'fragile', 'propre'], [7, 'courant', 'aimant'], [8, 'miroir', 'pluie'], [9, 'double', 'souffle'], [10, 'sansPate', 'aimant'], [11, 'courant', 'pluie'], [12, 'presse', 'propre'], [13, 'courant', 'souffle'], [14, 'presse', 'aimant'], [15, 'courant', 'pluie'], [16, 'presse', 'souffle'], [17, 'courant', 'aimant'], [18, 'presse', 'pluie'], [2, 'taille', 'souffle'], [3, 'perfore', 'pluie'], [11, 'perfore', 'souffle'], [4, 'dateur', 'pluie']]) {
+    for (const [chapter, consigne, pouce] of [[1, 'miroir', 'pluie'], [1, 'sansPate', 'propre'], [4, 'courant', 'pluie'], [2, 'brouillard', 'souffle'], [6, 'double', 'aimant'], [3, 'presse', 'souffle'], [5, 'fragile', 'propre'], [7, 'courant', 'aimant'], [8, 'miroir', 'pluie'], [9, 'double', 'souffle'], [10, 'sansPate', 'aimant'], [11, 'courant', 'pluie'], [12, 'presse', 'propre'], [13, 'courant', 'souffle'], [14, 'presse', 'aimant'], [15, 'courant', 'pluie'], [16, 'presse', 'souffle'], [17, 'courant', 'aimant'], [18, 'presse', 'pluie'], [19, 'courant', 'souffle'], [2, 'taille', 'souffle'], [3, 'perfore', 'pluie'], [11, 'perfore', 'souffle'], [4, 'dateur', 'pluie']]) {
       window.__cap.devoir({ chapter, consigne, pouce, seed: chapter }); window.__cap.skip(25); window.__cap.frames(2);
     }
     window.__cap.bonspoints(9); window.__cap.start(9); window.__cap.skip(40); window.__cap.frames(3); window.__cap.images(); window.__cap.frames(2); window.__cap.feuilleter(-1); window.__cap.frames(2); window.__cap.bonspoints(500); window.__cap.feuilleter(1); window.__cap.frames(2); window.__cap.refermer();
@@ -204,16 +208,16 @@ while (st.state !== 'gameover' && st.state !== 'victory' && st.t < BOSS_AT - 4) 
   st = await state();
 }
 if (st.state !== 'gameover' && st.state !== 'victory') {
-  await cap('… 3:00 : le Grand Manège se met à tourner !', 2.6);
-  await cap('Lettres en spirale… attrape le pompon pour un tour gratuit !', 5);
+  await cap('… 3:00 : la Grande Loupe se penche sur la page !', 2.6);
+  await cap('Sous son verre, tout est grossi… et le soleil brûle là où elle regarde', 5);
   for (let i = 0; i < BOSS_FILM && st.state !== 'victory' && st.state !== 'gameover'; i++) { await grab(1); st = await state(); }
   if (st.state !== 'victory' && st.state !== 'gameover') {   // la fin du combat est sautée, pour que la vidéo reste courte
     await page.evaluate(() => { for (let i = 0; i < 300; i++) { const s = window.__cap.state(); if (s.state === 'victory' || s.state === 'gameover') break; window.__cap.skip(0.5); } });
     st = await state();
-    if (st.state === 'victory') await cap('Quelques tours de manège plus tard…', 3);
+    if (st.state === 'victory') await cap('Quelques expériences plus tard…', 3);
   }
 }
-// l'écran de fin compte les bonshommes de neige
+// l'écran de fin compte les haricots magiques
 if (st.state === 'victory' || st.state === 'gameover') await grab(6.5);
 else await grab(1);
 // retour à l'écran titre

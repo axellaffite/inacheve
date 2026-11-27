@@ -82,6 +82,7 @@ function newGame(demo, start = 1, devoir = null) {
     vent: null, brosse: null, crisses: [], gumSeen: false, ventSeen: false, brosseSeen: false, crisseSeen: false,
     glaces: null, claque: null, avalanches: [], glaceSeen: false, claqueSeen: false, avalSeen: false,
     bh: null, nextBh: BH.first, bonshommes: 0, bhKills: 0, bhSeen: false, bhRollSeen: false, bhSmallSeen: false,
+    foyers: [], zaps: [], ha: null, nextHa: HA.first, haricots: 0, haKills: 0, haSeen: false, haCanSeen: false, morphSeen: false, foyerSeen: false, grossiSeen: false,
     cerf: null, nextCerf: CERF.first, cerfs: 0, cerfKills: 0,   // les explications du cerf-volant (cerfSeen, cerfRunSeen) ne sont données qu'une fois par visite
     v: null, voisinKills: 0, voisinLends: 0, voisinStops: 0
   });
@@ -89,7 +90,7 @@ function newGame(demo, start = 1, devoir = null) {
   G.p = { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, r: 13, hp, maxHp: hp, inv: 1.2, dashCd: 0, dashT: 0, dx: 1, dy: 0, face: 0, fireCd: 0.5, look: 0, puddleT: 0, squash: 0, hidden: 0, gx: 0, gy: 0, pin: 0, moving: false };
   G.cam.x = G.p.x; G.cam.y = G.p.y;
   computeStats(); clearStains();
-  if (start > 1) draft([0, 0, 19, 28, 37, 46, 52, 52, 52, 52, 52, 52, 52, 52, 52, 52, 52, 52, 52][start]);
+  if (start > 1) draft([0, 0, 19, 28, 37, 46, 52, 52, 52, 52, 52, 52, 52, 52, 52, 52, 52, 52, 52, 52][start]);
   if (devoir) setupDevoir();
   else {
     caption(CH().intro, 4);
@@ -136,7 +137,8 @@ function turnPage() {
     nuit: null, nextNuit: VEIL.first, lucioles: [], vols: [], bocal: 0, luciT: null,
     oie: null, nextOie: OIE.first, oieVols: [],
     copain: null, nextCopain: FARA.first, fara: [], fpath: [], partis: [], dedis: [], ronde: null, vent: null, brosse: null, crisses: [],
-    glaces: null, claque: null, avalanches: [], bh: null, nextBh: BH.first, cerf: null, nextCerf: CERF.first
+    glaces: null, claque: null, avalanches: [], bh: null, nextBh: BH.first, cerf: null, nextCerf: CERF.first,
+    foyers: [], zaps: [], ha: null, nextHa: HA.first
   });
   G.dicteeWord = CH().dictees[0];
   const p = G.p; Object.assign(p, { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, hp: p.maxHp, inv: 2.5, dashT: 0, hidden: 0, pin: 0 });
@@ -254,7 +256,8 @@ function killEnemy(e) {
     return;
   }
   const paper = CH().paper;
-  if (paper === 'portee') AU.play('noteKill', staffPitch(e.y)); else if (paper === 'milli') AU.play('mmKill'); else if (paper === 'carte') AU.play('carteKill'); else if (paper === 'calli') AU.play('calliKill'); else if (paper === 'garde') AU.play('gardeKill'); else if (paper === 'brouillon') AU.play('brouKill'); else if (paper === 'vacances') AU.play('vacKill'); else if (paper === 'tables') AU.play('tablesKill', e.type === 'chiffre' ? 1 + e.id % 9 : 5); else if (paper === 'recre') AU.play('recreKill', e.id); else if (paper === 'poesie') AU.play('poesieKill', e.id); else if (paper === 'textes') textesKill(e); else if (paper === 'carnet') AU.play('carnetKill', e.id); else if (paper === 'bulletin') AU.play('bulletinKill', e.id); else if (paper === 'kermesse') AU.play('kermesseKill', e.id); else if (paper === 'camp') AU.play('campKill', e.id); else if (paper === 'dernier') AU.play('dernierKill', e.id); else if (paper === 'neige') AU.play('neigeKill', e.id); else AU.play('kill');
+  if (paper === 'portee') AU.play('noteKill', staffPitch(e.y)); else if (paper === 'milli') AU.play('mmKill'); else if (paper === 'carte') AU.play('carteKill'); else if (paper === 'calli') AU.play('calliKill'); else if (paper === 'garde') AU.play('gardeKill'); else if (paper === 'brouillon') AU.play('brouKill'); else if (paper === 'vacances') AU.play('vacKill'); else if (paper === 'tables') AU.play('tablesKill', e.type === 'chiffre' ? 1 + e.id % 9 : 5); else if (paper === 'recre') AU.play('recreKill', e.id); else if (paper === 'poesie') AU.play('poesieKill', e.id); else if (paper === 'textes') textesKill(e); else if (paper === 'carnet') AU.play('carnetKill', e.id); else if (paper === 'bulletin') AU.play('bulletinKill', e.id); else if (paper === 'kermesse') AU.play('kermesseKill', e.id); else if (paper === 'camp') AU.play('campKill', e.id); else if (paper === 'dernier') AU.play('dernierKill', e.id); else if (paper === 'neige') AU.play('neigeKill', e.id); else if (paper === 'sciences') AU.play('sciKill', e.id); else AU.play('kill');
+  if (SCI_TYPES.has(e.type)) sciDeath(e);   // le pissenlit lâche ses aigrettes
   if (NEIGE_TYPES.has(e.type)) neigeDeath(e);   // la boule éclate (et la grosse se casse en deux)
   if (DERNIER_TYPES.has(e.type)) dernierDeath(e);   // le chewing-gum laisse une tache rose
   if (G.ctrl) ctrlKill(e);   // le contrôle surprise : une question de biffée
@@ -304,9 +307,9 @@ function botInput() {
   const need = G.dicteeWord[G.dicteeProg];
   for (const it of G.items) { const d = Math.hypot(it.x - p.x, it.y - p.y) - (it.ch === need ? 160 : 0) - (it.rare ? 80 : 0); if (d < gd && d < 520) { gd = d; goal = it; } }
   if (soleilFreezeBot()) return { x: 0, y: 0, dash: false };   // « soleil ! » : on ne bouge plus
-  const rn = veilleeTarget() || farandoleTarget() || bonhommeTarget() || coloTarget() || oieTarget() || cerfTarget() || dateurTarget() || photoTarget() || agrafTarget() || perfoTarget() || tailleTarget() || (G.refrain && G.refrain.notes[G.refrain.prog]) || figureTarget() || tresorTarget() || enluTarget() || sceauTarget() || lignesTarget() || morpionTarget() || labyTarget() || calcTarget() || marelleTarget() || rimesTarget() || agendaTarget() || motTarget() || ctrlTarget() || chambouleTarget();   // coloriage, machines égarées, refrain, figure, trésor, lettrine, sceau, lignes, morpion, labyrinthe, calcul, marelle, rimes, case à cocher, mot à signer, questions du contrôle, chamboule-tout et pompon passent avant les lettres
+  const rn = veilleeTarget() || farandoleTarget() || bonhommeTarget() || haricotTarget() || coloTarget() || oieTarget() || cerfTarget() || dateurTarget() || photoTarget() || agrafTarget() || perfoTarget() || tailleTarget() || (G.refrain && G.refrain.notes[G.refrain.prog]) || figureTarget() || tresorTarget() || enluTarget() || sceauTarget() || lignesTarget() || morpionTarget() || labyTarget() || calcTarget() || marelleTarget() || rimesTarget() || agendaTarget() || motTarget() || ctrlTarget() || chambouleTarget();   // coloriage, machines égarées, refrain, figure, trésor, lettrine, sceau, lignes, morpion, labyrinthe, calcul, marelle, rimes, case à cocher, mot à signer, questions du contrôle, chamboule-tout et pompon passent avant les lettres
   const toSong = rn && Math.hypot(rn.x - p.x, rn.y - p.y) < 1600;
-  const pull = toSong ? ((G.laby && !G.laby.end && rn === G.labyGoal) || rn === calcTarget() || (G.marelle && !G.marelle.end) || (G.rimes && !G.rimes.end) || rn === agendaTarget() || rn === motTarget() || rn === G.pompon || (G.colo && rn === G.colo.tgt) || (G.oie && rn === G.oie.de) || rn === G.cerf || rn === G.luciT || rn === G.copain || (G.bh && (rn === G.bh.ball || rn === G.bh.spot)) ? 5 : 3) : 1.5;   // le labyrinthe, la bonne réponse, la marelle, les rimes, la case à cocher et le mot attirent plus fort : il faut traverser la foule
+  const pull = toSong ? ((G.laby && !G.laby.end && rn === G.labyGoal) || rn === calcTarget() || (G.marelle && !G.marelle.end) || (G.rimes && !G.rimes.end) || rn === agendaTarget() || rn === motTarget() || rn === G.pompon || (G.colo && rn === G.colo.tgt) || (G.oie && rn === G.oie.de) || rn === G.cerf || rn === G.luciT || rn === G.copain || (G.bh && (rn === G.bh.ball || rn === G.bh.spot)) || (G.ha && (rn === G.ha.can || rn === G.ha.spot || rn === G.ha.rain)) ? 5 : 3) : 1.5;   // le labyrinthe, la bonne réponse, la marelle, les rimes, la case à cocher et le mot attirent plus fort : il faut traverser la foule
   if (toSong) goal = rn;
   if (!goal) goal = { x: WORLD.w / 2 + Math.cos(G.t * 0.21) * 700, y: WORLD.h / 2 + Math.sin(G.t * 0.17) * 420 };
   const gdx = goal.x - p.x, gdy = goal.y - p.y, gl = Math.hypot(gdx, gdy) || 1;
@@ -325,6 +328,7 @@ function botInput() {
   const bltn = CH().paper === 'bulletin';   // le couloir des zéros qui roulent
   const ker = CH().paper === 'kermesse';   // là où les sacs retombent
   const dern = CH().paper === 'dernier';   // bulles de chewing-gum, courant d'air, brosse et cercles de craie
+  const sci = CH().paper === 'sciences';   // le saut des grenouilles, les pissenlits qui soufflent, les rayons de la Loupe
   const nei = CH().paper === 'neige';   // les flocons qui éclatent, la claque de la Moufle, l'avalanche
   const camp = CH().paper === 'camp';   // les hérissons en boule et le piqué des moustiques
   const agr = G.enemies.some(e => e.type === 'agrafeuse');   // l'axe des agrafes
@@ -363,6 +367,7 @@ function botInput() {
       if (camp) sc -= w * campDanger(x, y);
       if (dern) sc -= w * dernierDanger(x, y);
       if (nei) sc -= w * neigeDanger(x, y);
+      if (sci) sc -= w * sciDanger(x, y);
       if (agr) sc -= w * agrafDanger(x, y);
       if (perf) sc -= w * perfoDanger(x, y);
       if (tll) sc -= w * tailleDanger(x, y);
@@ -543,6 +548,8 @@ function stepPlay(dt) {
       stepGrandBulletin(e, dt, dx, dy, d, slow); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else if (e.type === 'moufle') {
       stepMoufle(e, dt, dx, dy, d, slow); tx = MV.x; ty = MV.y; agil = MV.agil;
+    } else if (e.type === 'loupe') {
+      stepLoupe(e, dt, dx, dy, d, slow); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else if (e.type === 'tableau') {
       stepTableau(e, dt, dx, dy, d, slow); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else if (e.type === 'ourse') {
@@ -583,6 +590,8 @@ function stepPlay(dt) {
       stepBulletinEnemy(e, dt, dx, dy, d, slow, hid); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else if (NEIGE_TYPES.has(e.type)) {
       stepNeigeEnemy(e, dt, dx, dy, d, slow, hid); tx = MV.x; ty = MV.y; agil = MV.agil;
+    } else if (SCI_TYPES.has(e.type)) {
+      stepSciEnemy(e, dt, dx, dy, d, slow, hid); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else if (DERNIER_TYPES.has(e.type)) {
       stepDernierEnemy(e, dt, dx, dy, d, slow, hid); tx = MV.x; ty = MV.y; agil = MV.agil;
     } else if (CAMP_TYPES.has(e.type)) {
@@ -757,6 +766,8 @@ function stepPlay(dt) {
   stepDernierFx(dt);   // le chewing-gum aux pattes, le courant d'air, la brosse et les cercles de craie
   stepNeigeFx(dt);   // le verglas, la claque de la Moufle et les avalanches
   stepBonhomme(dt);   // la boule qui roule, le bonhomme de neige qui prend vie
+  stepSciFx(dt);   // les aigrettes qui ondulent, les rayons de la Loupe
+  stepHaricot(dt);   // l'arrosoir, le nuage de pluie et le haricot magique
   stepFarandole(dt);   // les copains, leurs dédicaces, la farandole et la ronde
   for (const c of G.coins) c.t += dt;
   G.coins = G.coins.filter(c => c.t < c.dur);
@@ -871,6 +882,7 @@ function phrase(win) {
   const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
   if (!ws.length) return 'Une page presque blanche.';
   if (ws.length === 1) return win ? cap(ws[0]) + ' tint bon, jusqu’au point final.' : 'Il ne restait que ' + ws[0] + '.';
+  if (win && G.chapter === 19) return pick(['Grâce à ' + ws[0] + ', la Grande Loupe vit enfin la page en entier, et la trouva très belle.', cap(ws[0]) + ' et ' + ws[1] + ' firent pousser un haricot jusqu’au plafond de la classe.']);
   if (win && G.chapter === 18) return pick(['Grâce à ' + ws[0] + ', la Grande Moufle retrouva sa jumelle et rentra au chalet.', cap(ws[0]) + ' et ' + ws[1] + ' firent un bonhomme de neige aussi grand que le chalet.']);
   if (win && G.chapter === 17) return pick(['Grâce à ' + ws[0] + ', le Grand Tableau écrivit enfin : « Bonnes vacances ! »', cap(ws[0]) + ' et ' + ws[1] + ' firent la ronde dans la cour vide, jusqu’à la dernière cloche.']);
   if (win && G.chapter === 16) return pick(['Grâce à ' + ws[0] + ', la Grande Ourse remonta se coucher dans le ciel.', cap(ws[0]) + ' et ' + ws[1] + ' veillèrent jusqu’au matin, un bocal de lucioles entre eux.']);

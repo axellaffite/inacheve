@@ -16,7 +16,8 @@ const CAHIERS = [
   { name: 'Kermesse', sub: 'page XV', pages: [15], cover: '#e0a23a', dark: '#a8701c', doodle: 'fanions' },
   { name: 'Colo', sub: 'page XVI', pages: [16], cover: '#2f6b4f', dark: '#1c4433', doodle: 'tente' },
   { name: 'Dernier jour', sub: 'page XVII', pages: [17], cover: '#d0603e', dark: '#8e3a22', doodle: 'cloche' },
-  { name: 'Classe de neige', sub: 'page XVIII', pages: [18], cover: '#4f86b8', dark: '#2c5680', doodle: 'flocon' }
+  { name: 'Classe de neige', sub: 'page XVIII', pages: [18], cover: '#4f86b8', dark: '#2c5680', doodle: 'flocon' },
+  { name: 'Sciences', sub: 'page XIX', pages: [19], cover: '#5f8a3a', dark: '#3a5a22', doodle: 'feuille' }
 ];
 // L'histoire du cahier : une phrase par page, qu'on ne lit qu'une fois la page débloquée
 const HISTOIRE = [null,
@@ -37,9 +38,10 @@ const HISTOIRE = [null,
   'À la kermesse, elle fit tout tomber au chamboule-tout, et le manège lui offrit un tour gratuit.',
   'À la colo, elle attrapa des lucioles dans un bocal, et la Grande Ourse lui souhaita bonne nuit.',
   'Le dernier jour, tous ses copains écrivirent dans son cahier, et ils firent la ronde jusqu’à la cloche.',
-  'À la classe de neige, elle glissa sur le verglas, et fit un bonhomme qui lui lança des boules de neige pour de rire.'
+  'À la classe de neige, elle glissa sur le verglas, et fit un bonhomme qui lui lança des boules de neige pour de rire.',
+  'En sciences, elle arrosa un haricot dans du coton, et il poussa si haut qu’il chatouilla la Grande Loupe.'
 ];
-const TAB_COLORS = [null, '#f6e75e', '#ff9ec4', '#9be59b', '#8fd3f0', '#f7b267', '#c9a7f0', '#dcd6bc', '#ffd36b', '#b5e3d0', '#ffc4d6', '#d9c2ff', '#a8e6dc', '#f5c98a', '#a9c8ee', '#ffc98a', '#a6dcb8', '#ffb59a', '#cfe6f7'];
+const TAB_COLORS = [null, '#f6e75e', '#ff9ec4', '#9be59b', '#8fd3f0', '#f7b267', '#c9a7f0', '#dcd6bc', '#ffd36b', '#b5e3d0', '#ffc4d6', '#d9c2ff', '#a8e6dc', '#f5c98a', '#a9c8ee', '#ffc98a', '#a6dcb8', '#ffb59a', '#cfe6f7', '#cfe8a8'];
 const BUREAU = { hop: 0.24, key: 'inacheve.pages' };
 
 /* ----- les records de chaque page : { chapitre: { w: victoires, t: meilleur temps } } ----- */
@@ -309,6 +311,11 @@ function drawDoodle(kind, x, y, r, open) {
     ctx.beginPath(); ctx.moveTo(-r * 0.7, -r * 0.45); ctx.lineTo(0, r * 0.12); ctx.lineTo(r * 0.7, -r * 0.45); ctx.stroke();
     ctx.fillStyle = '#e85a5f'; ctx.fillRect(r * 0.38, -r * 0.36, r * 0.22, r * 0.26);
   }
+  else if (kind === 'feuille') {   // une feuille d'herbier, avec sa nervure
+    ctx.strokeStyle = '#fffdf4'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(0, r * 0.75); ctx.quadraticCurveTo(-r * 0.75, r * 0.1, 0, -r * 0.75); ctx.quadraticCurveTo(r * 0.75, r * 0.1, 0, r * 0.75); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, r * 0.85); ctx.lineTo(0, -r * 0.5); for (const k of [-0.2, 0.15]) { ctx.moveTo(0, k * r); ctx.lineTo(-r * 0.3, (k - 0.25) * r); ctx.moveTo(0, k * r); ctx.lineTo(r * 0.3, (k - 0.25) * r); } ctx.stroke();
+  }
   else if (kind === 'flocon') {   // un flocon à six branches
     ctx.strokeStyle = '#fffdf4'; ctx.lineWidth = 2; ctx.lineCap = 'round';
     for (let i = 0; i < 6; i++) { const a = i / 6 * TAU, c = Math.cos(a), s = Math.sin(a); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(c * r * 0.7, s * r * 0.7); ctx.moveTo(c * r * 0.4, s * r * 0.4); ctx.lineTo(c * r * 0.4 + Math.cos(a + 0.8) * r * 0.2, s * r * 0.4 + Math.sin(a + 0.8) * r * 0.2); ctx.moveTo(c * r * 0.4, s * r * 0.4); ctx.lineTo(c * r * 0.4 + Math.cos(a - 0.8) * r * 0.2, s * r * 0.4 + Math.sin(a - 0.8) * r * 0.2); ctx.stroke(); }
@@ -351,7 +358,7 @@ function drawGhost(g, k) {
   roundRect(g.x, g.y, g.w, g.h, 6 * s); ctx.stroke(); ctx.setLineDash([]);
   const fz = Math.min(19 * s, g.w / 9);
   txt('ici, plus tard :', g.x + g.w / 2, g.y + g.h / 2 - fz * 0.8, fz, { color: '#fff3d8', weight: 400, rot: -0.05 });
-  txt('un ' + ['premier', 'deuxième', 'troisième', 'quatrième', 'cinquième', 'sixième', 'septième', 'huitième', 'neuvième', 'dixième', 'onzième', 'douzième', 'treizième'][CAHIERS.length] + ' cahier ?', g.x + g.w / 2, g.y + g.h / 2 + fz * 0.6, fz, { color: '#fff3d8', weight: 400, rot: -0.05 });
+  txt('un ' + ['premier', 'deuxième', 'troisième', 'quatrième', 'cinquième', 'sixième', 'septième', 'huitième', 'neuvième', 'dixième', 'onzième', 'douzième', 'treizième', 'quatorzième'][CAHIERS.length] + ' cahier ?', g.x + g.w / 2, g.y + g.h / 2 + fz * 0.6, fz, { color: '#fff3d8', weight: 400, rot: -0.05 });
   ctx.restore();
 }
 function drawDevoirSheet(d, me, k) {

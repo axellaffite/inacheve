@@ -115,6 +115,12 @@ const BESTIAIRE = [null,
     ['flocon', 'le flocon', 'Flotte en zigzag, puis tourne de plus en plus vite… et éclate en six éclats de glace.'],
     ['boule', 'la boule de neige', 'Grossit en roulant : plus lente, plus solide, et elle mord deux fois. Grosse, elle se casse en deux.'],
     ['moufle', 'la Grande Moufle', 'Lance des boules en éventail, retombe à plat sur toi et déclenche des avalanches. Passe par le trou !']
+  ],
+  [
+    ['tetard', 'le têtard', 'Frétille vers toi. Laisse-le grandir seize secondes, et ses pattes poussent : il devient grenouille.'],
+    ['grenouille', 'la grenouille', 'Saute là où tu vas, et retombe en éclaboussant. Le rond rouge dit où elle atterrit.'],
+    ['pissenlit', 'le pissenlit', 'Gonfle les joues et souffle ses aigrettes en éventail. Biffé, il les lâche toutes d’un coup.'],
+    ['loupe', 'la Grande Loupe', 'Concentre le soleil en un point qui brûle, grossit les ratures qu’elle regarde et lance des reflets.']
   ]
 ];
 // Les rares (itération 18) : les machines égarées, qui n'appartiennent à aucune page
@@ -129,7 +135,7 @@ const rarePage = () => CHAPTERS.length;
 const bestList = n => n === rarePage() ? RARES : BESTIAIRE[n];
 const BEST_TYPES = new Set(BESTIAIRE.slice(1).concat([RARES]).flat().map(b => b[0]));
 // rayon apparent de chaque croquis, pour qu'il tienne dans sa case
-const BEST_VIS = { moufle: 170, flocon: 26, boule: 30, tableau: 165, chewing: 30, feuille: 26, ourse: 175, moustique: 26, herisson: 34, manege: 150, canard: 30, sac: 34, grandbulletin: 125, zeropointe: 32, note20: 32, grandtampon: 125, colle: 34, enveloppe: 30, horloge: 130, reveil: 30, cocotte: 28, alexandrin: 125, ver: 30, rime: 52, exclam: 34, corbeau: 36, sifflet: 120, calot: 22, toupie: 30, corde: 150, avion: 32, photocopieuse: 76, agrafeuse: 66, perforatrice: 64, taillelec: 70, dateur: 72, boulier: 125, chiffre: 26, fois: 30, egal: 30, retenue: 26, soleil: 135, cornet: 34, ballon: 30, pointille: 70, coquillage: 24, stylo: 150, blanco: 32, taillecrayon: 30, cafe: 30, trombone: 24, cartable: 130, tampon: 38, peigne: 36, signet: 26, marbrure: 22, paraphe: 175, majuscule: 40, plumeoie: 30, arabesque: 36, delie: 30, boss: 92, fausse: 128, regle: 282, pieuvre: 150, metronome: 54, compas: 42, tourbillon: 34, equerre: 32, rapporteur: 32, bouteille: 34, crabe: 34, mouette: 24, tache: 30, gomme: 32 };
+const BEST_VIS = { loupe: 175, tetard: 26, grenouille: 30, pissenlit: 34, moufle: 170, flocon: 26, boule: 30, tableau: 165, chewing: 30, feuille: 26, ourse: 175, moustique: 26, herisson: 34, manege: 150, canard: 30, sac: 34, grandbulletin: 125, zeropointe: 32, note20: 32, grandtampon: 125, colle: 34, enveloppe: 30, horloge: 130, reveil: 30, cocotte: 28, alexandrin: 125, ver: 30, rime: 52, exclam: 34, corbeau: 36, sifflet: 120, calot: 22, toupie: 30, corde: 150, avion: 32, photocopieuse: 76, agrafeuse: 66, perforatrice: 64, taillelec: 70, dateur: 72, boulier: 125, chiffre: 26, fois: 30, egal: 30, retenue: 26, soleil: 135, cornet: 34, ballon: 30, pointille: 70, coquillage: 24, stylo: 150, blanco: 32, taillecrayon: 30, cafe: 30, trombone: 24, cartable: 130, tampon: 38, peigne: 36, signet: 26, marbrure: 22, paraphe: 175, majuscule: 40, plumeoie: 30, arabesque: 36, delie: 30, boss: 92, fausse: 128, regle: 282, pieuvre: 150, metronome: 54, compas: 42, tourbillon: 34, equerre: 32, rapporteur: 32, bouteille: 34, crabe: 34, mouette: 24, tache: 30, gomme: 32 };
 const BEST_TOAST = 3.4;
 
 G.bestiary = {};
@@ -272,6 +278,10 @@ function bestFake(type, i) {
   else if (type === 'tableau') e.phase = 'walk';
   else if (type === 'flocon') { e.phase = Math.sin(t * 1.2) > 0.4 ? 'eclat' : 'walk'; e.pt = FLOCON.spin * (1 - ((t * 0.7) % 1)); e.rot = t; }
   else if (type === 'boule') { e.r = 22; e.rot = t * 2; }
+  else if (type === 'tetard') { e.rot = Math.sin(t) * 0.4; e.age = (t * 3) % 16; }
+  else if (type === 'grenouille') { e.phase = Math.sin(t * 1.3) > 0.5 ? 'saut' : 'walk'; e.h = e.phase === 'saut' ? Math.abs(Math.sin(t * 4)) * 24 : 0; e.rot = -Math.PI / 2; }
+  else if (type === 'pissenlit') { e.phase = Math.sin(t * 1.1) > 0.4 ? 'souffle' : 'walk'; e.pt = PISSENLIT.warn * (1 - ((t * 0.6) % 1)); }
+  else if (type === 'loupe') { e.phase = 'walk'; e.wave = t; e.h = 8 + Math.sin(t * 2) * 8; }
   else if (type === 'moufle') { e.phase = 'walk'; e.wave = t; e.h = Math.max(0, Math.sin(t * 1.1)) * 30; }
   else if (type === 'zeropointe') { e.rot = t * 2; e.phase = 'walk'; }
   else if (type === 'note20') e.rot = Math.sin(t * 3) * 0.2;
