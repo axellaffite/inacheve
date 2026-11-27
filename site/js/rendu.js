@@ -336,6 +336,7 @@ function drawWorld() {
   drawPlayer();
   drawPlayerPin();
   drawColoHeld();   // le crayon de couleur en main
+  drawCerf();   // le cerf-volant, par terre ou en l'air au bout de son fil
   for (const pt of G.points) {
     if (pt.done) { const k = (pt.t - pt.fall) / 0.6; ctx.strokeStyle = 'rgba(18,39,95,' + (1 - k) + ')'; ctx.lineWidth = 6 * (1 - k) + 1; ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.r * ease(k), 0, TAU); ctx.stroke(); continue; }
     if (pt.t < 0) continue;
@@ -530,7 +531,7 @@ function drawTitle() {
   txt(G.input.touch ? 'Touche l’écran pour commencer' : 'Appuie sur Entrée pour commencer', W / 2, ty + 196 * s, Math.min(38 * s, W / 18), { color: C.ink, alpha: a * (0.6 + 0.4 * Math.sin(G.time * 3)), hl: C.hl });
   if (!G.input.touch) txt('ZQSD, WASD ou flèches : bouger    Espace : pâté d’encre    Échap : pause    Tab : le bureau    N : voisin    J : devoir du jour    B : bestiaire    I : images    M : son', W / 2, ty + 252 * s, Math.min(22 * s, W / 40), { color: C.pencil, weight: 400, alpha: a });
   else txt('Glisse pour bouger, bouton « pâté » pour foncer', W / 2, ty + 252 * s, 22 * s, { color: C.pencil, weight: 400, alpha: a });
-  const news = 'Nouveau : le chapitre XVIII, la classe de neige ! Verglas, boules qui grossissent, et un bonhomme de neige à faire.';
+  const news = 'Nouveau, sur toutes les pages : un cerf-volant ! Ramasse-le et cours face au vent pour qu’il touche les nuages.';
   txt(news, W / 2, ty + (G.best ? 322 : 290) * s, Math.min(22 * s, W / 30), { color: C.ink, weight: 400, alpha: a * 0.85 });
   const bn = bestCount(), un = unionCount(), keyI = G.input.touch ? ' (au bout du bestiaire)' : ' (touche I)';
   const bnews = !G.bonsPoints ? 'Nouveau : les bons points ! Chaque exploit en rapporte, et dix bons points font une image' + keyI + '.'
@@ -571,6 +572,7 @@ function endTally() {
   if (G.oies) parts.push(['parties de l’oie', G.oies]);
   if (G.rondes) parts.push(['rondes des copains', G.rondes]);
   if (G.bonshommes) parts.push(['bonshommes de neige', G.bonshommes]);
+  if (G.cerfs) parts.push(['cerfs-volants', G.cerfs]);
   if (parts.length > 4) parts.splice(1, parts.length - 4);   // la copie ne déborde plus : les dictées et les trois derniers exploits
   return parts.length > 1 ? [parts.map(q => q[0]).join(' · '), parts.map(q => q[1]).join(' · ')] : ['dictées réussies', G.dictees];
 }
@@ -614,6 +616,7 @@ function render() {
   else {
     drawWorld();
     drawDevoirFx();   // courant d'air, brouillard de gomme
+    drawCerfWind();   // le vent du cerf-volant
     drawVacancesScreen();   // le coucher du Grand Soleil
     drawNuitScreen();   // la nuit de la colo
   }
@@ -639,6 +642,7 @@ function render() {
     drawChambouleArrow();
     drawColoArrow();
     drawOieArrow();
+    drawCerfArrow();
     drawFaraArrow();
     drawBhArrow();
     drawVeilleeArrow();

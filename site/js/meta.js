@@ -5,7 +5,7 @@
 /* =====================================================================
    MÉTA : à mettre à jour à CHAQUE itération (lu par tools/record.mjs)
    ===================================================================== */
-const GAME_META = { iteration: 34, date: '2026-11-26', title: 'La classe de neige', chapter: 'XVIII', chapterName: 'La classe de neige' };
+const GAME_META = { iteration: 35, date: '2026-11-27', title: 'Le cerf-volant', chapter: 'XVIII', chapterName: 'La classe de neige' };
 const JOURNAL = [
   { iteration: 1, date: '2026-10-09', title: 'Le premier brouillon',
     notes: [
@@ -276,6 +276,13 @@ const JOURNAL = [
       "Le bonhomme prend vie, avec son bonnet, son écharpe et son nez en carotte : il lance des boules de neige sur les ratures, puis fond doucement. Un cœur et un bon point pour toi.",
       "Deux nouvelles ratures : le flocon, qui tourne de plus en plus vite et éclate en étoile de glace, et la boule de neige, qui grossit en roulant et se casse en deux.",
       "À 3:00, la Grande Moufle descend la piste : boules en éventail, claque à plat sur le rond annoncé, et avalanches à traverser par le trou. Une chanson de neige, avec ses grelots, accompagne la page."
+    ] },
+  { iteration: 35, date: '2026-11-27', title: 'Le cerf-volant', notes: [
+      "Sur toutes les pages, vers 0:55, un cerf-volant tombe à côté de toi, avec sa bobine et sa queue à nœuds de surligneur. Il est découpé dans la page où tu joues : un bout de portée, de carte au trésor, de papier millimétré…",
+      "Ramasse-le, puis cours face au vent : une flèche te montre la direction, et elle devient verte quand tu cours du bon côté. Le vent tourne de temps en temps !",
+      "Si tu t’arrêtes, ou si tu cours avec le vent dans le dos, il redescend… et finit par piquer du nez. Une rature qui te touche fait détendre le fil.",
+      "En vol, il se balance au bout de son fil, et lui comme sa queue fauchent les ratures qu’ils touchent. Assez de ciel, et il touche les nuages : un grand looping autour de toi balaie la page, avec un cœur et un bon point en prime.",
+      "Sur le bureau, les douze cahiers ne tenaient plus sur une ligne : ils sont maintenant rangés sur deux étagères, bien plus lisibles, avec la place vide d’un treizième cahier."
     ] }
 ];
 window.GAME_META = GAME_META;

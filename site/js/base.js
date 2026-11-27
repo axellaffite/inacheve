@@ -597,6 +597,12 @@ const AU = {
       case 'claque': this.noise(0.35, { f: 300, q: 0.7, vol: 0.2, sweep: 0.4 }); this.tone(73.42, 0.35, { vol: 0.2, slide: 0.6 }); break;
       case 'avalanche': this.noise(2.2, { f: 400, q: 0.5, vol: 0.09, sweep: 2.5, type: 'lowpass' }); this.tone(55, 1.6, { type: 'sine', vol: 0.08 }); break;
       case 'boss18': for (let i = 0; i < 8; i++) this.noise(0.04, { f: 7000, q: 3, vol: 0.04, when: i * 0.12 }); [349.23, 440, 523.25, 698.46].forEach((f, i) => this.tone(f, 0.6, { type: 'triangle', vol: 0.07, when: 1 + i * 0.12 })); this.tone(87.31, 1.4, { vol: 0.15, when: 1 }); break;
+      // le cerf-volant (itération 35)
+      case 'cerfNew': this.noise(0.9, { f: 600, q: 0.7, vol: 0.06, sweep: 2.2, type: 'lowpass' }); [587.33, 739.99, 880].forEach((f, i) => this.tone(f, 0.2, { type: 'triangle', vol: 0.05, when: 0.3 + i * 0.1 })); break;
+      case 'cerfUp': this.noise(0.5, { f: 900, q: 0.8, vol: 0.06, sweep: 2.5 }); [440, 554.37, 659.25, 880].forEach((f, i) => this.tone(f, 0.18, { type: 'sine', vol: 0.05, when: i * 0.06 })); break;
+      case 'cerfFlap': if (this.throttle('cerfFlap', 300)) { for (let i = 0; i < 3; i++) this.noise(0.04, { f: 1400 + i * 200, q: 1.5, vol: 0.035, when: i * 0.06 }); } break;
+      case 'cerfDown': this.tone(659.25, 0.5, { type: 'triangle', vol: 0.06, slide: 0.45 }); this.noise(0.4, { f: 800, q: 0.8, vol: 0.05, sweep: 0.4 }); break;
+      case 'cerfWin': [587.33, 739.99, 880, 1174.66, 1479.98, 1760].forEach((f, i) => this.tone(f, 0.35, { type: 'triangle', vol: 0.05, when: i * 0.07 })); this.noise(1.4, { f: 700, q: 0.6, vol: 0.07, sweep: 3, type: 'lowpass', when: 0.1 }); break;
       case 'bhBall': this.noise(0.1, { f: 1200, q: 1, vol: 0.08 }); this.tone(523.25, 0.12, { type: 'triangle', vol: 0.05 }); break;
       case 'bhPret': [1046.5, 1318.51].forEach((f, i) => this.tone(f, 0.15, { type: 'sine', vol: 0.05, when: i * 0.08 })); break;
       case 'bhPose': this.noise(0.15, { f: 500, q: 0.8, vol: 0.12 }); [523.25, 659.25, 783.99].slice(0, k || 1).forEach((f, i) => this.tone(f * 2, 0.25, { type: 'triangle', vol: 0.06, when: 0.1 + i * 0.1 })); break;

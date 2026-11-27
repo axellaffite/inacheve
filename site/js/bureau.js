@@ -120,13 +120,18 @@ function bureauLayout() {
   const items = bureauItems(), books = [], tabs = [];
   const nC = CAHIERS.length, availH = fiche.y - top - 22 * s;
   let bw, bh, devoir, ghost;
+  let shelves = [];
   if (wide) {
-    const slots = nC + 2;   // les cahiers, la place du suivant, le devoir
-    bw = Math.min(232 * s, aw / (slots * 1.17 + 0.6), availH / 1.32); bh = bw * 1.32;
-    const step = bw * 1.17, gap = (aw - slots * step) / (slots + 1), y = top + (availH - bh) / 2;
-    for (let ci = 0; ci < nC; ci++) books.push({ ci, x: l + gap + ci * (step + gap), y, w: bw, h: bh });
-    ghost = { x: l + gap + nC * (step + gap), y, w: bw, h: bh };
-    devoir = { x: l + gap + (nC + 1) * (step + gap), y: y + bh * 0.16, w: bw * 1.05, h: bw * 0.82 };
+    // les cahiers, la place du suivant, le devoir ; sur deux étagères quand ils ne tiennent plus sur une (itération 35)
+    const slots = nC + 2, rows = slots > 9 ? 2 : 1, cols = Math.ceil(slots / rows), rh = availH / rows;
+    bw = Math.min(232 * s, aw / (cols * 1.17 + 0.6), (rh - (rows > 1 ? 20 * s : 0)) / 1.32); bh = bw * 1.32;
+    const step = bw * 1.17, gap = (aw - cols * step) / (cols + 1);
+    const slot = k => ({ x: l + gap + (k % cols) * (step + gap), y: top + Math.floor(k / cols) * rh + (rh - bh) / 2 });
+    for (let ci = 0; ci < nC; ci++) books.push(Object.assign({ ci, w: bw, h: bh }, slot(ci)));
+    ghost = Object.assign({ w: bw, h: bh }, slot(nC));
+    const d = slot(nC + 1);
+    devoir = { x: d.x, y: d.y + bh * 0.16, w: bw * 1.05, h: bw * 0.82 };
+    if (rows > 1) for (let r = 0; r < rows; r++) shelves.push({ x: l, y: top + r * rh + (rh + bh) / 2 + 3 * s, w: aw, h: 12 * s });
   } else {   // en hauteur : deux colonnes, le devoir après le dernier cahier
     const cols = 2, rows = Math.ceil((nC + 1) / cols);
     bw = Math.min(200 * s, aw / (cols * 1.17 + 0.5), (availH / rows - 14 * s) / 1.32); bh = bw * 1.32;
@@ -145,7 +150,7 @@ function bureauLayout() {
     });
   }
   const devoirI = items.length - 1;
-  return { wide, books, tabs, ghost, devoir, devoirI, fiche, close: { x: W - SAFE.r - 40 * s, y: SAFE.t + 40 * s, r: 24 * s } };
+  return { wide, books, tabs, ghost, devoir, devoirI, fiche, shelves, close: { x: W - SAFE.r - 40 * s, y: SAFE.t + 40 * s, r: 24 * s } };
 }
 function bureauHit(x, y) {
   const L = bureauLayout(), inR = (b, m = 0) => x >= b.x - m && x <= b.x + b.w + m && y >= b.y - m && y <= b.y + b.h + m;
@@ -225,6 +230,11 @@ function drawBureau() {
   // la croix pour revenir au titre
   ctx.fillStyle = C.paper; ctx.beginPath(); ctx.arc(L.close.x, L.close.y, L.close.r, 0, TAU); ctx.fill();
   ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.stroke(); txt('×', L.close.x, L.close.y - 2 * s, 30 * s, { color: C.ink });
+  for (const sh of L.shelves) {   // les étagères du bureau : une planche sous chaque rangée de cahiers
+    ctx.save(); ctx.shadowColor = 'rgba(40,22,8,0.35)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 5;
+    ctx.fillStyle = '#8a5a2e'; roundRect(sh.x, sh.y, sh.w, sh.h, 3 * s); ctx.fill(); ctx.shadowColor = 'transparent';
+    ctx.fillStyle = 'rgba(255,230,190,0.25)'; ctx.fillRect(sh.x + 4 * s, sh.y + 2 * s, sh.w - 8 * s, 2 * s); ctx.restore();
+  }
   L.books.forEach((b, k) => drawCahier(b, L, sel, clamp(t * 3 - k * 0.25, 0, 1)));
   drawGhost(L.ghost, clamp(t * 3 - 0.75, 0, 1));
   drawDevoirSheet(L.devoir, sel.kind === 'devoir', clamp(t * 3 - 1, 0, 1));

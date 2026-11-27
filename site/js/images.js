@@ -30,6 +30,7 @@ const BON_SOURCES = [
   [() => G.oies || 0, 1, 'jeu de l’oie gagné'],
   [() => G.rondes || 0, 1, 'ronde des copains'],
   [() => G.bonshommes || 0, 1, 'bonhomme de neige'],
+  [() => G.cerfs || 0, 1, 'cerf-volant dans les nuages'],
   [() => Math.floor((G.kills || 0) / 300), 1, 'trois cents ratures biffées'],
   [() => bestCount(), 1, 'nouveau croquis'],
   [() => unionCount(), 2, 'nouvelle union'],

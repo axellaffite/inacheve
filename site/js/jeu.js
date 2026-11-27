@@ -82,6 +82,7 @@ function newGame(demo, start = 1, devoir = null) {
     vent: null, brosse: null, crisses: [], gumSeen: false, ventSeen: false, brosseSeen: false, crisseSeen: false,
     glaces: null, claque: null, avalanches: [], glaceSeen: false, claqueSeen: false, avalSeen: false,
     bh: null, nextBh: BH.first, bonshommes: 0, bhKills: 0, bhSeen: false, bhRollSeen: false, bhSmallSeen: false,
+    cerf: null, nextCerf: CERF.first, cerfs: 0, cerfKills: 0,   // les explications du cerf-volant (cerfSeen, cerfRunSeen) ne sont données qu'une fois par visite
     v: null, voisinKills: 0, voisinLends: 0, voisinStops: 0
   });
   const hp = demo ? 7 : 6;
@@ -135,7 +136,7 @@ function turnPage() {
     nuit: null, nextNuit: VEIL.first, lucioles: [], vols: [], bocal: 0, luciT: null,
     oie: null, nextOie: OIE.first, oieVols: [],
     copain: null, nextCopain: FARA.first, fara: [], fpath: [], partis: [], dedis: [], ronde: null, vent: null, brosse: null, crisses: [],
-    glaces: null, claque: null, avalanches: [], bh: null, nextBh: BH.first
+    glaces: null, claque: null, avalanches: [], bh: null, nextBh: BH.first, cerf: null, nextCerf: CERF.first
   });
   G.dicteeWord = CH().dictees[0];
   const p = G.p; Object.assign(p, { x: WORLD.w / 2, y: WORLD.h / 2, vx: 0, vy: 0, hp: p.maxHp, inv: 2.5, dashT: 0, hidden: 0, pin: 0 });
@@ -303,9 +304,9 @@ function botInput() {
   const need = G.dicteeWord[G.dicteeProg];
   for (const it of G.items) { const d = Math.hypot(it.x - p.x, it.y - p.y) - (it.ch === need ? 160 : 0) - (it.rare ? 80 : 0); if (d < gd && d < 520) { gd = d; goal = it; } }
   if (soleilFreezeBot()) return { x: 0, y: 0, dash: false };   // « soleil ! » : on ne bouge plus
-  const rn = veilleeTarget() || farandoleTarget() || bonhommeTarget() || coloTarget() || oieTarget() || dateurTarget() || photoTarget() || agrafTarget() || perfoTarget() || tailleTarget() || (G.refrain && G.refrain.notes[G.refrain.prog]) || figureTarget() || tresorTarget() || enluTarget() || sceauTarget() || lignesTarget() || morpionTarget() || labyTarget() || calcTarget() || marelleTarget() || rimesTarget() || agendaTarget() || motTarget() || ctrlTarget() || chambouleTarget();   // coloriage, machines égarées, refrain, figure, trésor, lettrine, sceau, lignes, morpion, labyrinthe, calcul, marelle, rimes, case à cocher, mot à signer, questions du contrôle, chamboule-tout et pompon passent avant les lettres
+  const rn = veilleeTarget() || farandoleTarget() || bonhommeTarget() || coloTarget() || oieTarget() || cerfTarget() || dateurTarget() || photoTarget() || agrafTarget() || perfoTarget() || tailleTarget() || (G.refrain && G.refrain.notes[G.refrain.prog]) || figureTarget() || tresorTarget() || enluTarget() || sceauTarget() || lignesTarget() || morpionTarget() || labyTarget() || calcTarget() || marelleTarget() || rimesTarget() || agendaTarget() || motTarget() || ctrlTarget() || chambouleTarget();   // coloriage, machines égarées, refrain, figure, trésor, lettrine, sceau, lignes, morpion, labyrinthe, calcul, marelle, rimes, case à cocher, mot à signer, questions du contrôle, chamboule-tout et pompon passent avant les lettres
   const toSong = rn && Math.hypot(rn.x - p.x, rn.y - p.y) < 1600;
-  const pull = toSong ? ((G.laby && !G.laby.end && rn === G.labyGoal) || rn === calcTarget() || (G.marelle && !G.marelle.end) || (G.rimes && !G.rimes.end) || rn === agendaTarget() || rn === motTarget() || rn === G.pompon || (G.colo && rn === G.colo.tgt) || (G.oie && rn === G.oie.de) || rn === G.luciT || rn === G.copain || (G.bh && (rn === G.bh.ball || rn === G.bh.spot)) ? 5 : 3) : 1.5;   // le labyrinthe, la bonne réponse, la marelle, les rimes, la case à cocher et le mot attirent plus fort : il faut traverser la foule
+  const pull = toSong ? ((G.laby && !G.laby.end && rn === G.labyGoal) || rn === calcTarget() || (G.marelle && !G.marelle.end) || (G.rimes && !G.rimes.end) || rn === agendaTarget() || rn === motTarget() || rn === G.pompon || (G.colo && rn === G.colo.tgt) || (G.oie && rn === G.oie.de) || rn === G.cerf || rn === G.luciT || rn === G.copain || (G.bh && (rn === G.bh.ball || rn === G.bh.spot)) ? 5 : 3) : 1.5;   // le labyrinthe, la bonne réponse, la marelle, les rimes, la case à cocher et le mot attirent plus fort : il faut traverser la foule
   if (toSong) goal = rn;
   if (!goal) goal = { x: WORLD.w / 2 + Math.cos(G.t * 0.21) * 700, y: WORLD.h / 2 + Math.sin(G.t * 0.17) * 420 };
   const gdx = goal.x - p.x, gdy = goal.y - p.y, gl = Math.hypot(gdx, gdy) || 1;
@@ -752,6 +753,7 @@ function stepPlay(dt) {
   stepColo(dt);   // le coloriage magique, et les dessins qui ont pris vie
   stepVeillee(dt);   // la nuit de la colo, les lucioles et le bocal
   stepOie(dt);   // le jeu de l'oie, son dé et l'oie qui s'envole
+  stepCerf(dt);   // le cerf-volant, sa queue et son looping
   stepDernierFx(dt);   // le chewing-gum aux pattes, le courant d'air, la brosse et les cercles de craie
   stepNeigeFx(dt);   // le verglas, la claque de la Moufle et les avalanches
   stepBonhomme(dt);   // la boule qui roule, le bonhomme de neige qui prend vie
